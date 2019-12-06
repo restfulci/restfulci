@@ -1,0 +1,29 @@
+version: "3"
+services:
+
+  database:
+    image: postgres:12.1
+    volumes:
+      - ./database/setup.sql:/docker-entrypoint-initdb.d/setup.sql
+    restart: always
+    environment:
+      POSTGRES_PASSWORD: postgres
+
+  master:
+    build:
+      context: ./master
+      dockerfile: ./Dockerfile
+    ports:
+      - "8881:8080"
+    depends_on:
+      - database
+    tty: true
+    restart: always
+
+  slave:
+    image: docker:19.03.5
+    deploy:
+      replicas: 2
+    depends_on:
+      - master
+    restart: always

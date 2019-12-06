@@ -50,12 +50,15 @@ Server management and autoscaling should be part of what this framework can supp
 
 Pipeline should be a client side setup, as it breaks independency between jobs/RESTful endpoints. It can be implemented as [batch operation](https://www.codementor.io/blog/batch-endpoints-6olbjay1hd).
 
-* Pipeline in UI client is obvious/through common sense. 
+* Pipeline in UI client is obvious/through common sense.
 * Command line client shouldn't have shared pipeline. User can have their shellscript with multiple steps.
-* There may be an pipeline extension GitHub PR hooks client (for deployment after a master commit). 
-	* But this makes the GitHub PR hooks client not universally applied, but depend on indivitual job. Better approach?
+* There may be an pipeline extension GitHub PR hooks client (for deployment after a master commit).
+  * But this makes the GitHub PR hooks client not universally applied, but depend on indivitual job. Better approach?
 
 #### Build artifact where to?
+
+* JFrog artifactory
+* Upload to/download from S3/docker hub/ECR/...
 
 ### Why not other frameworks?
 
