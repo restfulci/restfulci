@@ -9,9 +9,9 @@ services:
     environment:
       POSTGRES_PASSWORD: postgres
 
-  master:
+  api-master:
     build:
-      context: ./master
+      context: ./api-master
       dockerfile: ./Dockerfile
     ports:
       - "8881:8080"
