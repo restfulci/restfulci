@@ -46,8 +46,10 @@ Job configuration/the logic of a particular job (see list below) should be insid
 * Job command/script.
 * (Dockerized) environment the script can be run onto.
 	* Unlike in CircleCI it needs special format Dockerfiles (chose one of the official ones and extends on your need through `.circleci/config.yml` `run` command, or create a specific one with strong CircleCI constrain), it should be able to re-use the Dockerfile used for the production or dev environment of the related project. 
-* What kind of servers.
 * What kind of results it should save, and where are they inside of the container after finishing the job.
+* Resource quota(?)
+	* If the existing jobs on a slave machine has taking out all the resource quota, new jobs will be blocked to send to that machine. Not sure if that is needed, as we can also use slave CPU percentage to block sending new jobs.
+	* No need to define what kind of slaves (CPU core, ...) the job want to run at, since slaves should be just multi-core boxes with multiple jobs running on it (otherwise we cannot autoscale them based on CPU usage). 
 
 It doesn't matter if the job config (in repo) and infrastructure-as-code are in the same production repo, as they are with separated deployment anyway (same as whether app code and AWS setup are in the same repo or not, so may apply the same rule for both of them). However, job configuration should probably go in the same place as where the production infrastructure-as-code in.
 
@@ -70,20 +72,51 @@ ssh_exchange_identification: Connection closed by remote host
 
 As docker is a simple extension of alpine which doesn't have SSH installed/configured, we need to customize it so its `authorized_hosts` includes master's public key.
 
-##### Share caching
+##### Share docker caching
 
 Since everything are running on docker, we may consider using [registry](https://hub.docker.com/_/registry/) to share docker cache across hosts/slaves. And if a step is not defined in Dockerfile (e.g. library installation inside of the script), the installation should be down everytime (rather than home baked caching dependencies e.g. [in CircleCI](https://circleci.com/docs/2.0/caching/)). Also refer [here (a 4 years old guide which may be out of date but describe the problem clearly)](https://runnable.com/blog/distributing-docker-cache-across-hosts) and [here (new/updated toolsets)](https://medium.com/titansoft-engineering/docker-build-cache-sharing-on-multi-hosts-with-buildkit-and-buildx-eb8f7005918e).
 
-##### Agent
+##### Slave agent
 
-Reason we need a slave side agent (just like what Jenkins is doing):
+Reason we need a slave agent (just like what Jenkins is doing):
 
 * We can drop connection to slave after starting the job. Agent can communicate back to master when the job is done.
-* Slave may directly talks to persistent storage(s), so no detour to upload test results.
+* Slave may directly talks to persistent storage(s), expecially upload the console output/test results which may be huge files.
 
-Agent should be quite small and can be `scp` to slave every single time a new job starts (then problem free for legacy agent version). [Jenkins does this](https://wiki.jenkins.io/display/JENKINS/SSH+Slaves+plugin) by overwriting the agent is shared by all jobs in slave. We should be able to just set them up independently.
+Slave agent can be a buildin application of slave container (an extension of `docker` image as described above -- not the container the actual job is running). 
+
+* [Jenkins is using a different approach]((https://wiki.jenkins.io/display/JENKINS/SSH+Slaves+plugin)) to `scp` the slave agent every single time a new job starts (to resolve the problem of legacy agent version) by overwriting the agent is shared by all jobs in slave. That's mostly because Jenkins slaved (setup by using manually and stays persistently) have configuration drafting. We have no need to do it, as our slaves (as docker containers) are disposable, and can be cleaned up every time we want to upgrade the slave agent version.
+* This also saves the need for api master to know `scp`/[Apache MINA SSHD](https://mina.apache.org/sshd-project/).
+* Slave agent need to be able to create job-specific docker containers, and execute the job inside of it, and cleanup the container after it. May consider using [Java Docker API Client](https://github.com/docker-java/docker-java).
+	* Slave agent should be able to manage multiple jobs to be executed together in the same machine. See below "autoscaling" for reasons.
+
+Master (a Spring based RESTful API application) may communicate with slave by [Spring remoting support](https://docs.spring.io/spring/docs/5.1.9.RELEASE/spring-framework-reference/integration.html#remoting-rmi). May choose to implmented by [RMI](https://www.baeldung.com/spring-remoting-rmi) (no authentication), [Hessian](https://www.baeldung.com/spring-remoting-hessian-burlap) (2nd recommanded, support authentication), [HTTP invokers](https://www.baeldung.com/spring-remoting-http-invoker) (seems most recommanded), web services, JMS, ... ([consideration of choices](https://docs.spring.io/spring/docs/5.1.9.RELEASE/spring-framework-reference/integration.html#remoting-considerations))
+
+* Master (as client) to talk to the slave agent (as server) by RMI to pass job run information, and trigger the job to be executed there.
+	* RMI connection can be dropped immediately after this.
+* Slave agent monitor the job execution progress, upload the console output/testing results to persistent storages(s), and modify the database `run.completeAt` and `run.status`. No need for slave agent (as client) to communicate back to master (server) to notify the job is done.
+	* Master is supposed to be stateless. No need for it to keep the job result in its memory so no need for slave to notify it.
+	* Everytime the run status is requested, master should consult the database. Master may cache the "done" case since it is forever done. It should be explicitly marked in the caching policy that "in progress" is not a cachable state.
+	
+Decide which slave the master should send the job to should be a job of a load balancer (should have no need to develop it/put it as part of the master logic). Possible ways:
+
+* Slave which has the (above some threshold) lowest CPU usage.
+	* Can't be the exact lowest CPU usage, as 
+	* Pros:
+		* No need to define the customized logic of "resource quota".
+	* Cons:
+		* Potentially risky if a job use significant different amount of resources in different stage of it. CPU may goes up unexpectedly and finally freeze that slave box/affects all jobs running on it. 
+			* Need to know the detail of how docker manage/distribute resources for multiple containers running on the same box.
+			* For example, a testing job which uses single thread for initialization, and execute tests using multiple CPUs in parallel.
+		* Will use, and highly tight to backend infrastructure: load balancer in orchestration framework.
+* Slave which has the (above some threshold) lowest "resource quota".
+	* Cons:
+		* Resource quota is a customized business logic, which means we need to implement the load balancing logic in our master/slave agents: master consults all slave agents about their remaining quota, and then choose one from them.
+* The lowest always need to be above some threshold, because otherwise autoscaling mechanism is very hard to scale down as no node is completely idle.
 
 ##### Autoscaling
+
+Slaves should be 
 
 Slave management and autoscaling should be part of what this framework can support (probably through Kubernetes).
 
