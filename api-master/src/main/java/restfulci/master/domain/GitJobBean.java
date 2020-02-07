@@ -30,7 +30,7 @@ public class GitJobBean extends JobBean {
 	@Column(name="config_filepath")
 	private String configFilepath;
 	
-	public String getType() {
-		return "git";
+	public JobType getType() {
+		return JobType.GIT;
 	}
 }

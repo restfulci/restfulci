@@ -68,7 +68,7 @@ public class GitJobUserJourneyIT {
 						.andReturn().getResponse().getContentAsString(),
 				Map.class);
 		assertEquals(createdJob.get("name"), jobName);
-		assertEquals(createdJob.get("type"), "git");
+		assertEquals(createdJob.get("type"), "GIT");
 		
 		Integer jobId = (Integer)createdJob.get("id");
 		Map<?, ?> queriedJob = objectMapper.readValue(
@@ -77,7 +77,7 @@ public class GitJobUserJourneyIT {
 						.andReturn().getResponse().getContentAsString(), 
 				Map.class);
 		assertEquals(queriedJob.get("name"), jobName);
-		assertEquals(queriedJob.get("type"), "git");
+		assertEquals(queriedJob.get("type"), "GIT");
 		
 		final String branchName = "master";
 		Map<String, String> runData = new HashMap<String, String>();
@@ -91,7 +91,7 @@ public class GitJobUserJourneyIT {
 						.andReturn().getResponse().getContentAsString(),
 				Map.class);
 		assertEquals(triggeredRun.get("branchName"), branchName);
-		assertEquals(triggeredRun.get("type"), "git");
+		assertEquals(triggeredRun.get("type"), "GIT");
 		
 		mockMvc.perform(delete("/jobs/"+jobId))
 				.andExpect(status().isOk());

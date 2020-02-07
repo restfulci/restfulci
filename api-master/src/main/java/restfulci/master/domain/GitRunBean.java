@@ -17,7 +17,7 @@ import lombok.ToString;
 @Inheritance(strategy=InheritanceType.JOINED)
 public abstract class GitRunBean extends RunBean {
 
-	public String getType() {
-		return "git";
+	public JobType getType() {
+		return JobType.GIT;
 	}
 }

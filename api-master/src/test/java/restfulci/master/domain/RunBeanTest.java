@@ -28,11 +28,11 @@ public class RunBeanTest {
 		assertEquals(
 				mapper.writeValueAsString(run),
 				"{\"id\":456,"
-				+ "\"job\":{\"id\":123,\"name\":\"job\",\"script\":\"echo 0\",\"type\":\"freestyle\"},"
+				+ "\"job\":{\"id\":123,\"name\":\"job\",\"script\":\"echo 0\",\"type\":\"FREESTYLE\"},"
 				+ "\"triggerAt\":\"1970-01-01 12:00:00\","
 				+ "\"completeAt\":\"1970-01-01 12:00:01\"}");
 		assertEquals(
 				mapper.writeValueAsString(job),
-				"{\"id\":123,\"name\":\"job\",\"script\":\"echo 0\",\"type\":\"freestyle\"}");
+				"{\"id\":123,\"name\":\"job\",\"script\":\"echo 0\",\"type\":\"FREESTYLE\"}");
 	}
 }

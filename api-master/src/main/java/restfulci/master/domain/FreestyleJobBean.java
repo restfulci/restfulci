@@ -23,7 +23,12 @@ public class FreestyleJobBean extends JobBean {
 	@Column(name="script")
 	private String script;
 	
-	public String getType() {
-		return "freestyle";
+	public JobType getType() {
+		return JobType.FREESTYLE;
 	}
+	
+	/*
+	 * TODO:
+	 * Add input parameters
+	 */
 }

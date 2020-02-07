@@ -24,6 +24,6 @@ public class GitJobBeanTest {
 				+ "\"name\":\"job\","
 				+ "\"remoteOrigin\":\"git@github.com:dummy/dummy.git\","
 				+ "\"configFilepath\":\".restfulci.yml\","
-				+ "\"type\":\"git\"}");
+				+ "\"type\":\"GIT\"}");
 	}
 }

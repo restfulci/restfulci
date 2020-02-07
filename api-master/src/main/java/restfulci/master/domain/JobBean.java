@@ -46,5 +46,5 @@ public abstract class JobBean {
 	@OneToMany(targetEntity=RunBean.class, fetch=FetchType.LAZY, cascade=CascadeType.ALL, mappedBy="job")
 	private List<RunBean> runs = new ArrayList<RunBean>();
 	
-	public abstract String getType();
+	public abstract JobType getType();
 }
