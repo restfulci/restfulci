@@ -1,0 +1,69 @@
+version: 2.1
+
+executors:
+  java-with-postgres-executor:
+    docker:
+      - image: circleci/openjdk:11.0.2-jdk
+        environment:
+          TEST_DATABASE_URL: postgresql://postgres@localhost/restfulci
+
+      - image: circleci/postgres:11
+        environment:
+          POSTGRES_PASSWORD: postgres
+
+    working_directory: /tmp/java
+
+    environment:
+      # Customize the JVM maximum heap limit
+      MAVEN_OPTS: -Xmx3200m
+
+orbs:
+  inline-postgres:
+    commands:
+      initialize:
+        steps:
+          - run: sudo apt-get update || sudo apt-get update && sudo apt install postgresql-client
+          - run: psql -U postgres -h localhost -p 5432 -w -c "CREATE DATABASE restfulci OWNER postgres;"
+          - run: psql -U postgres -h localhost -d restfulci -p 5432 -w -f database/setup.sql
+
+jobs:
+  java-api-master-unittest:
+    executor: java-with-postgres-executor
+    steps:
+      - checkout
+      - inline-postgres/initialize
+
+      - run: cd api-master && mvn test
+
+      - run:
+          name: Save test results
+          command: |
+            mkdir -p ~/unittest-results/
+            find . -type f -regex ".*/target/surefire-reports/.*xml" -exec cp {} ~/unittest-results/ \;
+          when: always
+      - store_test_results:
+          path: ~/unittest-results
+
+  java-api-master-integration-test:
+    executor: java-with-postgres-executor
+    steps:
+      - checkout
+      - inline-postgres/initialize
+
+      - run: cd api-master && mvn verify -Dskip.unittest=true
+
+      - run:
+          name: Save test results
+          command: |
+            mkdir -p ~/integration-test-results/
+            find . -type f -regex ".*/target/failsafe-reports/.*xml" -exec cp {} ~/integration-test-results/ \;
+          when: always
+      - store_test_results:
+          path: ~/integration-test-results
+
+workflows:
+  version: 2
+  build-test-and-deploy:
+    jobs:
+      - java-api-master-unittest
+      - java-api-master-integration-test

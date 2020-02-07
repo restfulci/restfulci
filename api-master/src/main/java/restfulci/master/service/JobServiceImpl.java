@@ -1,0 +1,44 @@
+package restfulci.master.service;
+
+import java.io.IOException;
+import java.util.Optional;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import restfulci.master.dao.JobRepository;
+import restfulci.master.domain.JobBean;
+import restfulci.master.dto.JobDTO;
+
+@Service
+public class JobServiceImpl implements JobService {
+	
+	@Autowired private JobRepository jobRepository;
+
+	@Override
+	public JobBean getJob(Integer jobId) throws IOException {
+		
+		Optional<JobBean> jobs = jobRepository.findById(jobId);
+		if (jobs.isPresent()) {
+			return jobs.get();
+		}
+		else {
+			throw new IOException();
+		}
+	}
+
+	@Override
+	public JobBean createJob(JobDTO jobDTO) throws IOException {
+		
+		JobBean job = jobDTO.toBean();
+		jobRepository.saveAndFlush(job);
+		return job;
+	}
+
+	@Override
+	public void deleteJob(JobBean job) {
+		
+		jobRepository.delete(job);
+	}
+
+}
