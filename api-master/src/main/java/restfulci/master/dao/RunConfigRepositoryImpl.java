@@ -19,10 +19,11 @@ public class RunConfigRepositoryImpl implements RunConfigRepository {
 		Path localRepoPath = Files.createTempDirectory("local-repo");
 		
 		GitClone gitClone = new GitClone(branchRun.getJob().getRemoteOrigin(), localRepoPath.toFile());
+		gitClone.setBranchName(branchRun.getBranchName());
+		gitClone.setDepth(1);
 		gitClone.execute();
 		
 		List<String> lines = Files.readAllLines(localRepoPath.resolve(branchRun.getJob().getConfigFilepath()));
 		return String.join("\n", lines);
 	}
-
 }
