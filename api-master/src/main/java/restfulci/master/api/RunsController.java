@@ -29,7 +29,7 @@ public class RunsController {
 	@PostMapping
 	public RunBean triggerRun(
 			@PathVariable @Min(1) Integer jobId,
-			@RequestBody @Valid RunDTO runDTO) throws IOException {
+			@RequestBody @Valid RunDTO runDTO) throws Exception {
 		
 		JobBean job = jobService.getJob(jobId);
 		return runService.triggerRun(job, runDTO);

@@ -3,7 +3,6 @@ package restfulci.master.dao;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.List;
 
 import org.springframework.stereotype.Repository;
 
@@ -13,12 +12,13 @@ import restfulci.master.dao.git.GitFetch;
 import restfulci.master.dao.git.GitInit;
 import restfulci.master.domain.GitBranchRunBean;
 import restfulci.master.domain.GitCommitRunBean;
+import restfulci.master.domain.yaml.RunConfigBean;
 
 @Repository
 public class RunConfigRepositoryImpl implements RunConfigRepository {
 
 	@Override
-	public String getConfig(GitBranchRunBean branchRun) throws IOException, InterruptedException {
+	public RunConfigBean getConfig(GitBranchRunBean branchRun) throws IOException, InterruptedException {
 		
 		Path localRepoPath = Files.createTempDirectory("local-repo");
 		
@@ -39,7 +39,7 @@ public class RunConfigRepositoryImpl implements RunConfigRepository {
 	 * ```
 	 */
 	@Override
-	public String getConfig(GitCommitRunBean commitRun) throws IOException, InterruptedException {
+	public RunConfigBean getConfig(GitCommitRunBean commitRun) throws IOException, InterruptedException {
 		
 		Path localRepoPath = Files.createTempDirectory("local-repo");
 		
@@ -59,8 +59,8 @@ public class RunConfigRepositoryImpl implements RunConfigRepository {
 		return getConfigFromFilepath(localRepoPath, commitRun.getJob().getConfigFilepath());
 	}
 	
-	private String getConfigFromFilepath(Path localRepoPath, String configFilepath) throws IOException {
-		List<String> lines = Files.readAllLines(localRepoPath.resolve(configFilepath));
-		return String.join("\n", lines);
+	private RunConfigBean getConfigFromFilepath(Path localRepoPath, String configFilepath) throws IOException {
+		String yamlContent = String.join("\n", Files.readAllLines(localRepoPath.resolve(configFilepath)));
+		return RunConfigYamlParser.parse(yamlContent);
 	}
 }

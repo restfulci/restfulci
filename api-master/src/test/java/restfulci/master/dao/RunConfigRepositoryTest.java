@@ -37,9 +37,9 @@ public class RunConfigRepositoryTest {
 		File sourceDirectory = new File(tmpFolder, "source-repo");
 		sourceDirectory.mkdir();
 		
-		Files.write(
-				sourceDirectory.toPath().resolve(".restfulci.yml"), 
-				"config content".getBytes());
+		Files.copy(
+				new File(getClass().getClassLoader().getResource("example-restfulci.yml").getFile()).toPath(), 
+				sourceDirectory.toPath().resolve(".restfulci.yml"));
 		
 		ProcessBuilder builder = new ProcessBuilder("git", "init");
 		builder.directory(sourceDirectory);
@@ -66,7 +66,7 @@ public class RunConfigRepositoryTest {
 		run.setCompleteAt(new Date(1000L));
 		run.setBranchName("master");
 		
-		assertEquals(repository.getConfig(run), "config content");
+		assertEquals(repository.getConfig(run).getVersion(), "1.0");
 	}
 	
 	/*
@@ -78,9 +78,9 @@ public class RunConfigRepositoryTest {
 		File sourceDirectory = new File(tmpFolder, "source-repo");
 		sourceDirectory.mkdir();
 		
-		Files.write(
-				sourceDirectory.toPath().resolve(".restfulci.yml"), 
-				"config content".getBytes());
+		Files.copy(
+				new File(getClass().getClassLoader().getResource("example-restfulci.yml").getFile()).toPath(), 
+				sourceDirectory.toPath().resolve(".restfulci.yml"));
 		
 		ProcessBuilder builder = new ProcessBuilder("git", "init");
 		builder.directory(sourceDirectory);
@@ -113,7 +113,7 @@ public class RunConfigRepositoryTest {
 		run.setCompleteAt(new Date(1000L));
 		run.setCommitSha(commitSha);
 		
-		assertEquals(repository.getConfig(run), "config content");
+		assertEquals(repository.getConfig(run).getVersion(), "1.0");
 	}
 	
 	@Test
