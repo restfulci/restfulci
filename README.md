@@ -36,7 +36,7 @@ Framework configuration (see list below) should be setup by API calls. There can
 		* Git repo jobs (the trigger from GitHub/GitLab/... PR hooks is a different thing/not define in here, and this job can be triggered manually or from a PR hook):
 			* Git repo centralized location.
 			* Job config file relative path in git repo.
-		* Freestyle jobs: 
+		* Freestyle jobs:
 			* Everything.
 * Overall config:
 	* What kind of servers (number of cores) can a job run onto. Or this is hard to be customized.
@@ -45,7 +45,7 @@ Job configuration/the logic of a particular job (see list below) should be insid
 
 * Job command/script.
 * (Dockerized) environment the script can be run onto.
-	* Unlike in CircleCI it needs special format Dockerfiles (chose one of the official ones and extends on your need through `.circleci/config.yml` `run` command, or create a specific one with strong CircleCI constrain), it should be able to re-use the Dockerfile used for the production or dev environment of the related project. 
+	* Unlike in CircleCI it needs special format Dockerfiles (chose one of the official ones and extends on your need through `.circleci/config.yml` `run` command, or create a specific one with strong CircleCI constrain), it should be able to re-use the Dockerfile used for the production or dev environment of the related project.
 * What kind of servers.
 * What kind of results it should save, and where are they inside of the container after finishing the job.
 
@@ -53,7 +53,7 @@ It doesn't matter if the job config (in repo) and infrastructure-as-code are in 
 
 #### Slaves
 
-Slaves should be a customized extension of [docker](https://hub.docker.com/_/docker) image with SSH enabled. 
+Slaves should be a customized extension of [docker](https://hub.docker.com/_/docker) image with SSH enabled.
 
 By default,
 
@@ -89,11 +89,11 @@ Slave management and autoscaling should be part of what this framework can suppo
 
 #### Git fetching
 
-For Git repo jobs, repo needs to be fetched *two* times, once from master and once from slave (or master need to send content to slave through RPC/scp). To minimize network overhead, master fetches the single config file (to know the job name, server type, and other metadata), while slave fetches the whole repo. Slave git fetch should be inside of the docker container rather than the host machine (so we know it is completely gone when the container is destroyed). 
+For Git repo jobs, repo needs to be fetched *two* times, once from master and once from slave (or master need to send content to slave through RPC/scp). To minimize network overhead, master fetches the single config file (to know the job name, server type, and other metadata), while slave fetches the whole repo. Slave git fetch should be inside of the docker container rather than the host machine (so we know it is completely gone when the container is destroyed).
 
 Note that while [single branch clone](https://stackoverflow.com/questions/1778088/how-do-i-clone-a-single-branch-in-git/7034921#7034921) is supported by GitHub, [single commit fetch](https://stackoverflow.com/a/30701724/11335489) is only supported by GitLab but not GitHub. This fact may limits our git operations performance
 
-Also, if we want to run a task only based on the what is changed from git, we'll need to fetch more than one commit which is a more complicated task. 
+Also, if we want to run a task only based on the what is changed from git, we'll need to fetch more than one commit which is a more complicated task.
 
 #### Results where to?
 
@@ -107,8 +107,18 @@ Pipeline should be a client side setup/setup in a layer on top of the RESTful AP
 * Command line client shouldn't have shared pipeline. User can have their shellscript with multiple steps.
 * There may be an pipeline extension GitHub PR hooks client (for deployment after a master commit).
   * But this makes the GitHub PR hooks client not universally applied, but depend on indivitual job. Better approach?
-  
+
 In case pipeline definition is in code (not necessarily to be in the same repo as the endpoint job), consider the pipeline layer git fetch a single file from [a single commit](https://stackoverflow.com/a/30701724/11335489) (GitHub does not support, GitLab supports) or [a single branch](https://stackoverflow.com/questions/1778088/how-do-i-clone-a-single-branch-in-git/7034921#7034921) (GitHub supports). Then each step/endpoint git fetch seperately.
+
+```
+git clone <source> -b <branch-name> --single-branch --depth 1
+```
+
+```
+git init
+git fetch --depth=1 <source>
+git checkout -f <commit-sha>
+```
 
 #### Build artifact where to?
 

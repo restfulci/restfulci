@@ -12,37 +12,34 @@ import lombok.Setter;
  * (2) single file clone.
  */
 @Setter
-public class GitClone extends Executable {
+public class GitFetch extends Executable {
 	
-	public GitClone (String URI, File directory) {
+	public GitFetch (String URI, File directory) {
 		this.URI = URI;
 		this.directory = directory;
 	}
 	
 	private String URI;
 	private File directory;
-	private String branchName;
+	private String commitSha;
 	private Integer depth;
 
 	public CommandResult execute() throws IOException, InterruptedException {
 		
 		List<String> commandArray = new ArrayList<String>();
 		commandArray.add("git");
-		commandArray.add("clone");
-		commandArray.add(URI);
-		
-		if (branchName != null) {
-			commandArray.add("-b");
-			commandArray.add(branchName);
-			commandArray.add("--single-branch");
-		}
+		commandArray.add("fetch");
 		
 		if (depth != null) {
 			commandArray.add("--depth");
 			commandArray.add(depth.toString());
 		}
 		
-		commandArray.add(directory.getAbsolutePath());
+		commandArray.add(URI);
+		
+		if (commitSha != null) {
+			commandArray.add(commitSha);
+		}
 		
 		return executeWith(commandArray, directory);
 	}

@@ -53,7 +53,7 @@ public class GitCloneTest {
 		File localDirectory = new File(tmpFolder, "local-repo");
 		localDirectory.mkdir();
 		
-		GitClone gitClone = new GitClone(sourceDirectory.getAbsolutePath(), localDirectory);
+		GitClone gitClone = new GitClone("file://"+sourceDirectory.getAbsolutePath(), localDirectory);
 		gitClone.setBranchName("master");
 		gitClone.setDepth(1);
 		CommandResult gitResult = gitClone.execute();

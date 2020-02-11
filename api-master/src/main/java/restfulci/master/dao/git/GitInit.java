@@ -12,37 +12,19 @@ import lombok.Setter;
  * (2) single file clone.
  */
 @Setter
-public class GitClone extends Executable {
+public class GitInit extends Executable {
 	
-	public GitClone (String URI, File directory) {
-		this.URI = URI;
+	public GitInit (File directory) {
 		this.directory = directory;
 	}
 	
-	private String URI;
 	private File directory;
-	private String branchName;
-	private Integer depth;
 
 	public CommandResult execute() throws IOException, InterruptedException {
 		
 		List<String> commandArray = new ArrayList<String>();
 		commandArray.add("git");
-		commandArray.add("clone");
-		commandArray.add(URI);
-		
-		if (branchName != null) {
-			commandArray.add("-b");
-			commandArray.add(branchName);
-			commandArray.add("--single-branch");
-		}
-		
-		if (depth != null) {
-			commandArray.add("--depth");
-			commandArray.add(depth.toString());
-		}
-		
-		commandArray.add(directory.getAbsolutePath());
+		commandArray.add("init");
 		
 		return executeWith(commandArray, directory);
 	}

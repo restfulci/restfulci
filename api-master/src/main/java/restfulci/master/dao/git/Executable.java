@@ -22,6 +22,11 @@ abstract class Executable {
 		commandResult.setErrorOutput(process);
 		commandResult.setExitCode(process);
 		
+//		System.out.println("$ "+commandResult.getCommand());
+//		System.out.println(commandResult.getNormalOutput());
+//		System.out.println(commandResult.getErrorOutput());
+//		System.out.println(commandResult.getExitCode());
+		
 		return commandResult;
 	}
 }
