@@ -51,6 +51,8 @@ Job configuration/the logic of a particular job (see list below) should be insid
 	* If the existing jobs on a slave machine has taking out all the resource quota, new jobs will be blocked to send to that machine. Not sure if that is needed, as we can also use slave CPU percentage to block sending new jobs.
 	* No need to define what kind of slaves (CPU core, ...) the job want to run at, since slaves should be just multi-core boxes with multiple jobs running on it (otherwise we cannot autoscale them based on CPU usage). 
 
+TODO: Job specific input parameters.
+
 It doesn't matter if the job config (in repo) and infrastructure-as-code are in the same production repo, as they are with separated deployment anyway (same as whether app code and AWS setup are in the same repo or not, so may apply the same rule for both of them). However, job configuration should probably go in the same place as where the production infrastructure-as-code in.
 
 #### Slaves
@@ -78,47 +80,81 @@ Since everything are running on docker, we may consider using [registry](https:/
 
 ##### Slave agent
 
-Reason we need a slave agent (just like what Jenkins is doing):
+Even if both master and slave has multiple machines (masters are tranditional API machines with a load balancer balances the API calls), we still want them to be seperated machines. Reason:
 
-* We can drop connection to slave after starting the job. Agent can communicate back to master when the job is done.
-* Slave may directly talks to persistent storage(s), expecially upload the console output/test results which may be huge files.
+* Master (working for simple tasks and response user quickly) can use a pure API framework, can keep stateless, easy to re-deploy and killed when necessary.
+* Slave overloading will not cause master to freeze/not responding.
+* Master and slave can follow different scaling rules.
 
-Slave agent can be a buildin application of slave container (an extension of `docker` image as described above -- not the container the actual job is running). 
+Roles for master/slave machines:
 
-* [Jenkins is using a different approach]((https://wiki.jenkins.io/display/JENKINS/SSH+Slaves+plugin)) to `scp` the slave agent every single time a new job starts (to resolve the problem of legacy agent version) by overwriting the agent is shared by all jobs in slave. That's mostly because Jenkins slaved (setup by using manually and stays persistently) have configuration drafting. We have no need to do it, as our slaves (as docker containers) are disposable, and can be cleaned up every time we want to upgrade the slave agent version.
+* Master machine has API server running on it. It is in charge of
+	* Expose API endpoints. Manage (create/update/delete) jobs. Serve results of querying historical job run data. Act as the gateway of triggering new job.
+	* When there's a new job request, it record it -- create run record in database ("trigger time", ...) with status "in progress", and pass the job information to slave to be executed.
+* Slave machine hosts a long-run agent on it. Agent is in charge of
+	* Starts the job.
+	* Monitors the job execution progress.
+	* Upload the console output/testing results to persistent storages(s), and modify the database run record (complete time and status "done") without the needs/detour to communicate to master on this.
+
+Master/slave communication:
+
+* **Triggering:** triggering should be done by message queues. Master sends the task to a message queuing system (may have multiple queues based on "resource quota"). When slave have spear compatibility, it actively goes the message queue to grab messages and work on them. It is a better option than remote calls (like the various options provided by [Spring remoting support](https://docs.spring.io/spring/docs/5.1.9.RELEASE/spring-framework-reference/integration.html#remoting-rmi)).
+	* With this loose coupling (by a queueing system), there's no need for master/slave to keep a (SSH/...) connection when a job is executed.
+	* It naturally acts as a buffer, so 
+		* Slave machines are not overloaded.
+		* Unstarted runs (if all slaves are busy) are safe when machines restarts/redeploy.
+	* It naturally distributes the run tasks to multiple machines, regardless of how many masters/slave machines we have.
+* **Share/communicate job status:** By the database.
+	* No need for slave agent (as client) to communicate back to master (server) to notify the job is done.
+		* Master is supposed to be stateless. No need for it to keep the job status in its memory so no need for slave to notify it.
+	* Everytime the run status is queried, master should consult the database. Master may cache the "done" case since it is forever done. It should be explicitly marked in the caching policy that "in progress" is not a cachable state.
+
+Slave agent can be an application burn into the slave image (an extension of `docker` image as described above -- not the container the actual job is running). 
+
+* [Jenkins is using a different approach]((https://wiki.jenkins.io/display/JENKINS/SSH+Slaves+plugin)) to `scp` the slave agent every single time a new job starts (to resolve the problem of legacy agent version) by overwriting the agent is shared by all jobs in slave. That's mostly because Jenkins slave machines (setup by using manually and stays persistently) have configuration drafting. We have no need to do it, as our slaves (as docker containers) are disposable, and can be cleaned up every time we want to upgrade the slave agent version.
 * This also saves the need for api master to know `scp`/[Apache MINA SSHD](https://mina.apache.org/sshd-project/).
-* Slave agent need to be able to create job-specific docker containers, and execute the job inside of it, and cleanup the container after it. May consider using [Java Docker API Client](https://github.com/docker-java/docker-java).
-	* Slave agent should be able to manage multiple jobs to be executed together in the same machine. See below "autoscaling" for reasons.
 
-Master (a Spring based RESTful API application) may communicate with slave by [Spring remoting support](https://docs.spring.io/spring/docs/5.1.9.RELEASE/spring-framework-reference/integration.html#remoting-rmi). May choose to implmented by [RMI](https://www.baeldung.com/spring-remoting-rmi) (no authentication), [Hessian](https://www.baeldung.com/spring-remoting-hessian-burlap) (2nd recommanded, support authentication), [HTTP invokers](https://www.baeldung.com/spring-remoting-http-invoker) (seems most recommanded), web services, JMS, ... ([consideration of choices](https://docs.spring.io/spring/docs/5.1.9.RELEASE/spring-framework-reference/integration.html#remoting-considerations))
+Slave is very likely to be implemented in [spring-rabbitmq](https://spring.io/guides/gs/messaging-rabbitmq/). Slave should grab/distribute tasks based on a combined concern of CPU and resource quota.
 
-* Master (as client) to talk to the slave agent (as server) by RMI to pass job run information, and trigger the job to be executed there.
-	* RMI connection can be dropped immediately after this.
-* Slave agent monitor the job execution progress, upload the console output/testing results to persistent storages(s), and modify the database `run.completeAt` and `run.status`. No need for slave agent (as client) to communicate back to master (server) to notify the job is done.
-	* Master is supposed to be stateless. No need for it to keep the job result in its memory so no need for slave to notify it.
-	* Everytime the run status is requested, master should consult the database. Master may cache the "done" case since it is forever done. It should be explicitly marked in the caching policy that "in progress" is not a cachable state.
-	
-Decide which slave the master should send the job to should be a job of a load balancer (should have no need to develop it/put it as part of the master logic). Possible ways:
-
-* Slave which has the (above some threshold) lowest CPU usage.
-	* Can't be the exact lowest CPU usage, as 
-	* Pros:
-		* No need to define the customized logic of "resource quota".
+* Slave which has CPU below some threshold (+ not notified to be graceful shutdown) should grab new tasks.
 	* Cons:
 		* Potentially risky if a job use significant different amount of resources in different stage of it. CPU may goes up unexpectedly and finally freeze that slave box/affects all jobs running on it. 
 			* Need to know the detail of how docker manage/distribute resources for multiple containers running on the same box.
 			* For example, a testing job which uses single thread for initialization, and execute tests using multiple CPUs in parallel.
 		* Will use, and highly tight to backend infrastructure: load balancer in orchestration framework.
-* Slave which has the (above some threshold) lowest "resource quota".
+* Slave which has certain amount of unused resource quota (+ not notified to be graceful shutdown) should grab new tasks.
 	* Cons:
 		* Resource quota is a customized business logic, which means we need to implement the load balancing logic in our master/slave agents: master consults all slave agents about their remaining quota, and then choose one from them.
+		* If user mis-configured the resource quota to be too small, particular job may consume to many resources, and finally caused the slave machine to be freeze/in unhealthy state.
+* To prevent the cons, slave should only grab new tasks when *both* of the above conditions meet.
 * The lowest always need to be above some threshold, because otherwise autoscaling mechanism is very hard to scale down as no node is completely idle.
 
-##### Autoscaling
+Slave auto-scaling:
 
-Slaves should be 
-
-Slave management and autoscaling should be part of what this framework can support (probably through Kubernetes).
+* There should be multiple tasks running in the same (resource-rich) slave machine, rather than one machine per job.
+	* Pros:
+		* Various job running together in a single hosting machine can smooth CPU and other resources usage.
+		* Scale up and down can be less sparky (not sure if this can be done by a smart auto-scaling policy).
+	* Cons:
+		* Runs are not independent. A bad run may overload the machine and affect other jobs running on it (depending on how docker distribute hardware resources).
+	* Slave agent need to be able to create job-specific docker containers, and execute the job inside of it, and cleanup the container after it. May consider using [Java Docker API Client](https://github.com/docker-java/docker-java).
+		* Slave agent should be able to manage multiple jobs to be executed together in the same machine. See below "autoscaling" for reasons.
+* Graceful shutdown (scale down only happens when the agent finish all jobs in hands) is a prerequisite for auto-scaling.
+	* Cannot use retry/rerun a job as a workaround, as 
+		* The job (e.g. deployment) may not be idempotent.
+		* Users are urgently waiting for the result.
+	* Need to send notification to a slave machine for graceful shutdown, and only do it after it finished all tasks. 
+		* Not sure if that can be supported by an existing infrastructure (which is mostly for killing a machine if anything may go wrong -- health check endpoint/...).
+* Auto-scaling policy:
+	* CPU usage:
+		* May be not compatible with resource quota, as a job may have high resource quota, but use only a little bit of CPU in some phase of it.
+		* May conflict to the decision when a slave should grab new jobs.
+	* The length of message queue ([SQS + AWS](https://docs.aws.amazon.com/autoscaling/ec2/userguide/as-using-sqs-queue.html) supports that):
+		* When there's a queue (so the policy has useful input), that means everybody is waiting to be kicked off.
+		* May cause some important (e.g. fire-fighting) jobs to not being kicked off immediately.
+	* May use the combination of the two.
+		* Not sure if that can be supported by an existing infrastructure.
+* Slave auto-scaling should be implemented (probably through Kubernetes).
 
 #### Git fetching
 
