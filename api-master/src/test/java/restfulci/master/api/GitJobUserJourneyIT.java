@@ -33,7 +33,7 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 @ActiveProfiles("local")
 public class GitJobUserJourneyIT {
 	
-@Autowired MockMvc mockMvc;
+	@Autowired MockMvc mockMvc;
 	
 	private ObjectMapper objectMapper;
 	private ObjectWriter objectWriter;

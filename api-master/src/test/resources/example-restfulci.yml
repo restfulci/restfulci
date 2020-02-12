@@ -1,0 +1,16 @@
+version: 1.0
+
+environment:
+  build:
+    context: ./path/to/subproject
+    dockerfile: ./Dockerfile
+
+commands:
+  - run: echo 0
+  - run: ls
+
+results:
+  - type: junit
+    path: target/surefile-reports
+  - type: junit
+    path: target/failsafe-reports

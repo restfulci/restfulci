@@ -16,6 +16,10 @@ import lombok.ToString;
 @Table(name="git_run")
 @Inheritance(strategy=InheritanceType.JOINED)
 public abstract class GitRunBean extends RunBean {
+	
+	public GitJobBean getJob() {
+		return (GitJobBean)super.getJob();
+	}
 
 	public JobType getType() {
 		return JobType.GIT;
