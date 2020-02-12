@@ -12,7 +12,7 @@ import restfulci.master.domain.GitBranchRunBean;
 import restfulci.master.domain.GitCommitRunBean;
 import restfulci.master.domain.JobBean;
 import restfulci.master.domain.RunBean;
-import restfulci.master.domain.yaml.RunConfigBean;
+import restfulci.master.domain.RunConfigBean;
 import restfulci.master.dto.RunDTO;
 
 @Service

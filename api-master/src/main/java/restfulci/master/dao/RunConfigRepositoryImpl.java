@@ -12,7 +12,7 @@ import restfulci.master.dao.git.GitFetch;
 import restfulci.master.dao.git.GitInit;
 import restfulci.master.domain.GitBranchRunBean;
 import restfulci.master.domain.GitCommitRunBean;
-import restfulci.master.domain.yaml.RunConfigBean;
+import restfulci.master.domain.RunConfigBean;
 
 @Repository
 public class RunConfigRepositoryImpl implements RunConfigRepository {
