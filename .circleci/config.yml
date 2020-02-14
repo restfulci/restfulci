@@ -1,7 +1,7 @@
 version: 2.1
 
 executors:
-  java-with-postgres-executor:
+  java-executor:
     docker:
       - image: circleci/openjdk:11.0.2-jdk
         environment:
@@ -10,6 +10,8 @@ executors:
       - image: circleci/postgres:11
         environment:
           POSTGRES_PASSWORD: postgres
+
+      - image: rabbitmq:3.8.2
 
     working_directory: /tmp/java
 
@@ -28,7 +30,7 @@ orbs:
 
 jobs:
   java-api-master-unittest:
-    executor: java-with-postgres-executor
+    executor: java-executor
     steps:
       - checkout
       - inline-postgres/initialize
@@ -45,7 +47,7 @@ jobs:
           path: ~/unittest-results
 
   java-api-master-integration-test:
-    executor: java-with-postgres-executor
+    executor: java-executor
     steps:
       - checkout
       - inline-postgres/initialize

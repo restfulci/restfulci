@@ -46,6 +46,8 @@ Job configuration/the logic of a particular job (see list below) should be insid
 * Job command/script.
 * (Dockerized) environment the script can be run onto.
 	* Unlike in CircleCI it needs special format Dockerfiles (chose one of the official ones and extends on your need through `.circleci/config.yml` `run` command, or create a specific one with strong CircleCI constrain), it should be able to re-use the Dockerfile used for the production or dev environment of the related project.
+* Timeout
+  * There should probably also a global (umbrella) one shared by all jobs.
 * What kind of results it should save, and where are they inside of the container after finishing the job.
 * Resource quota(?)
 	* If the existing jobs on a slave machine has taking out all the resource quota, new jobs will be blocked to send to that machine. Not sure if that is needed, as we can also use slave CPU percentage to block sending new jobs.
@@ -114,7 +116,7 @@ Slave agent can be an application burn into the slave image (an extension of `do
 * [Jenkins is using a different approach]((https://wiki.jenkins.io/display/JENKINS/SSH+Slaves+plugin)) to `scp` the slave agent every single time a new job starts (to resolve the problem of legacy agent version) by overwriting the agent is shared by all jobs in slave. That's mostly because Jenkins slave machines (setup by using manually and stays persistently) have configuration drafting. We have no need to do it, as our slaves (as docker containers) are disposable, and can be cleaned up every time we want to upgrade the slave agent version.
 * This also saves the need for api master to know `scp`/[Apache MINA SSHD](https://mina.apache.org/sshd-project/).
 
-Slave is very likely to be implemented in [spring-rabbitmq](https://spring.io/guides/gs/messaging-rabbitmq/). Slave should grab/distribute tasks based on a combined concern of CPU and resource quota.
+Slave is very likely to be implemented in [RabbitMQ](https://spring.io/guides/gs/messaging-rabbitmq/) and [Spring Cloud Stream](https://spring.io/projects/spring-cloud-stream) ([this article](http://pillopl.github.io/testing-messaging/) (originally about E2E testing) illustrated a good implementation). Slave should grab/distribute tasks based on a combined concern of CPU and resource quota.
 
 * Slave which has CPU below some threshold (+ not notified to be graceful shutdown) should grab new tasks.
 	* Cons:
