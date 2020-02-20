@@ -14,7 +14,7 @@ public class RestfulCiSlaveApplication {
 	}
 	
 	@Bean
-	public Consumer<String> executeTask() {
+	public Consumer<String> executeRun() {
 		return input -> {
 			System.out.println("Received: " + input);
 		};

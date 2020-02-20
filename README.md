@@ -11,7 +11,7 @@ curl --request POST -H "Authorization: Bearer abc.def.ghi" \
 https://my-ci-server.com/job/unit-test \
 -d '{"sha": "0000000000000000000000000000000000000000"}'
 curl --request POST -H "Authorization: Bearer abc.def.ghi" \
-https://my-ci-server.com/job/unit-test \
+https://my-ci-server.com/jobs/unit-test \
 -d '{"branch": "master"}'
 ```
 
@@ -19,7 +19,7 @@ check a unit test status:
 
 ```
 curl --request GET -H "Authorization: Bearer abc.def.ghi" \
-https://my-ci-server.com.com/job/unit-test/12345
+https://my-ci-server.com.com/jobs/unit-test/runs/12345
 ```
 
 It may have multiple clients. The below listed clients should be part of the official framework support.
