@@ -11,7 +11,7 @@
     </parent>
 
     <groupId>restfulci</groupId>
-    <artifactId>api-master</artifactId>
+    <artifactId>master-api</artifactId>
     <version>0.0.1-prototype</version>
     <packaging>war</packaging>
 
