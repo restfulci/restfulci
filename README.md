@@ -46,6 +46,13 @@ Job configuration/the logic of a particular job (see list below) should be insid
 * Job command/script.
 * (Dockerized) environment the script can be run onto.
 	* Unlike in CircleCI it needs special format Dockerfiles (chose one of the official ones and extends on your need through `.circleci/config.yml` `run` command, or create a specific one with strong CircleCI constrain), it should be able to re-use the Dockerfile used for the production or dev environment of the related project.
+* A list of environmental variables (used to pass in secrets/credentials).
+	* Will need the actual credentials saved in backend associate with the job itself. The run will error out if it cannot find some values of the secrets/credentials.
+		* First step save plat text in database. 
+		* Finally we should move them to a secured backend persistent storage, e.g. [HashiCorp Vault](https://www.vaultproject.io/).
+	* Follows [The Twelve Factors](https://12factor.net/config) that they should be passed as environmental variables one at a time.
+	* Actual pass in the secrets/credentials by `docker --env ENV=foo`. Very unforturate cannot do `docker -e ENV` and define ENV in host, as that will cause ENV name crashing for secrets/credentials belong to different jobs.
+		* An alternative approach is to use [Docker swarm secrets](https://docs.docker.com/engine/swarm/secrets/). Needs to investigate more on the possibilities/pros/cons this approach.
 * What kind of results it should save, and where are they inside of the container after finishing the job.
 * Resource quota(?)
 	* If the existing jobs on a slave machine has taking out all the resource quota, new jobs will be blocked to send to that machine. Not sure if that is needed, as we can also use slave CPU percentage to block sending new jobs.
@@ -55,24 +62,15 @@ TODO: Job specific input parameters.
 
 It doesn't matter if the job config (in repo) and infrastructure-as-code are in the same production repo, as they are with separated deployment anyway (same as whether app code and AWS setup are in the same repo or not, so may apply the same rule for both of them). However, job configuration should probably go in the same place as where the production infrastructure-as-code in.
 
+We should completely hide docker operations (especially forbid volume link) so docker can make sure each run can be cleaned up completely.
+
 #### Slaves
 
-Slaves should be a customized extension of [docker](https://hub.docker.com/_/docker) image with SSH enabled.
+Slaves should be a customized extension of [docker](https://hub.docker.com/_/docker) image with slave agent burned in. Slave agent talks to docker by [Java Docker API Client](https://github.com/docker-java/docker-java).
 
-By default,
+There's no need to enable SSH in the slave box, as communication between master API and slave agent is through message broker.
 
-```
-$ docker run -i -p 22:12345 -t docker:19.03 sh
-```
-
-and in a different shell
-
-```
-$ ssh localhost -p 12345
-ssh_exchange_identification: Connection closed by remote host
-```
-
-As docker is a simple extension of alpine which doesn't have SSH installed/configured, we need to customize it so its `authorized_hosts` includes master's public key.
+Job are run in docker containers inside of this slave docker container. It is very important that (1) necessary port is opened, and (2) credentials can be passed in, in case the job want to communicate with outside world (e.g. curl/git clone from outside, upload to S3, ...).
 
 ##### Share docker caching
 
