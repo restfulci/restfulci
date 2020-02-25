@@ -1,4 +1,4 @@
-package restfulci.master.config;
+package restfulci.shared.config;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 

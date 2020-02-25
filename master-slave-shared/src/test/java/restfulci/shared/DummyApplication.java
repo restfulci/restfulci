@@ -1,13 +1,12 @@
-package restfulci.master;
+package restfulci.shared;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class RestfulCiMasterApplication {
+public class DummyApplication {
 
 	public static void main(String[] args) {
-		SpringApplication.run(RestfulCiMasterApplication.class, args);
+		SpringApplication.run(DummyApplication.class, args);
 	}
-
 }

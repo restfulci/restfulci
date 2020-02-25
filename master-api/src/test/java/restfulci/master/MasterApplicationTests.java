@@ -9,7 +9,7 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 @ExtendWith(SpringExtension.class)
 @SpringBootTest
 @ActiveProfiles("local")
-class RestfulCiMasterApplicationTests {
+class MasterApplicationTests {
 
 	@Test
 	void contextLoads() {

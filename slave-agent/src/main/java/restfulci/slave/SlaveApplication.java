@@ -5,12 +5,13 @@ import java.util.function.Consumer;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.ComponentScan;
 
-@SpringBootApplication
-public class RestfulCiSlaveApplication {
+@SpringBootApplication(scanBasePackages= {"restfulci.slave", "restfulci.shared"})
+public class SlaveApplication {
 
 	public static void main(String[] args) {
-		SpringApplication.run(RestfulCiSlaveApplication.class, args);
+		SpringApplication.run(SlaveApplication.class, args);
 	}
 	
 	@Bean

@@ -14,18 +14,22 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import lombok.extern.slf4j.Slf4j;
 import restfulci.master.domain.JobBean;
 import restfulci.master.dto.JobDTO;
 import restfulci.master.service.JobService;
 
 @RestController
 @RequestMapping(value="/jobs")
+@Slf4j
 public class JobsController {
 
 	@Autowired private JobService jobService;
 	
 	@PostMapping
 	public JobBean createJob(@RequestBody @Valid JobDTO jobDTO) throws IOException {
+		
+		log.debug("Create job:"+jobDTO);
 		
 		/*
 		 * TODO:

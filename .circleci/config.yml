@@ -29,13 +29,13 @@ orbs:
           - run: psql -U postgres -h localhost -d restfulci -p 5432 -w -f database/setup.sql
 
 jobs:
-  java-master-api-unittest:
+  java-unittest:
     executor: java-executor
     steps:
       - checkout
       - inline-postgres/initialize
 
-      - run: cd master-api && mvn test
+      - run: mvn test
 
       - run:
           name: Save test results
@@ -46,13 +46,13 @@ jobs:
       - store_test_results:
           path: ~/unittest-results
 
-  java-master-api-integration-test:
+  java-integration-test:
     executor: java-executor
     steps:
       - checkout
       - inline-postgres/initialize
 
-      - run: cd master-api && mvn verify -Dskip.unittest=true
+      - run: mvn verify -Dskip.unittest=true
 
       - run:
           name: Save test results
@@ -67,5 +67,5 @@ workflows:
   version: 2
   build-test-and-deploy:
     jobs:
-      - java-master-api-unittest
-      - java-master-api-integration-test
+      - java-unittest
+      - java-integration-test

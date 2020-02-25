@@ -1,4 +1,4 @@
-package restfulci.master.config;
+package restfulci.shared.config;
 
 import java.util.HashMap;
 import java.util.Map;

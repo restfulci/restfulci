@@ -1,4 +1,4 @@
-package restfulci.master.config;
+package restfulci.shared.config;
 
 import org.springframework.amqp.rabbit.connection.CachingConnectionFactory;
 import org.springframework.context.annotation.Bean;
