@@ -1,4 +1,4 @@
-package restfulci.master.domain;
+package restfulci.shared.domain;
 
 import java.util.List;
 

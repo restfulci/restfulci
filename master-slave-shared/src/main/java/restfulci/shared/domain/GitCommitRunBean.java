@@ -1,4 +1,4 @@
-package restfulci.master.domain;
+package restfulci.shared.domain;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;

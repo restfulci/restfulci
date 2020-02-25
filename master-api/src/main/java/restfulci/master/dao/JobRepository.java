@@ -4,7 +4,7 @@ import java.util.Optional;
 
 import org.springframework.data.repository.PagingAndSortingRepository;
 
-import restfulci.master.domain.JobBean;
+import restfulci.shared.domain.JobBean;
 
 public interface JobRepository extends PagingAndSortingRepository<JobBean, Integer> {
 

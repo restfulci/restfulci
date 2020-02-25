@@ -4,7 +4,7 @@ import java.util.Optional;
 
 import org.springframework.data.repository.PagingAndSortingRepository;
 
-import restfulci.master.domain.RunBean;
+import restfulci.shared.domain.RunBean;
 
 public interface RunRepository extends PagingAndSortingRepository<RunBean, Integer> {
 

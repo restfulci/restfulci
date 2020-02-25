@@ -4,7 +4,7 @@ import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.constructor.Constructor;
 import org.yaml.snakeyaml.error.YAMLException;
 
-import restfulci.master.domain.RunConfigBean;
+import restfulci.shared.domain.RunConfigBean;
 
 class RunConfigYamlParser {
 

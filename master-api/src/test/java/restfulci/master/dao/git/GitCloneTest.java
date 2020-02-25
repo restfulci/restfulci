@@ -11,6 +11,10 @@ import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
+import restfulci.master.dao.git.CommandResult;
+import restfulci.master.dao.git.Executable;
+import restfulci.master.dao.git.GitClone;
+
 public class GitCloneTest {
 
 	/*

@@ -1,4 +1,4 @@
-package restfulci.master.domain;
+package restfulci.shared.domain;
 
 public enum JobType {
 	

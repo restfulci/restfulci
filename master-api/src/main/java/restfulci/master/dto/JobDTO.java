@@ -8,9 +8,9 @@ import javax.validation.constraints.Size;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
-import restfulci.master.domain.FreestyleJobBean;
-import restfulci.master.domain.GitJobBean;
-import restfulci.master.domain.JobBean;
+import restfulci.shared.domain.FreestyleJobBean;
+import restfulci.shared.domain.GitJobBean;
+import restfulci.shared.domain.JobBean;
 
 @Getter
 @Setter

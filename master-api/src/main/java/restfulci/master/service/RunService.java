@@ -2,9 +2,9 @@ package restfulci.master.service;
 
 import java.io.IOException;
 
-import restfulci.master.domain.JobBean;
-import restfulci.master.domain.RunBean;
 import restfulci.master.dto.RunDTO;
+import restfulci.shared.domain.JobBean;
+import restfulci.shared.domain.RunBean;
 
 public interface RunService {
 

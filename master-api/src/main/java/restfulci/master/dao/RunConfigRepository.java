@@ -2,9 +2,9 @@ package restfulci.master.dao;
 
 import java.io.IOException;
 
-import restfulci.master.domain.GitBranchRunBean;
-import restfulci.master.domain.GitCommitRunBean;
-import restfulci.master.domain.RunConfigBean;
+import restfulci.shared.domain.GitBranchRunBean;
+import restfulci.shared.domain.GitCommitRunBean;
+import restfulci.shared.domain.RunConfigBean;
 
 public interface RunConfigRepository {
 

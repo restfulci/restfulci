@@ -10,9 +10,9 @@ import restfulci.master.dao.git.GitCheckout;
 import restfulci.master.dao.git.GitClone;
 import restfulci.master.dao.git.GitFetch;
 import restfulci.master.dao.git.GitInit;
-import restfulci.master.domain.GitBranchRunBean;
-import restfulci.master.domain.GitCommitRunBean;
-import restfulci.master.domain.RunConfigBean;
+import restfulci.shared.domain.GitBranchRunBean;
+import restfulci.shared.domain.GitCommitRunBean;
+import restfulci.shared.domain.RunConfigBean;
 
 @Repository
 public class RunConfigRepositoryImpl implements RunConfigRepository {

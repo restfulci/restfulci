@@ -1,10 +1,9 @@
-package restfulci.master.domain;
+package restfulci.shared.domain;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Size;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -12,8 +11,8 @@ import lombok.Setter;
 @Getter
 @Setter
 @Entity
-@Table(name="git_job")
-public class GitJobBean extends JobBean {
+@Table(name="freestyle_job")
+public class FreestyleJobBean extends JobBean {
 
 	/*
 	 * TODO:
@@ -21,16 +20,15 @@ public class GitJobBean extends JobBean {
 	 * is not necessarily to be called "origin"?
 	 */
 	@NotNull
-	@Size(max=128)
-	@Column(name="remote_origin")
-	private String remoteOrigin;
-	
-	@NotNull
-	@Size(max=128)
-	@Column(name="config_filepath")
-	private String configFilepath;
+	@Column(name="script")
+	private String script;
 	
 	public JobType getType() {
-		return JobType.GIT;
+		return JobType.FREESTYLE;
 	}
+	
+	/*
+	 * TODO:
+	 * Add input parameters
+	 */
 }

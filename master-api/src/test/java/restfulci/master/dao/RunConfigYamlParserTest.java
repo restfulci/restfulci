@@ -8,7 +8,8 @@ import java.nio.file.Files;
 
 import org.junit.jupiter.api.Test;
 
-import restfulci.master.domain.RunConfigBean;
+import restfulci.master.dao.RunConfigYamlParser;
+import restfulci.shared.domain.RunConfigBean;
 
 public class RunConfigYamlParserTest {
 

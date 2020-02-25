@@ -15,9 +15,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import lombok.extern.slf4j.Slf4j;
-import restfulci.master.domain.JobBean;
 import restfulci.master.dto.JobDTO;
 import restfulci.master.service.JobService;
+import restfulci.shared.domain.JobBean;
 
 @RestController
 @RequestMapping(value="/jobs")

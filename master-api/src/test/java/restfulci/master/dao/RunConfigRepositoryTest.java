@@ -17,9 +17,10 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
-import restfulci.master.domain.GitBranchRunBean;
-import restfulci.master.domain.GitCommitRunBean;
-import restfulci.master.domain.GitJobBean;
+import restfulci.master.dao.RunConfigRepository;
+import restfulci.shared.domain.GitBranchRunBean;
+import restfulci.shared.domain.GitCommitRunBean;
+import restfulci.shared.domain.GitJobBean;
 
 @ExtendWith(SpringExtension.class)
 @SpringBootTest

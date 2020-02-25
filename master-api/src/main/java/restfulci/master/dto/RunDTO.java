@@ -8,9 +8,9 @@ import javax.validation.constraints.Size;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
-import restfulci.master.domain.GitBranchRunBean;
-import restfulci.master.domain.GitCommitRunBean;
-import restfulci.master.domain.RunBean;
+import restfulci.shared.domain.GitBranchRunBean;
+import restfulci.shared.domain.GitCommitRunBean;
+import restfulci.shared.domain.RunBean;
 
 @Getter
 @Setter

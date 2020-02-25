@@ -13,11 +13,11 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import restfulci.master.domain.JobBean;
-import restfulci.master.domain.RunBean;
 import restfulci.master.dto.RunDTO;
 import restfulci.master.service.JobService;
 import restfulci.master.service.RunService;
+import restfulci.shared.domain.JobBean;
+import restfulci.shared.domain.RunBean;
 
 @RestController
 @RequestMapping(value="/jobs/{jobId}/runs")

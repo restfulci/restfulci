@@ -7,8 +7,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import restfulci.master.dao.JobRepository;
-import restfulci.master.domain.JobBean;
 import restfulci.master.dto.JobDTO;
+import restfulci.shared.domain.JobBean;
 
 @Service
 public class JobServiceImpl implements JobService {

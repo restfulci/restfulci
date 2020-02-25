@@ -1,4 +1,4 @@
-package restfulci.master.domain;
+package restfulci.shared.domain;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 

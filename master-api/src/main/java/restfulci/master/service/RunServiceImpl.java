@@ -14,9 +14,9 @@ import com.fasterxml.jackson.databind.ObjectWriter;
 
 import restfulci.master.dao.RunConfigRepository;
 import restfulci.master.dao.RunRepository;
-import restfulci.master.domain.JobBean;
-import restfulci.master.domain.RunBean;
 import restfulci.master.dto.RunDTO;
+import restfulci.shared.domain.JobBean;
+import restfulci.shared.domain.RunBean;
 
 @Service
 public class RunServiceImpl implements RunService {
