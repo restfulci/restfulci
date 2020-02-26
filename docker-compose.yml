@@ -27,3 +27,8 @@ services:
     depends_on:
       - master
     restart: always
+
+  rabbitmq:
+    image: rabbitmq:3.8.2-management
+    ports:
+      - "15673:15672"

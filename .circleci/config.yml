@@ -1,7 +1,7 @@
 version: 2.1
 
 executors:
-  java-with-postgres-executor:
+  java-executor:
     docker:
       - image: circleci/openjdk:11.0.2-jdk
         environment:
@@ -10,6 +10,8 @@ executors:
       - image: circleci/postgres:11
         environment:
           POSTGRES_PASSWORD: postgres
+
+      - image: rabbitmq:3.8.2
 
     working_directory: /tmp/java
 
@@ -27,13 +29,13 @@ orbs:
           - run: psql -U postgres -h localhost -d restfulci -p 5432 -w -f database/setup.sql
 
 jobs:
-  java-api-master-unittest:
-    executor: java-with-postgres-executor
+  java-unittest:
+    executor: java-executor
     steps:
       - checkout
       - inline-postgres/initialize
 
-      - run: cd api-master && mvn test
+      - run: mvn test
 
       - run:
           name: Save test results
@@ -44,13 +46,13 @@ jobs:
       - store_test_results:
           path: ~/unittest-results
 
-  java-api-master-integration-test:
-    executor: java-with-postgres-executor
+  java-integration-test:
+    executor: java-executor
     steps:
       - checkout
       - inline-postgres/initialize
 
-      - run: cd api-master && mvn verify -Dskip.unittest=true
+      - run: mvn verify -Dskip.unittest=true
 
       - run:
           name: Save test results
@@ -65,5 +67,5 @@ workflows:
   version: 2
   build-test-and-deploy:
     jobs:
-      - java-api-master-unittest
-      - java-api-master-integration-test
+      - java-unittest
+      - java-integration-test
