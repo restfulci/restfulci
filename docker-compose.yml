@@ -9,26 +9,30 @@ services:
     environment:
       POSTGRES_PASSWORD: postgres
 
-  api-master:
+  rabbitmq:
+    image: rabbitmq:3.8.2-management
+    ports:
+      - "15673:15672"
+
+  master-api:
     build:
-      context: ./api-master
+      context: ./master-api
       dockerfile: ./Dockerfile
     ports:
       - "8881:8080"
     depends_on:
       - database
+      - rabbitmq
     tty: true
     restart: always
 
-  slave:
-    image: docker:19.03.5
+  slave-agent:
+    build:
+      context: ./slave-agent
+      dockerfile: ./Dockerfile
     deploy:
       replicas: 2
     depends_on:
-      - master
+      - database
+      - rabbitmq
     restart: always
-
-  rabbitmq:
-    image: rabbitmq:3.8.2-management
-    ports:
-      - "15673:15672"
