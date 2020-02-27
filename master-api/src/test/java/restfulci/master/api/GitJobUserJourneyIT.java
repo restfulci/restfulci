@@ -60,6 +60,9 @@ public class GitJobUserJourneyIT {
 		jobData.put("remoteOrigin", "git@github.com:dummy/dummy.git");
 		jobData.put("configFilepath", ".restfulci.yml");
 		
+		/*
+		 * curl -X POST -H "Content-Type: application/json" --data '{"name": "manual_job_name", "remoteOrigin": "git@github.com:dummy/dummy.git", "configFilepath": ".restfulci.yml"}' localhost:8881/jobs 
+		 */
 		Map<?, ?> createdJob = objectMapper.readValue(
 				mockMvc.perform(post("/jobs")
 						.contentType(MediaType.APPLICATION_JSON)
@@ -83,6 +86,9 @@ public class GitJobUserJourneyIT {
 		Map<String, String> runData = new HashMap<String, String>();
 		runData.put("branchName", branchName);
 		
+		/*
+		 * curl -X POST -H "Content-Type: application/json" --data '{"branchName": "master"}' localhost:8881/jobs/1/runs
+		 */
 		Map<?, ?> triggeredRun = objectMapper.readValue(
 				mockMvc.perform(post("/jobs/"+jobId+"/runs")
 						.contentType(MediaType.APPLICATION_JSON)

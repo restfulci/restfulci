@@ -1,4 +1,4 @@
-package restfulci.master.dao;
+package restfulci.shared.dao;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -6,10 +6,10 @@ import java.nio.file.Path;
 
 import org.springframework.stereotype.Repository;
 
-import restfulci.master.dao.git.GitCheckout;
-import restfulci.master.dao.git.GitClone;
-import restfulci.master.dao.git.GitFetch;
-import restfulci.master.dao.git.GitInit;
+import restfulci.shared.dao.git.GitCheckout;
+import restfulci.shared.dao.git.GitClone;
+import restfulci.shared.dao.git.GitFetch;
+import restfulci.shared.dao.git.GitInit;
 import restfulci.shared.domain.GitBranchRunBean;
 import restfulci.shared.domain.GitCommitRunBean;
 import restfulci.shared.domain.RunConfigBean;

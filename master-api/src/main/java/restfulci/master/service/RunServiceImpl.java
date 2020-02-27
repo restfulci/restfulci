@@ -12,9 +12,9 @@ import org.springframework.stereotype.Service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 
-import restfulci.master.dao.RunConfigRepository;
-import restfulci.master.dao.RunRepository;
 import restfulci.master.dto.RunDTO;
+import restfulci.shared.dao.RunConfigRepository;
+import restfulci.shared.dao.RunRepository;
 import restfulci.shared.domain.JobBean;
 import restfulci.shared.domain.RunBean;
 

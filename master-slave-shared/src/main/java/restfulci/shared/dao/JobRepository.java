@@ -1,4 +1,4 @@
-package restfulci.master.dao;
+package restfulci.shared.dao;
 
 import java.util.Optional;
 
