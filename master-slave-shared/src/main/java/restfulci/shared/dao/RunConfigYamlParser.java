@@ -1,4 +1,4 @@
-package restfulci.master.dao;
+package restfulci.shared.dao;
 
 import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.constructor.Constructor;

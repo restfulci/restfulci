@@ -6,8 +6,8 @@ import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import restfulci.master.dao.JobRepository;
 import restfulci.master.dto.JobDTO;
+import restfulci.shared.dao.JobRepository;
 import restfulci.shared.domain.JobBean;
 
 @Service

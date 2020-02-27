@@ -1,4 +1,4 @@
-package restfulci.master.dao.git;
+package restfulci.shared.dao.git;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -11,9 +11,9 @@ import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
-import restfulci.master.dao.git.CommandResult;
-import restfulci.master.dao.git.Executable;
-import restfulci.master.dao.git.GitClone;
+import restfulci.shared.dao.git.CommandResult;
+import restfulci.shared.dao.git.Executable;
+import restfulci.shared.dao.git.GitClone;
 
 public class GitCloneTest {
 

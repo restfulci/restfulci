@@ -1,4 +1,4 @@
-package restfulci.master.dao;
+package restfulci.shared.dao;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -8,7 +8,7 @@ import java.nio.file.Files;
 
 import org.junit.jupiter.api.Test;
 
-import restfulci.master.dao.RunConfigYamlParser;
+import restfulci.shared.dao.RunConfigYamlParser;
 import restfulci.shared.domain.RunConfigBean;
 
 public class RunConfigYamlParserTest {

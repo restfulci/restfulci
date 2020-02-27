@@ -1,4 +1,4 @@
-package restfulci.master.dao;
+package restfulci.shared.dao;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -17,7 +17,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
-import restfulci.master.dao.RunConfigRepository;
+import restfulci.shared.dao.RunConfigRepository;
 import restfulci.shared.domain.GitBranchRunBean;
 import restfulci.shared.domain.GitCommitRunBean;
 import restfulci.shared.domain.GitJobBean;

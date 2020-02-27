@@ -1,4 +1,4 @@
-package restfulci.master.dao.git;
+package restfulci.shared.dao.git;
 
 import java.io.File;
 import java.io.IOException;
