@@ -4,7 +4,8 @@ services:
   database:
     image: postgres:12.1
     volumes:
-      - ./database/setup.sql:/docker-entrypoint-initdb.d/setup.sql
+      - ./database:/database
+      - ./database/docker_init.sh:/docker-entrypoint-initdb.d/docker_init.sh
     restart: always
     environment:
       POSTGRES_PASSWORD: postgres
@@ -30,9 +31,8 @@ services:
     build:
       context: ./slave-agent
       dockerfile: ./Dockerfile
-    deploy:
-      replicas: 2
     depends_on:
       - database
       - rabbitmq
+    tty: true
     restart: always
