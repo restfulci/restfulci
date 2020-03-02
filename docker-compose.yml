@@ -34,5 +34,15 @@ services:
     depends_on:
       - database
       - rabbitmq
+      - slave-docker
+    tty: true
+    restart: always
+
+  slave-docker:
+    image: docker:19.03.6
+    volumes:
+      # Run not as docker-in-docker but as sibling of host docker.
+      # https://jpetazzo.github.io/2015/09/03/do-not-use-docker-in-docker-for-ci/
+      - /var/run/docker.sock:/var/run/docker.sock
     tty: true
     restart: always
