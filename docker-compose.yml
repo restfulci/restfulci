@@ -43,6 +43,19 @@ services:
     volumes:
       # Run not as docker-in-docker but as sibling of host docker.
       # https://jpetazzo.github.io/2015/09/03/do-not-use-docker-in-docker-for-ci/
+      #
+      # But this also mean we only enable UNIX socket.
+      # https://docs.docker.com/engine/security/https/
+      # > docker -H unix:///var/run/docker.sock version     # Works
+      # > docker -H tcp://localhost:2375 version            # Doesn't work
+      #
+      # docker image provides a way to enable TCP socket, but that requires
+      # docker-in-docker.
+      #
+      # TODO:
+      # Make a decision whether we want to keep `slave-agent` and `slave-docker`
+      # as different services, and enable TCP socket, or we should just
+      # `FROM docker` and install Java to let the slave agent talk to local docker.
       - /var/run/docker.sock:/var/run/docker.sock
     tty: true
     restart: always

@@ -12,7 +12,7 @@ public class DockerDaemonConfig {
 	@Profile("local")
 	@Bean
 	public DockerDaemon stsDockerDaemon() {
-		return new DockerDaemon("tcp://localhost:2375");
+		return new DockerDaemon("unix:///var/run/docker.sock");
 	}
 	
 	@Profile("docker")

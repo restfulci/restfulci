@@ -14,7 +14,7 @@ public class DockerDaemonConfigTest {
 	public void testDockerDaemonConfig() {
 		
 		DockerClientConfig config = DefaultDockerClientConfig.createDefaultConfigBuilder()
-				.withDockerHost("tcp://localhost:2375")
+				.withDockerHost("unix:///var/run/docker.sock")
 //				.withDockerTlsVerify(true)
 //				.withDockerCertPath("/home/user/.docker/certs")
 //				.withDockerConfig("/home/user/.docker")
@@ -26,7 +26,7 @@ public class DockerDaemonConfigTest {
 			    .build();
 		DockerClient dockerClient = DockerClientBuilder.getInstance(config).build();
 		
-//		Info info = dockerClient.infoCmd().exec();
-//		System.out.print(info);
+		Info info = dockerClient.infoCmd().exec();
+		System.out.print(info);
 	}
 }

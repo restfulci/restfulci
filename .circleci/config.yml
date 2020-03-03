@@ -35,6 +35,10 @@ jobs:
       - checkout
       - inline-postgres/initialize
 
+      # This is to support running docker-java related unit tests.
+      - setup_remote_docker:
+          docker_layer_caching: false
+
       - run: mvn test
 
       - run:
