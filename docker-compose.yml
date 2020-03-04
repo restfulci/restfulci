@@ -56,6 +56,9 @@ services:
       # Make a decision whether we want to keep `slave-agent` and `slave-docker`
       # as different services, and enable TCP socket, or we should just
       # `FROM docker` and install Java to let the slave agent talk to local docker.
+      #
+      # TODO:
+      # Investigate the possibility to use HTTP socket.
       - /var/run/docker.sock:/var/run/docker.sock
     tty: true
     restart: always
