@@ -61,10 +61,18 @@ public class DockerRunServiceImpl implements DockerRunService {
 	public DockerRunCmdResultBean runCommand(String image, List<String> command) throws InterruptedException {
 		
 		DockerClientConfig config = DefaultDockerClientConfig.createDefaultConfigBuilder()
-				.withDockerHost(dockerDaemon.getDockerHost())
+//				.withDockerHost(dockerDaemon.getDockerHost())
 				.build();
 		DockerClient dockerClient = DockerClientBuilder.getInstance(config).build();
 		
+		/*
+		 * TODO:
+		 * This may not work if the image is not existing in the docker cache. Observe it
+		 * on CircleCI:
+		 * - Without `docker pull busybox` in command line test fails: https://circleci.com/gh/restfulci/restfulci/72
+		 * - With `docker pull busybox` test passed: https://circleci.com/gh/restfulci/restfulci/76
+		 * To be confirmed later.
+		 */
 		CreateContainerResponse container = dockerClient.createContainerCmd(image)
 				.withCmd(command)
 				.exec();

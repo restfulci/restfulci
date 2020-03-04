@@ -16,7 +16,7 @@ public class DockerDaemonConfigTest {
 	public void testDockerDaemonConfig() {
 		
 		DockerClientConfig config = DefaultDockerClientConfig.createDefaultConfigBuilder()
-				.withDockerHost("unix:///var/run/docker.sock")
+//				.withDockerHost("unix:///var/run/docker.sock")
 //				.withDockerTlsVerify(true)
 //				.withDockerCertPath("/home/user/.docker/certs")
 //				.withDockerConfig("/home/user/.docker")
