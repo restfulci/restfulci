@@ -1,5 +1,7 @@
 package restfulci.slave.config;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 import org.junit.jupiter.api.Test;
 
 import com.github.dockerjava.api.DockerClient;
@@ -27,6 +29,6 @@ public class DockerDaemonConfigTest {
 		DockerClient dockerClient = DockerClientBuilder.getInstance(config).build();
 		
 		Info info = dockerClient.infoCmd().exec();
-		System.out.print(info);
+		assertEquals(info.getOsType(), "linux");
 	}
 }
