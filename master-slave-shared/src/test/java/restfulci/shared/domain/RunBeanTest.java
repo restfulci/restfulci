@@ -16,7 +16,8 @@ public class RunBeanTest {
 		FreestyleJobBean job = new FreestyleJobBean();
 		job.setId(123);
 		job.setName("job");
-		job.setScript("echo 0");
+		job.setDockerImage("busybox");
+		job.setCommand(new String[] {"echo", "0"});
 		
 		RunBean run = new RunBean();
 		run.setId(456);
@@ -28,11 +29,11 @@ public class RunBeanTest {
 		assertEquals(
 				mapper.writeValueAsString(run),
 				"{\"id\":456,"
-				+ "\"job\":{\"id\":123,\"name\":\"job\",\"script\":\"echo 0\",\"type\":\"FREESTYLE\"},"
+				+ "\"job\":{\"id\":123,\"name\":\"job\",\"dockerImage\":\"busybox\",\"command\":[\"echo\",\"0\"],\"type\":\"FREESTYLE\"},"
 				+ "\"triggerAt\":\"1970-01-01 12:00:00\","
 				+ "\"completeAt\":\"1970-01-01 12:00:01\"}");
 		assertEquals(
 				mapper.writeValueAsString(job),
-				"{\"id\":123,\"name\":\"job\",\"script\":\"echo 0\",\"type\":\"FREESTYLE\"}");
+				"{\"id\":123,\"name\":\"job\",\"dockerImage\":\"busybox\",\"command\":[\"echo\",\"0\"],\"type\":\"FREESTYLE\"}");
 	}
 }

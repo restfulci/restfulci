@@ -7,8 +7,8 @@ import lombok.ToString;
 @Getter
 @Setter
 @ToString
-public class DockerRunCmdResultBean {
+public class RunMessageBean {
 
-	private int exitCode;
-	private String output;
+	Integer jobId;
+	Integer runId;
 }

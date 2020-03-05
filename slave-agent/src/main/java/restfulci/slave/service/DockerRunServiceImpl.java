@@ -1,6 +1,7 @@
 package restfulci.slave.service;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,7 +15,12 @@ import com.github.dockerjava.core.DockerClientBuilder;
 import com.github.dockerjava.core.DockerClientConfig;
 import com.github.dockerjava.core.command.WaitContainerResultCallback;
 
+import restfulci.shared.dao.RunRepository;
 import restfulci.shared.domain.DockerRunCmdResultBean;
+import restfulci.shared.domain.FreestyleJobBean;
+import restfulci.shared.domain.JobBean;
+import restfulci.shared.domain.RunBean;
+import restfulci.shared.domain.RunMessageBean;
 import restfulci.slave.config.bean.DockerDaemon;
 
 ////import com.github.dockerjava.utils.LogContainerTestCallback;
@@ -25,7 +31,64 @@ import com.github.dockerjava.core.command.LogContainerResultCallback;
 @Service
 public class DockerRunServiceImpl implements DockerRunService {
 	
-	@Autowired DockerDaemon dockerDaemon;
+	@Autowired private DockerDaemon dockerDaemon;
+	
+	@Autowired private RunRepository runRepository;
+
+	@Override
+	public void executeRun(RunMessageBean runMessage) throws InterruptedException {
+		
+		RunBean run = runRepository.findById(runMessage.getRunId()).get();
+		JobBean job = run.getJob();
+		if (job instanceof FreestyleJobBean) {
+			FreestyleJobBean freestyleJob = (FreestyleJobBean)job;
+			
+			DockerRunCmdResultBean result = runCommand(freestyleJob.getDockerImage(), freestyleJob.getCommand());
+			System.out.println(result);
+		}
+	}
+
+	@Override
+	public DockerRunCmdResultBean runCommand(String image, String[] command) throws InterruptedException {
+		
+		DockerClientConfig config = DefaultDockerClientConfig.createDefaultConfigBuilder()
+//				.withDockerHost(dockerDaemon.getDockerHost())
+				.build();
+		DockerClient dockerClient = DockerClientBuilder.getInstance(config).build();
+		
+		/*
+		 * TODO:
+		 * This may not work if the image is not existing in the docker cache. Observe it
+		 * on CircleCI:
+		 * - Without `docker pull busybox` in command line test fails: https://circleci.com/gh/restfulci/restfulci/72
+		 * - With `docker pull busybox` test passed: https://circleci.com/gh/restfulci/restfulci/76
+		 * To be confirmed later.
+		 */
+		CreateContainerResponse container = dockerClient.createContainerCmd(image)
+				.withCmd(Arrays.asList(command))
+				.exec();
+		
+		int timestamp = (int) (System.currentTimeMillis() / 1000);
+		dockerClient.startContainerCmd(container.getId()).exec();
+		
+		DockerRunCmdResultBean result = new DockerRunCmdResultBean();
+
+		int exitCode = dockerClient.waitContainerCmd(container.getId())
+				.exec(new WaitContainerResultCallback())
+				.awaitStatusCode();
+		result.setExitCode(exitCode);
+		
+		LogContainerCallbackWrapper loggingCallback = new LogContainerCallbackWrapper();
+		dockerClient.logContainerCmd(container.getId())
+				.withStdErr(true)
+				.withStdOut(true)
+				.withSince(timestamp)
+				.exec(loggingCallback);
+		loggingCallback.awaitCompletion();
+		result.setOutput(loggingCallback.toString());
+		
+		return result;
+	}
 	
 	/*
 	 * Copyright (c) docker-java
@@ -56,46 +119,5 @@ public class DockerRunServiceImpl implements DockerRunService {
 		public String toString() {
 			return log.toString();
 		}
-	}
-
-	public DockerRunCmdResultBean runCommand(String image, List<String> command) throws InterruptedException {
-		
-		DockerClientConfig config = DefaultDockerClientConfig.createDefaultConfigBuilder()
-//				.withDockerHost(dockerDaemon.getDockerHost())
-				.build();
-		DockerClient dockerClient = DockerClientBuilder.getInstance(config).build();
-		
-		/*
-		 * TODO:
-		 * This may not work if the image is not existing in the docker cache. Observe it
-		 * on CircleCI:
-		 * - Without `docker pull busybox` in command line test fails: https://circleci.com/gh/restfulci/restfulci/72
-		 * - With `docker pull busybox` test passed: https://circleci.com/gh/restfulci/restfulci/76
-		 * To be confirmed later.
-		 */
-		CreateContainerResponse container = dockerClient.createContainerCmd(image)
-				.withCmd(command)
-				.exec();
-		
-		int timestamp = (int) (System.currentTimeMillis() / 1000);
-		dockerClient.startContainerCmd(container.getId()).exec();
-		
-		DockerRunCmdResultBean result = new DockerRunCmdResultBean();
-
-		int exitCode = dockerClient.waitContainerCmd(container.getId())
-				.exec(new WaitContainerResultCallback())
-				.awaitStatusCode();
-		result.setExitCode(exitCode);
-		
-		LogContainerCallbackWrapper loggingCallback = new LogContainerCallbackWrapper();
-		dockerClient.logContainerCmd(container.getId())
-				.withStdErr(true)
-				.withStdOut(true)
-				.withSince(timestamp)
-				.exec(loggingCallback);
-		loggingCallback.awaitCompletion();
-		result.setOutput(loggingCallback.toString());
-		
-		return result;
 	}
 }

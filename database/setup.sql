@@ -11,7 +11,8 @@ CREATE TABLE job (
 
 CREATE TABLE freestyle_job (
   id serial PRIMARY KEY REFERENCES job(id) ON DELETE CASCADE,
-  script text NOT NULL
+  docker_image text NOT NULL,
+  command text[] NOT NULL
 );
 
 CREATE TABLE git_job (

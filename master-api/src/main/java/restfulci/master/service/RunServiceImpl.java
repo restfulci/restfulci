@@ -52,7 +52,7 @@ public class RunServiceImpl implements RunService {
 		 */
 		ObjectMapper objectMapper = new ObjectMapper();
 		ObjectWriter objectWriter = objectMapper.writer().withDefaultPrettyPrinter();
-		String messageContent = objectWriter.writeValueAsString(run);
+		String messageContent = objectWriter.writeValueAsString(run.toRunMessage());
 		
 		/*
 		 * TODO:

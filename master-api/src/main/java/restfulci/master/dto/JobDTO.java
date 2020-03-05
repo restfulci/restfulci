@@ -27,7 +27,9 @@ public class JobDTO {
 	@Size(max=128)
 	private String configFilepath;
 	
-	private String script;
+	private String dockerImage;
+	
+	private String[] command;
 	
 	public JobBean toBean() throws IOException {
 		
@@ -40,11 +42,12 @@ public class JobDTO {
 			return jobBean;
 		}
 		
-		if (script != null) {
+		if ((dockerImage != null) && (command != null)) {
 			
 			FreestyleJobBean jobBean = new FreestyleJobBean();
 			jobBean.setName(name);
-			jobBean.setScript(script);
+			jobBean.setDockerImage(dockerImage);
+			jobBean.setCommand(command);
 			return jobBean;
 		}
 		

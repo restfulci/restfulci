@@ -31,7 +31,7 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
 @AutoConfigureMockMvc
 @ActiveProfiles("local")
-public class GitJobUserJourneyIT {
+public class FreestyleJobUserJourneyIT {
 	
 	@Autowired MockMvc mockMvc;
 	
@@ -54,14 +54,14 @@ public class GitJobUserJourneyIT {
 	@Test
 	public void testUserJourney() throws Exception {
 		
-		final String jobName = "it_git_job_name";
-		Map<String, String> jobData = new HashMap<String, String>();
+		final String jobName = "it_freestyle_job_name";
+		Map<String, Object> jobData = new HashMap<String, Object>();
 		jobData.put("name", jobName);
-		jobData.put("remoteOrigin", "git@github.com:dummy/dummy.git");
-		jobData.put("configFilepath", ".restfulci.yml");
+		jobData.put("dockerImage", "busybox");
+		jobData.put("command", new String[] {"sh", "-c", "echo \"Hello world\""});
 		
 		/*
-		 * curl -X POST -H "Content-Type: application/json" --data '{"name": "manual_job_name", "remoteOrigin": "git@github.com:dummy/dummy.git", "configFilepath": ".restfulci.yml"}' localhost:8881/jobs 
+		 * curl -X POST -H "Content-Type: application/json" --data '{"name": "manual_job_name", "dockerImage": "busybox", "command": ["sh", "-c", "echo \"Hello world\""]}' localhost:8881/jobs 
 		 */
 		Map<?, ?> createdJob = objectMapper.readValue(
 				mockMvc.perform(post("/jobs")
@@ -71,7 +71,7 @@ public class GitJobUserJourneyIT {
 						.andReturn().getResponse().getContentAsString(),
 				Map.class);
 		assertEquals(createdJob.get("name"), jobName);
-		assertEquals(createdJob.get("type"), "GIT");
+		assertEquals(createdJob.get("type"), "FREESTYLE");
 		
 		Integer jobId = (Integer)createdJob.get("id");
 		Map<?, ?> queriedJob = objectMapper.readValue(
@@ -80,26 +80,23 @@ public class GitJobUserJourneyIT {
 						.andReturn().getResponse().getContentAsString(), 
 				Map.class);
 		assertEquals(queriedJob.get("name"), jobName);
-		assertEquals(queriedJob.get("type"), "GIT");
-		
-		final String branchName = "master";
-		Map<String, String> runData = new HashMap<String, String>();
-		runData.put("branchName", branchName);
+		assertEquals(queriedJob.get("type"), "FREESTYLE");
 		
 		/*
-		 * curl -X POST -H "Content-Type: application/json" --data '{"branchName": "master"}' localhost:8881/jobs/1/runs
+		 * curl -X POST -H "Content-Type: application/json" --data '{}' localhost:8881/jobs/1/runs
 		 */
 		Map<?, ?> triggeredRun = objectMapper.readValue(
 				mockMvc.perform(post("/jobs/"+jobId+"/runs")
 						.contentType(MediaType.APPLICATION_JSON)
-						.content(objectWriter.writeValueAsString(runData)))
+						.content("{}"))
 						.andExpect(status().isOk())
 						.andReturn().getResponse().getContentAsString(),
 				Map.class);
-		assertEquals(triggeredRun.get("branchName"), branchName);
-		assertEquals(triggeredRun.get("type"), "GIT");
+		assertEquals(
+				objectMapper.convertValue(triggeredRun.get("job"), Map.class).get("type"), 
+				"FREESTYLE");
 		
-		mockMvc.perform(delete("/jobs/"+jobId))
-				.andExpect(status().isOk());
+//		mockMvc.perform(delete("/jobs/"+jobId))
+//				.andExpect(status().isOk());
 	}
 }

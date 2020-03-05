@@ -29,12 +29,7 @@ import lombok.ToString;
 @Entity
 @Table(name="run")
 @Inheritance(strategy=InheritanceType.JOINED)
-public class RunBean {
-
-	@Id
-	@GeneratedValue(strategy=GenerationType.IDENTITY)
-	@Column(name="id", updatable=false)
-	private Integer id;
+public class RunBean extends BaseEntity {
 	
 	@NotNull
 	@ManyToOne(fetch=FetchType.EAGER)
@@ -56,4 +51,12 @@ public class RunBean {
 	 * TODO:
 	 * `getDuration()`
 	 */
+	
+	public RunMessageBean toRunMessage() {
+		
+		RunMessageBean runMessage = new RunMessageBean();
+		runMessage.setJobId(job.getId());
+		runMessage.setRunId(id);
+		return runMessage;
+	}
 }

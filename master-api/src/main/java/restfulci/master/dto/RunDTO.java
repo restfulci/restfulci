@@ -41,10 +41,8 @@ public class RunDTO {
 			return runBean;
 		}
 		
-		throw new IOException();
-		/* 
-		 * TODO:
-		 * Should input a type, rather than completely rely on input content negotiation?
-		 */
+		RunBean runBean = new RunBean();
+		runBean.setTriggerAt(new Date());
+		return runBean;
 	}
 }
