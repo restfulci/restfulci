@@ -4,26 +4,35 @@ services:
   database:
     image: postgres:12.1
     volumes:
-      - ./database/setup.sql:/docker-entrypoint-initdb.d/setup.sql
+      - ./database:/database
+      - ./database/docker_init.sh:/docker-entrypoint-initdb.d/docker_init.sh
     restart: always
     environment:
       POSTGRES_PASSWORD: postgres
 
-  api-master:
+  rabbitmq:
+    image: rabbitmq:3.8.2-management
+    ports:
+      - "15673:15672"
+
+  master-api:
     build:
-      context: ./api-master
+      context: ./master-api
       dockerfile: ./Dockerfile
     ports:
       - "8881:8080"
     depends_on:
       - database
+      - rabbitmq
     tty: true
     restart: always
 
-  slave:
-    image: docker:19.03.5
-    deploy:
-      replicas: 2
+  slave-agent:
+    build:
+      context: ./slave-agent
+      dockerfile: ./Dockerfile
     depends_on:
-      - master
+      - database
+      - rabbitmq
+    tty: true
     restart: always

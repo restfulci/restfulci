@@ -1,0 +1,2 @@
+spring.profiles.active=docker
+spring.cloud.stream.bindings.executeRun-in-0.group=runqueue

@@ -11,7 +11,7 @@ curl --request POST -H "Authorization: Bearer abc.def.ghi" \
 https://my-ci-server.com/job/unit-test \
 -d '{"sha": "0000000000000000000000000000000000000000"}'
 curl --request POST -H "Authorization: Bearer abc.def.ghi" \
-https://my-ci-server.com/job/unit-test \
+https://my-ci-server.com/jobs/unit-test \
 -d '{"branch": "master"}'
 ```
 
@@ -19,7 +19,7 @@ check a unit test status:
 
 ```
 curl --request GET -H "Authorization: Bearer abc.def.ghi" \
-https://my-ci-server.com.com/job/unit-test/12345
+https://my-ci-server.com.com/jobs/unit-test/runs/12345
 ```
 
 It may have multiple clients. The below listed clients should be part of the official framework support.
@@ -48,12 +48,14 @@ Job configuration/the logic of a particular job (see list below) should be insid
 	* Unlike in CircleCI it needs special format Dockerfiles (chose one of the official ones and extends on your need through `.circleci/config.yml` `run` command, or create a specific one with strong CircleCI constrain), it should be able to re-use the Dockerfile used for the production or dev environment of the related project.
 * A list of environmental variables (used to pass in secrets/credentials).
 	* Will need the actual credentials saved in backend associate with the job itself. The run will error out if it cannot find some values of the secrets/credentials.
-		* First step save plat text in database. 
+		* First step save plat text in database.
 		* Finally we should move them to a secured backend persistent storage, e.g. [HashiCorp Vault](https://www.vaultproject.io/).
 	* Follows [The Twelve Factors](https://12factor.net/config) that they should be passed as environmental variables one at a time.
 	* Actual pass in the secrets/credentials by `docker --env ENV=foo`. Very unforturate cannot do `docker -e ENV` and define ENV in host, as that will cause ENV name crashing for secrets/credentials belong to different jobs.
 		* An alternative approach is to use [Docker swarm secrets](https://docs.docker.com/engine/swarm/secrets/). Needs to investigate more on the possibilities/pros/cons this approach.
 		* If user need to do git operations inside of the git container, we need to use SSH agent forwarding for credentials (volume mount `.ssh/id_rsa` inside/outside of the container is not secure, and doesn't work if user uses a passphrase). Refer [here](http://blog.oddbit.com/post/2019-02-24-docker-build-learns-about-secr/), [here](https://github.com/uber-common/docker-ssh-agent-forward), [here](https://medium.com/@nazrulworld/ssh-agent-forward-into-docker-container-on-macos-ff847ec660e2) for detail. We should probably still need to create `.ssh/id_rsa` at some point, safe it to some secret persistent storage (because otherwise it cannot be used by multiple slaves), give user `.ssh/id_rsa.pub` and let them use it to setup 3rd party git servers.
+* Timeout
+  * There should probably also a global (umbrella) one shared by all jobs.
 * What kind of results it should save, and where are they inside of the container after finishing the job.
 	* If the plan is to "docker volume link" the result out, and let the slave machine (where slave agent stays) upload the result to persistent storage, we'll have problem cleanup those result files (as they are created/owned by the user inside of the docker container). To resolve it, we'll need to `--user $(id -u):$(id -g)` in the docker command, as suggested in [here](https://dille.name/blog/2018/07/16/handling-file-permissions-when-writing-to-volumes-from-docker-containers/).
 * Resource quota(?)
@@ -119,7 +121,7 @@ Slave agent can be an application burn into the slave image (an extension of `do
 * [Jenkins is using a different approach]((https://wiki.jenkins.io/display/JENKINS/SSH+Slaves+plugin)) to `scp` the slave agent every single time a new job starts (to resolve the problem of legacy agent version) by overwriting the agent is shared by all jobs in slave. That's mostly because Jenkins slave machines (setup by using manually and stays persistently) have configuration drafting. We have no need to do it, as our slaves (as docker containers) are disposable, and can be cleaned up every time we want to upgrade the slave agent version.
 * This also saves the need for api master to know `scp`/[Apache MINA SSHD](https://mina.apache.org/sshd-project/).
 
-Slave is very likely to be implemented in [spring-rabbitmq](https://spring.io/guides/gs/messaging-rabbitmq/). Slave should grab/distribute tasks based on a combined concern of CPU and resource quota.
+Slave is very likely to be implemented in [RabbitMQ](https://spring.io/guides/gs/messaging-rabbitmq/) and [Spring Cloud Stream](https://spring.io/projects/spring-cloud-stream) ([this article](http://pillopl.github.io/testing-messaging/) (originally about E2E testing) illustrated a good implementation). Slave should grab/distribute tasks based on a combined concern of CPU and resource quota.
 
 * Slave which has CPU below some threshold (+ not notified to be graceful shutdown) should grab new tasks.
 	* Cons:
