@@ -1,5 +1,6 @@
 package restfulci.shared.dao;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -15,19 +16,15 @@ import restfulci.shared.domain.GitCommitRunBean;
 import restfulci.shared.domain.RunConfigBean;
 
 @Repository
-public class RunConfigRepositoryImpl implements RunConfigRepository {
+public class RemoteGitRepositoryImpl implements RemoteGitRepository {
 
 	@Override
-	public RunConfigBean getConfig(GitBranchRunBean branchRun) throws IOException, InterruptedException {
+	public void copyToLocal(GitBranchRunBean branchRun, File targetFolder) throws IOException, InterruptedException {
 		
-		Path localRepoPath = Files.createTempDirectory("local-repo");
-		
-		GitClone gitClone = new GitClone(branchRun.getJob().getRemoteOrigin(), localRepoPath.toFile());
+		GitClone gitClone = new GitClone(branchRun.getJob().getRemoteOrigin(), targetFolder);
 		gitClone.setBranchName(branchRun.getBranchName());
 		gitClone.setDepth(1);
 		gitClone.execute();
-		
-		return getConfigFromFilepath(localRepoPath, branchRun.getJob().getConfigFilepath());
 	}
 
 	/*
@@ -39,22 +36,36 @@ public class RunConfigRepositoryImpl implements RunConfigRepository {
 	 * ```
 	 */
 	@Override
-	public RunConfigBean getConfig(GitCommitRunBean commitRun) throws IOException, InterruptedException {
+	public void copyToLocal(GitCommitRunBean commitRun, File targetFolder) throws IOException, InterruptedException {
 		
-		Path localRepoPath = Files.createTempDirectory("local-repo");
-		
-		GitInit gitInit = new GitInit(localRepoPath.toFile());
+		GitInit gitInit = new GitInit(targetFolder);
 		gitInit.execute();
 		
-		GitFetch gitFetch = new GitFetch(commitRun.getJob().getRemoteOrigin(), localRepoPath.toFile());
+		GitFetch gitFetch = new GitFetch(commitRun.getJob().getRemoteOrigin(), targetFolder);
 		gitFetch.setCommitSha(commitRun.getCommitSha());
 		gitFetch.setDepth(1);
 		gitFetch.execute();
 		
-		GitCheckout gitCheckout = new GitCheckout(localRepoPath.toFile());
+		GitCheckout gitCheckout = new GitCheckout(targetFolder);
 		gitCheckout.setCommitSha(commitRun.getCommitSha());
 		gitCheckout.setForce(true);
 		gitCheckout.execute();
+	}
+	
+	@Override
+	public RunConfigBean getConfig(GitBranchRunBean branchRun) throws IOException, InterruptedException {
+		
+		Path localRepoPath = Files.createTempDirectory("local-repo");
+		copyToLocal(branchRun, localRepoPath.toFile());
+		
+		return getConfigFromFilepath(localRepoPath, branchRun.getJob().getConfigFilepath());
+	}
+
+	@Override
+	public RunConfigBean getConfig(GitCommitRunBean commitRun) throws IOException, InterruptedException {
+		
+		Path localRepoPath = Files.createTempDirectory("local-repo");
+		copyToLocal(commitRun, localRepoPath.toFile());
 		
 		return getConfigFromFilepath(localRepoPath, commitRun.getJob().getConfigFilepath());
 	}

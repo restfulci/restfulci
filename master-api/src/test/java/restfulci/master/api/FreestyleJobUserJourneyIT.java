@@ -96,7 +96,7 @@ public class FreestyleJobUserJourneyIT {
 				objectMapper.convertValue(triggeredRun.get("job"), Map.class).get("type"), 
 				"FREESTYLE");
 		
-//		mockMvc.perform(delete("/jobs/"+jobId))
-//				.andExpect(status().isOk());
+		mockMvc.perform(delete("/jobs/"+jobId))
+				.andExpect(status().isOk());
 	}
 }

@@ -1,5 +1,6 @@
 package restfulci.slave;
 
+import java.io.IOException;
 import java.util.function.Consumer;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,6 +40,9 @@ public class SlaveApplication {
 				e.printStackTrace();
 			} 
 			catch (InterruptedException e) {
+				e.printStackTrace();
+			} 
+			catch (IOException e) {
 				e.printStackTrace();
 			}
 		};

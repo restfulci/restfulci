@@ -1,5 +1,6 @@
 package restfulci.slave.service;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -13,20 +14,20 @@ import com.github.dockerjava.api.model.Frame;
 import com.github.dockerjava.core.DefaultDockerClientConfig;
 import com.github.dockerjava.core.DockerClientBuilder;
 import com.github.dockerjava.core.DockerClientConfig;
+////import com.github.dockerjava.utils.LogContainerTestCallback;
+//import com.github.dockerjava.api.async.ResultCallback;
+//import com.github.dockerjava.api.model.Frame;
+import com.github.dockerjava.core.command.LogContainerResultCallback;
 import com.github.dockerjava.core.command.WaitContainerResultCallback;
 
 import restfulci.shared.dao.RunRepository;
 import restfulci.shared.domain.DockerRunCmdResultBean;
 import restfulci.shared.domain.FreestyleJobBean;
+import restfulci.shared.domain.GitJobBean;
 import restfulci.shared.domain.JobBean;
 import restfulci.shared.domain.RunBean;
 import restfulci.shared.domain.RunMessageBean;
 import restfulci.slave.config.bean.DockerDaemon;
-
-////import com.github.dockerjava.utils.LogContainerTestCallback;
-//import com.github.dockerjava.api.async.ResultCallback;
-//import com.github.dockerjava.api.model.Frame;
-import com.github.dockerjava.core.command.LogContainerResultCallback;
 
 @Service
 public class DockerRunServiceImpl implements DockerRunService {
@@ -36,7 +37,7 @@ public class DockerRunServiceImpl implements DockerRunService {
 	@Autowired private RunRepository runRepository;
 
 	@Override
-	public void executeRun(RunMessageBean runMessage) throws InterruptedException {
+	public void executeRun(RunMessageBean runMessage) throws InterruptedException, IOException {
 		
 		RunBean run = runRepository.findById(runMessage.getRunId()).get();
 		JobBean job = run.getJob();
@@ -45,6 +46,16 @@ public class DockerRunServiceImpl implements DockerRunService {
 			
 			DockerRunCmdResultBean result = runCommand(freestyleJob.getDockerImage(), freestyleJob.getCommand());
 			System.out.println(result);
+		}
+		else if (job instanceof GitJobBean) {
+			/*
+			 * TODO:
+			 * (1) Create temporary local folder.
+			 * (2) Clone (by branch name or commit SHA) single commit into the local folder.
+			 * (3) Find the config file in local folder and generate `RunConfigBean`.
+			 * (4) Build image, run job based on config file and the contents in git clone.
+			 * (5) Clean up the temporary local folder.
+			 */
 		}
 	}
 
