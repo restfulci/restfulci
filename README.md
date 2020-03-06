@@ -53,7 +53,9 @@ Job configuration/the logic of a particular job (see list below) should be insid
 	* Follows [The Twelve Factors](https://12factor.net/config) that they should be passed as environmental variables one at a time.
 	* Actual pass in the secrets/credentials by `docker --env ENV=foo`. Very unforturate cannot do `docker -e ENV` and define ENV in host, as that will cause ENV name crashing for secrets/credentials belong to different jobs.
 		* An alternative approach is to use [Docker swarm secrets](https://docs.docker.com/engine/swarm/secrets/). Needs to investigate more on the possibilities/pros/cons this approach.
+		* If user need to do git operations inside of the git container, we need to use SSH agent forwarding for credentials (volume mount `.ssh/id_rsa` inside/outside of the container is not secure, and doesn't work if user uses a passphrase). Refer [here](http://blog.oddbit.com/post/2019-02-24-docker-build-learns-about-secr/), [here](https://github.com/uber-common/docker-ssh-agent-forward), [here](https://medium.com/@nazrulworld/ssh-agent-forward-into-docker-container-on-macos-ff847ec660e2) for detail. We should probably still need to create `.ssh/id_rsa` at some point, safe it to some secret persistent storage (because otherwise it cannot be used by multiple slaves), give user `.ssh/id_rsa.pub` and let them use it to setup 3rd party git servers.
 * What kind of results it should save, and where are they inside of the container after finishing the job.
+	* If the plan is to "docker volume link" the result out, and let the slave machine (where slave agent stays) upload the result to persistent storage, we'll have problem cleanup those result files (as they are created/owned by the user inside of the docker container). To resolve it, we'll need to `--user $(id -u):$(id -g)` in the docker command, as suggested in [here](https://dille.name/blog/2018/07/16/handling-file-permissions-when-writing-to-volumes-from-docker-containers/).
 * Resource quota(?)
 	* If the existing jobs on a slave machine has taking out all the resource quota, new jobs will be blocked to send to that machine. Not sure if that is needed, as we can also use slave CPU percentage to block sending new jobs.
 	* No need to define what kind of slaves (CPU core, ...) the job want to run at, since slaves should be just multi-core boxes with multiple jobs running on it (otherwise we cannot autoscale them based on CPU usage).
@@ -102,6 +104,11 @@ Master/slave communication:
 		* Slave machines are not overloaded.
 		* Unstarted runs (if all slaves are busy) are safe when machines restarts/redeploy.
 	* It naturally distributes the run tasks to multiple machines, regardless of how many masters/slave machines we have.
+	* Open question: How to implement job aborting within message queue infrastructure?
+		* A working but tedious approach is master can setup the run to be in `abort` state. And slave, while executing the job, chech the status periodically.
+		* Maybe when slave starts the job, it records/communicates to master who it is (saving to database?), so later on master has a way to directly find it, and send kill signal to it.
+			* Not ideal because it is a very different communication protocol which needs a separate setup.
+			* Since slave host machines and docker nodes are both disposable, it doesn't make many sense to save their identities.
 * **Share/communicate job status:** By the database.
 	* No need for slave agent (as client) to communicate back to master (server) to notify the job is done.
 		* Master is supposed to be stateless. No need for it to keep the job status in its memory so no need for slave to notify it.
