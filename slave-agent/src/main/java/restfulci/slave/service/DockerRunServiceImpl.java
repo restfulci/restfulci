@@ -14,13 +14,7 @@ import org.springframework.stereotype.Service;
 import com.github.dockerjava.api.DockerClient;
 import com.github.dockerjava.api.command.CreateContainerResponse;
 import com.github.dockerjava.api.model.Frame;
-import com.github.dockerjava.core.DefaultDockerClientConfig;
-import com.github.dockerjava.core.DockerClientBuilder;
-import com.github.dockerjava.core.DockerClientConfig;
 import com.github.dockerjava.core.command.BuildImageResultCallback;
-////import com.github.dockerjava.utils.LogContainerTestCallback;
-//import com.github.dockerjava.api.async.ResultCallback;
-//import com.github.dockerjava.api.model.Frame;
 import com.github.dockerjava.core.command.LogContainerResultCallback;
 import com.github.dockerjava.core.command.WaitContainerResultCallback;
 
@@ -32,12 +26,11 @@ import restfulci.shared.domain.GitRunBean;
 import restfulci.shared.domain.RunBean;
 import restfulci.shared.domain.RunConfigBean;
 import restfulci.shared.domain.RunMessageBean;
-import restfulci.slave.config.bean.DockerDaemon;
 
 @Service
 public class DockerRunServiceImpl implements DockerRunService {
 	
-	@Autowired private DockerDaemon dockerDaemon;
+	@Autowired private DockerClient dockerClient;
 	
 	@Autowired private RunRepository runRepository;
 	@Autowired private RemoteGitRepository remoteGitRepository;
@@ -89,8 +82,6 @@ public class DockerRunServiceImpl implements DockerRunService {
 		remoteGitRepository.copyToLocal(run, localRepoPath);
 		RunConfigBean runConfig = remoteGitRepository.getConfigFromFilepath(run, localRepoPath);
 		
-		DockerClient dockerClient = getDockerClient();
-		
 		File dockerfile = localRepoPath
 				.resolve(runConfig.getEnvironment().getBuild().getContext())
 				.resolve(runConfig.getEnvironment().getBuild().getDockerfile()).toFile();
@@ -113,7 +104,6 @@ public class DockerRunServiceImpl implements DockerRunService {
 
 	@Override
 	public DockerRunCmdResultBean runCommand(String image, List<String> command) throws InterruptedException {
-		DockerClient dockerClient = getDockerClient();
 		
 		/*
 		 * TODO:
@@ -147,18 +137,6 @@ public class DockerRunServiceImpl implements DockerRunService {
 		result.setOutput(loggingCallback.toString());
 		
 		return result;
-	}
-	
-	/*
-	 * TODO:
-	 * Move to DockerDaemon or config files.
-	 */
-	private DockerClient getDockerClient() {
-		DockerClientConfig config = DefaultDockerClientConfig.createDefaultConfigBuilder()
-//				.withDockerHost(dockerDaemon.getDockerHost())
-				.build();
-		DockerClient dockerClient = DockerClientBuilder.getInstance(config).build();
-		return dockerClient;
 	}
 	
 	/*
