@@ -13,13 +13,26 @@ import restfulci.shared.dao.git.GitFetch;
 import restfulci.shared.dao.git.GitInit;
 import restfulci.shared.domain.GitBranchRunBean;
 import restfulci.shared.domain.GitCommitRunBean;
+import restfulci.shared.domain.GitRunBean;
 import restfulci.shared.domain.RunConfigBean;
 
 @Repository
 public class RemoteGitRepositoryImpl implements RemoteGitRepository {
-
+	
 	@Override
-	public void copyToLocal(GitBranchRunBean branchRun, File targetFolder) throws IOException, InterruptedException {
+	public void copyToLocal(GitRunBean run, Path localRepoPath) throws IOException, InterruptedException {
+		
+		if (run instanceof GitBranchRunBean) {
+			copyBranchToLocal((GitBranchRunBean)run, localRepoPath);
+		}
+		else if (run instanceof GitCommitRunBean) {
+			copyCommitToLocal((GitCommitRunBean)run, localRepoPath);
+		}
+	}
+
+	private void copyBranchToLocal(GitBranchRunBean branchRun, Path localRepoPath) throws IOException, InterruptedException {
+		
+		File targetFolder = localRepoPath.toFile();
 		
 		GitClone gitClone = new GitClone(branchRun.getJob().getRemoteOrigin(), targetFolder);
 		gitClone.setBranchName(branchRun.getBranchName());
@@ -35,8 +48,9 @@ public class RemoteGitRepositoryImpl implements RemoteGitRepository {
 	 * error: Server does not allow request for unadvertised object 1d0e1224b401490610b8cc257bedff35b0689cb5
 	 * ```
 	 */
-	@Override
-	public void copyToLocal(GitCommitRunBean commitRun, File targetFolder) throws IOException, InterruptedException {
+	private void copyCommitToLocal(GitCommitRunBean commitRun, Path localRepoPath) throws IOException, InterruptedException {
+		
+		File targetFolder = localRepoPath.toFile();
 		
 		GitInit gitInit = new GitInit(targetFolder);
 		gitInit.execute();
@@ -53,24 +67,9 @@ public class RemoteGitRepositoryImpl implements RemoteGitRepository {
 	}
 	
 	@Override
-	public RunConfigBean getConfig(GitBranchRunBean branchRun) throws IOException, InterruptedException {
+	public RunConfigBean getConfigFromFilepath(GitRunBean run, Path localRepoPath) throws IOException {
 		
-		Path localRepoPath = Files.createTempDirectory("local-repo");
-		copyToLocal(branchRun, localRepoPath.toFile());
-		
-		return getConfigFromFilepath(localRepoPath, branchRun.getJob().getConfigFilepath());
-	}
-
-	@Override
-	public RunConfigBean getConfig(GitCommitRunBean commitRun) throws IOException, InterruptedException {
-		
-		Path localRepoPath = Files.createTempDirectory("local-repo");
-		copyToLocal(commitRun, localRepoPath.toFile());
-		
-		return getConfigFromFilepath(localRepoPath, commitRun.getJob().getConfigFilepath());
-	}
-	
-	private RunConfigBean getConfigFromFilepath(Path localRepoPath, String configFilepath) throws IOException {
+		String configFilepath = run.getJob().getConfigFilepath();
 		String yamlContent = String.join("\n", Files.readAllLines(localRepoPath.resolve(configFilepath)));
 		return RunConfigYamlParser.parse(yamlContent);
 	}

@@ -8,6 +8,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Date;
 import java.util.List;
 
@@ -21,10 +22,10 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
-import restfulci.shared.dao.RemoteGitRepository;
 import restfulci.shared.domain.GitBranchRunBean;
 import restfulci.shared.domain.GitCommitRunBean;
 import restfulci.shared.domain.GitJobBean;
+import restfulci.shared.domain.RunConfigBean;
 
 /*
  * CircleCI doesn't support git local clone.
@@ -38,7 +39,7 @@ public class RemoteGitRepositoryTest {
 	@Autowired RemoteGitRepository repository;
 	
 	@Test
-	public void testCopyToLocalFromBranchRun(@TempDir File tmpFolder) throws Exception {
+	public void testCopyToLocalAndGetConfigFromBranchRun(@TempDir File tmpFolder) throws Exception {
 		
 		File sourceDirectory = new File(tmpFolder, "source-repo");
 		sourceDirectory.mkdir();
@@ -48,17 +49,21 @@ public class RemoteGitRepositoryTest {
 		
 		File targetDirectory = new File(tmpFolder, "local-repo");
 		targetDirectory.mkdir();
-		repository.copyToLocal(run, targetDirectory);
+		Path targetPath = targetDirectory.toPath();
+		repository.copyToLocal(run, targetPath);
 		
 		List<Object> localPathnames = Arrays.asList(targetDirectory.list());
 		
 		assertEquals(localPathnames.size(), 2);
 		assertTrue(localPathnames.contains(".restfulci.yml"));
 		assertTrue(localPathnames.contains(".git"));
+		
+		RunConfigBean runConfig = repository.getConfigFromFilepath(run, targetPath);
+		assertEquals(runConfig.getVersion(), "1.0");
 	}
 	
 	@Test
-	public void testCopyToLocalFromCommitRun(@TempDir File tmpFolder) throws Exception {
+	public void testCopyToLocalAndGetConfigFromCommitRun(@TempDir File tmpFolder) throws Exception {
 		
 		File sourceDirectory = new File(tmpFolder, "source-repo");
 		sourceDirectory.mkdir();
@@ -68,33 +73,17 @@ public class RemoteGitRepositoryTest {
 		
 		File targetDirectory = new File(tmpFolder, "local-repo");
 		targetDirectory.mkdir();
-		repository.copyToLocal(run, targetDirectory);
+		Path targetPath = targetDirectory.toPath();
+		repository.copyToLocal(run, targetPath);
 		
 		List<Object> localPathnames = Arrays.asList(targetDirectory.list());
 		
 		assertEquals(localPathnames.size(), 2);
 		assertTrue(localPathnames.contains(".restfulci.yml"));
 		assertTrue(localPathnames.contains(".git"));
-	}
-	
-	public void testGetJobConfigFromBranchRun(@TempDir File tmpFolder) throws Exception {
 		
-		File sourceDirectory = new File(tmpFolder, "source-repo");
-		sourceDirectory.mkdir();
-		setupRemoteGit(sourceDirectory);
-		
-		GitBranchRunBean run = setupBranchRun(sourceDirectory);
-		assertEquals(repository.getConfig(run).getVersion(), "1.0");
-	}
-	
-	public void testGetJobConfigFromCommitRun(@TempDir File tmpFolder) throws Exception {
-		
-		File sourceDirectory = new File(tmpFolder, "source-repo");
-		sourceDirectory.mkdir();
-		String commitSha = setupRemoteGit(sourceDirectory);
-		
-		GitCommitRunBean run = setupCommitRun(sourceDirectory, commitSha);
-		assertEquals(repository.getConfig(run).getVersion(), "1.0");
+		RunConfigBean runConfig = repository.getConfigFromFilepath(run, targetPath);
+		assertEquals(runConfig.getVersion(), "1.0");
 	}
 	
 	private String setupRemoteGit(File sourceDirectory) throws InterruptedException, IOException {

@@ -26,13 +26,6 @@ public class RunConfigBean {
 	
 	@Setter
 	@Getter
-	public static class RunConfigRunBean {
-
-		private String run;
-	}
-	
-	@Setter
-	@Getter
 	public static class RunConfigResultBean {
 
 		private String type;
@@ -42,6 +35,6 @@ public class RunConfigBean {
 	private String version;
 	
 	private RunConfigEnvironmentBean environment;
-	private List<RunConfigRunBean> commands;
+	private List<String> command;
 	private List<RunConfigResultBean> results;
 }
