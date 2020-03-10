@@ -38,6 +38,10 @@ services:
     tty: true
     restart: always
 
+  # TODO:
+  # Figure out a way either docker-java can call remote daemon (seems naive
+  # tcp://slave-docker:2375 doesn't work), or need to combine `slave-agent`
+  # (Java) and `slave-docker` to be the same container.
   slave-docker:
     image: docker:19.03.6
     volumes:
