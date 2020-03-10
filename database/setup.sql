@@ -25,6 +25,10 @@ CREATE TABLE run (
   id serial PRIMARY KEY,
   job_id serial REFERENCES job(id) ON DELETE CASCADE,
   -- user_id serial REFERENCES application_user (id) ON DELETE CASCADE,
+  phase_shortname char(1) NOT NULL CHECK (
+    phase_shortname='I' OR
+    phase_shortname='C' OR
+    phase_shortname='A') DEFAULT 'I',
   trigger_at timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   complete_at timestamp
 );

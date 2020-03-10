@@ -27,6 +27,7 @@ import restfulci.shared.domain.GitRunBean;
 import restfulci.shared.domain.RunBean;
 import restfulci.shared.domain.RunConfigBean;
 import restfulci.shared.domain.RunMessageBean;
+import restfulci.shared.domain.RunPhase;
 
 @Service
 public class DockerRunServiceImpl implements DockerRunService {
@@ -45,11 +46,17 @@ public class DockerRunServiceImpl implements DockerRunService {
 			FreestyleRunBean freestyleRun = (FreestyleRunBean)run;
 			DockerRunCmdResultBean result = runFreestyleJob(freestyleRun);
 			System.out.println(result);
+			
+			run.setPhase(RunPhase.COMPLETE);
+			runRepository.saveAndFlush(run);
 		}
 		else if (run instanceof GitRunBean) {
 			GitRunBean gitRun = (GitRunBean)run;
 			DockerRunCmdResultBean result = runGitJob(gitRun);
 			System.out.println(result);
+			
+			run.setPhase(RunPhase.COMPLETE);
+			runRepository.saveAndFlush(run);
 		}
 		else {
 			throw new IOException("Input run with wrong type");

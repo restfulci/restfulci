@@ -4,6 +4,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
 import java.io.File;
 import java.io.IOException;
@@ -33,6 +35,7 @@ import restfulci.shared.domain.GitJobBean;
 import restfulci.shared.domain.GitRunBean;
 import restfulci.shared.domain.RunBean;
 import restfulci.shared.domain.RunMessageBean;
+import restfulci.shared.domain.RunPhase;
 
 @ExtendWith(SpringExtension.class)
 @SpringBootTest
@@ -59,6 +62,7 @@ public class DockerRunServiceTest {
 		FreestyleRunBean run = new FreestyleRunBean();
 		run.setId(456);
 		run.setJob(job);
+		run.setPhase(RunPhase.IN_PROGRESS);
 		run.setTriggerAt(new Date(0L));
 		run.setCompleteAt(new Date(1000L));
 		
@@ -66,6 +70,9 @@ public class DockerRunServiceTest {
 		given(runRepository.findById(456)).willReturn(maybeRun);
 		
 		service.executeRun(runMessage);
+		
+		run.setPhase(RunPhase.COMPLETE);
+		verify(runRepository, times(1)).saveAndFlush(run);
 	}
 	
 	@Test
@@ -80,6 +87,7 @@ public class DockerRunServiceTest {
 		FreestyleRunBean run = new FreestyleRunBean();
 		run.setId(456);
 		run.setJob(job);
+		run.setPhase(RunPhase.IN_PROGRESS);
 		run.setTriggerAt(new Date(0L));
 		run.setCompleteAt(new Date(1000L));
 		
@@ -100,6 +108,7 @@ public class DockerRunServiceTest {
 		run.setId(456);
 		run.setJob(job);
 		run.setBranchName("master");
+		run.setPhase(RunPhase.IN_PROGRESS);
 		run.setTriggerAt(new Date(0L));
 		run.setCompleteAt(new Date(1000L));
 		

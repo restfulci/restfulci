@@ -3,6 +3,7 @@ package restfulci.shared.domain;
 import java.util.Date;
 
 import javax.persistence.Column;
+import javax.persistence.Convert;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.Inheritance;
@@ -32,6 +33,11 @@ public abstract class RunBean extends BaseEntity {
 	@ManyToOne(fetch=FetchType.EAGER)
 	@JoinColumn(name="job_id")
 	private JobBean job;
+	
+	@NotNull
+	@Column(name="phase_shortname")
+	@Convert(converter = RunPhaseConventer.class)
+	private RunPhase phase;
 	
 	@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd hh:mm:ss")
 	@NotNull

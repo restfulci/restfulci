@@ -22,6 +22,7 @@ public class FreestyleRunBeanTest {
 		FreestyleRunBean run = new FreestyleRunBean();
 		run.setId(456);
 		run.setJob(job);
+		run.setPhase(RunPhase.IN_PROGRESS);
 		run.setTriggerAt(new Date(0L));
 		run.setCompleteAt(new Date(1000L));
 		
@@ -30,6 +31,7 @@ public class FreestyleRunBeanTest {
 				mapper.writeValueAsString(run),
 				"{\"id\":456,"
 				+ "\"job\":{\"id\":123,\"name\":\"job\",\"dockerImage\":\"busybox\",\"command\":[\"echo\",\"0\"],\"type\":\"FREESTYLE\"},"
+				+ "\"phase\":\"IN_PROGRESS\","
 				+ "\"triggerAt\":\"1970-01-01 12:00:00\","
 				+ "\"completeAt\":\"1970-01-01 12:00:01\","
 				+ "\"type\":\"FREESTYLE\"}");

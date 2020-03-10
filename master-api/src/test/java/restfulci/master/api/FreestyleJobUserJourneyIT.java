@@ -92,9 +92,19 @@ public class FreestyleJobUserJourneyIT {
 						.andExpect(status().isOk())
 						.andReturn().getResponse().getContentAsString(),
 				Map.class);
+		assertEquals(triggeredRun.get("phase"), "IN_PROGRESS");
+		assertEquals(triggeredRun.get("type"), "FREESTYLE");
 		assertEquals(
 				objectMapper.convertValue(triggeredRun.get("job"), Map.class).get("type"), 
 				"FREESTYLE");
+		
+		Integer runId = (Integer)triggeredRun.get("id");
+		Map<?, ?> queriedRun = objectMapper.readValue(
+				mockMvc.perform(get("/jobs/"+jobId+"/runs/"+runId))
+						.andExpect(status().isOk())
+						.andReturn().getResponse().getContentAsString(), 
+				Map.class);
+		assertEquals(queriedRun.get("phase"), "IN_PROGRESS");
 		
 		mockMvc.perform(delete("/jobs/"+jobId))
 				.andExpect(status().isOk());
