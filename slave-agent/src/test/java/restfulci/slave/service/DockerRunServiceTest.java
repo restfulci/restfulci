@@ -27,6 +27,7 @@ import restfulci.shared.dao.RemoteGitRepository;
 import restfulci.shared.dao.RunRepository;
 import restfulci.shared.domain.DockerRunCmdResultBean;
 import restfulci.shared.domain.FreestyleJobBean;
+import restfulci.shared.domain.FreestyleRunBean;
 import restfulci.shared.domain.GitBranchRunBean;
 import restfulci.shared.domain.GitJobBean;
 import restfulci.shared.domain.GitRunBean;
@@ -55,7 +56,7 @@ public class DockerRunServiceTest {
 		job.setDockerImage("busybox");
 		job.setCommand(new String[] {"sh", "-c", "echo \"Hello world\""});
 		
-		RunBean run = new RunBean();
+		FreestyleRunBean run = new FreestyleRunBean();
 		run.setId(456);
 		run.setJob(job);
 		run.setTriggerAt(new Date(0L));
@@ -76,13 +77,13 @@ public class DockerRunServiceTest {
 		job.setDockerImage("busybox");
 		job.setCommand(new String[] {"sh", "-c", "echo \"Hello world\""});
 		
-		RunBean run = new RunBean();
+		FreestyleRunBean run = new FreestyleRunBean();
 		run.setId(456);
 		run.setJob(job);
 		run.setTriggerAt(new Date(0L));
 		run.setCompleteAt(new Date(1000L));
 		
-		DockerRunCmdResultBean result = service.runFreestyleJob(job);
+		DockerRunCmdResultBean result = service.runFreestyleJob(run);
 		assertEquals(result.getOutput(), "Hello world\n");
 	}
 	

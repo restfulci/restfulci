@@ -22,6 +22,7 @@ import restfulci.shared.dao.RemoteGitRepository;
 import restfulci.shared.dao.RunRepository;
 import restfulci.shared.domain.DockerRunCmdResultBean;
 import restfulci.shared.domain.FreestyleJobBean;
+import restfulci.shared.domain.FreestyleRunBean;
 import restfulci.shared.domain.GitRunBean;
 import restfulci.shared.domain.RunBean;
 import restfulci.shared.domain.RunConfigBean;
@@ -40,14 +41,9 @@ public class DockerRunServiceImpl implements DockerRunService {
 		
 		RunBean run = runRepository.findById(runMessage.getRunId()).get();
 		
-		/*
-		 * TODO: 
-		 * Should have a more unified way to decide what type the job/run is.
-		 * e.g., create a `FreestyleRunBean` even if its identical to `RunBean`.
-		 */
-		if (run.getJob() instanceof FreestyleJobBean) {
-			FreestyleJobBean freestyleJob = (FreestyleJobBean)run.getJob();
-			DockerRunCmdResultBean result = runFreestyleJob(freestyleJob);
+		if (run instanceof FreestyleRunBean) {
+			FreestyleRunBean freestyleRun = (FreestyleRunBean)run;
+			DockerRunCmdResultBean result = runFreestyleJob(freestyleRun);
 			System.out.println(result);
 		}
 		else if (run instanceof GitRunBean) {
@@ -55,14 +51,14 @@ public class DockerRunServiceImpl implements DockerRunService {
 			DockerRunCmdResultBean result = runGitJob(gitRun);
 			System.out.println(result);
 		}
+		else {
+			throw new IOException("Input run with wrong type");
+		}
 	}
 	
-	/*
-	 * TODO:
-	 * Input as run rather then job.
-	 */
 	@Override
-	public DockerRunCmdResultBean runFreestyleJob(FreestyleJobBean job) throws InterruptedException {
+	public DockerRunCmdResultBean runFreestyleJob(FreestyleRunBean run) throws InterruptedException {
+		FreestyleJobBean job = run.getJob();
 		return runCommand(job.getDockerImage(), Arrays.asList(job.getCommand()));
 	}
 	

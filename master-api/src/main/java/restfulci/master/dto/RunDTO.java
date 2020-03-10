@@ -8,6 +8,7 @@ import javax.validation.constraints.Size;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
+import restfulci.shared.domain.FreestyleRunBean;
 import restfulci.shared.domain.GitBranchRunBean;
 import restfulci.shared.domain.GitCommitRunBean;
 import restfulci.shared.domain.RunBean;
@@ -41,7 +42,7 @@ public class RunDTO {
 			return runBean;
 		}
 		
-		RunBean runBean = new RunBean();
+		FreestyleRunBean runBean = new FreestyleRunBean();
 		runBean.setTriggerAt(new Date());
 		return runBean;
 	}

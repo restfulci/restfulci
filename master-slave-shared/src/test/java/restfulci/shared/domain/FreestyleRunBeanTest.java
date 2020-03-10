@@ -8,7 +8,7 @@ import org.junit.jupiter.api.Test;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-public class RunBeanTest {
+public class FreestyleRunBeanTest {
 
 	@Test
 	public void testCorrectDisplayNestedJobJson() throws Exception {
@@ -19,7 +19,7 @@ public class RunBeanTest {
 		job.setDockerImage("busybox");
 		job.setCommand(new String[] {"echo", "0"});
 		
-		RunBean run = new RunBean();
+		FreestyleRunBean run = new FreestyleRunBean();
 		run.setId(456);
 		run.setJob(job);
 		run.setTriggerAt(new Date(0L));
@@ -31,7 +31,8 @@ public class RunBeanTest {
 				"{\"id\":456,"
 				+ "\"job\":{\"id\":123,\"name\":\"job\",\"dockerImage\":\"busybox\",\"command\":[\"echo\",\"0\"],\"type\":\"FREESTYLE\"},"
 				+ "\"triggerAt\":\"1970-01-01 12:00:00\","
-				+ "\"completeAt\":\"1970-01-01 12:00:01\"}");
+				+ "\"completeAt\":\"1970-01-01 12:00:01\","
+				+ "\"type\":\"FREESTYLE\"}");
 		assertEquals(
 				mapper.writeValueAsString(job),
 				"{\"id\":123,\"name\":\"job\",\"dockerImage\":\"busybox\",\"command\":[\"echo\",\"0\"],\"type\":\"FREESTYLE\"}");

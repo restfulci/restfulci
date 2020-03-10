@@ -26,7 +26,7 @@ import lombok.ToString;
 @Entity
 @Table(name="run")
 @Inheritance(strategy=InheritanceType.JOINED)
-public class RunBean extends BaseEntity {
+public abstract class RunBean extends BaseEntity {
 	
 	@NotNull
 	@ManyToOne(fetch=FetchType.EAGER)
