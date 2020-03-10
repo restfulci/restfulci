@@ -8,7 +8,7 @@ import org.junit.jupiter.api.Test;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-public class RunBeanTest {
+public class FreestyleRunBeanTest {
 
 	@Test
 	public void testCorrectDisplayNestedJobJson() throws Exception {
@@ -16,11 +16,13 @@ public class RunBeanTest {
 		FreestyleJobBean job = new FreestyleJobBean();
 		job.setId(123);
 		job.setName("job");
-		job.setScript("echo 0");
+		job.setDockerImage("busybox");
+		job.setCommand(new String[] {"echo", "0"});
 		
-		RunBean run = new RunBean();
+		FreestyleRunBean run = new FreestyleRunBean();
 		run.setId(456);
 		run.setJob(job);
+		run.setPhase(RunPhase.IN_PROGRESS);
 		run.setTriggerAt(new Date(0L));
 		run.setCompleteAt(new Date(1000L));
 		
@@ -28,11 +30,13 @@ public class RunBeanTest {
 		assertEquals(
 				mapper.writeValueAsString(run),
 				"{\"id\":456,"
-				+ "\"job\":{\"id\":123,\"name\":\"job\",\"script\":\"echo 0\",\"type\":\"FREESTYLE\"},"
+				+ "\"job\":{\"id\":123,\"name\":\"job\",\"dockerImage\":\"busybox\",\"command\":[\"echo\",\"0\"],\"type\":\"FREESTYLE\"},"
+				+ "\"phase\":\"IN_PROGRESS\","
 				+ "\"triggerAt\":\"1970-01-01 12:00:00\","
-				+ "\"completeAt\":\"1970-01-01 12:00:01\"}");
+				+ "\"completeAt\":\"1970-01-01 12:00:01\","
+				+ "\"type\":\"FREESTYLE\"}");
 		assertEquals(
 				mapper.writeValueAsString(job),
-				"{\"id\":123,\"name\":\"job\",\"script\":\"echo 0\",\"type\":\"FREESTYLE\"}");
+				"{\"id\":123,\"name\":\"job\",\"dockerImage\":\"busybox\",\"command\":[\"echo\",\"0\"],\"type\":\"FREESTYLE\"}");
 	}
 }

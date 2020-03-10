@@ -60,6 +60,11 @@
             <artifactId>snakeyaml</artifactId>
             <version>1.25</version>
         </dependency>
+        <dependency>
+            <groupId>com.vladmihalcea</groupId>
+            <artifactId>hibernate-types-52</artifactId>
+            <version>2.9.4</version>
+        </dependency>
 
         <!-- Runtime -->
         <dependency>

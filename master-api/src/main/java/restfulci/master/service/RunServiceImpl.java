@@ -13,16 +13,17 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 
 import restfulci.master.dto.RunDTO;
-import restfulci.shared.dao.RunConfigRepository;
 import restfulci.shared.dao.RunRepository;
+import restfulci.shared.domain.GitBranchRunBean;
+import restfulci.shared.domain.GitCommitRunBean;
 import restfulci.shared.domain.JobBean;
 import restfulci.shared.domain.RunBean;
+import restfulci.shared.domain.RunConfigBean;
 
 @Service
 public class RunServiceImpl implements RunService {
 	
 	@Autowired private RunRepository runRepository;
-	@Autowired private RunConfigRepository runConfigRepository;
 	
 	@Autowired AmqpAdmin admin;
 	@Autowired AmqpTemplate template;
@@ -46,13 +47,9 @@ public class RunServiceImpl implements RunService {
 		run.setJob(job);
 		runRepository.saveAndFlush(run);
 		
-		/*
-		 * TODO:
-		 * Pass to downstream a JSON other than RunBean.
-		 */
 		ObjectMapper objectMapper = new ObjectMapper();
 		ObjectWriter objectWriter = objectMapper.writer().withDefaultPrettyPrinter();
-		String messageContent = objectWriter.writeValueAsString(run);
+		String messageContent = objectWriter.writeValueAsString(run.toRunMessage());
 		
 		/*
 		 * TODO:
@@ -69,16 +66,12 @@ public class RunServiceImpl implements RunService {
 		admin.declareQueue(new Queue(queueName));
 		template.convertAndSend(queueName, messageContent);
 		
-		/*
-		 * TODO:
-		 * Should this part be put into a message queue?
-		 */
 //		RunConfigBean runConfig;
 //		if (run instanceof GitBranchRunBean) {
-//			runConfig = runConfigRepository.getConfig((GitBranchRunBean)run);
+//			runConfig = remoteGitRepository.getConfig((GitBranchRunBean)run);
 //		}
 //		else if (run instanceof GitCommitRunBean) {
-//			runConfig = runConfigRepository.getConfig((GitCommitRunBean)run);
+//			runConfig = remoteGitRepository.getConfig((GitCommitRunBean)run);
 //		}
 		
 		return run;

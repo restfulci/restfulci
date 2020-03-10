@@ -1,5 +1,6 @@
 package restfulci.shared.dao;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -12,22 +13,31 @@ import restfulci.shared.dao.git.GitFetch;
 import restfulci.shared.dao.git.GitInit;
 import restfulci.shared.domain.GitBranchRunBean;
 import restfulci.shared.domain.GitCommitRunBean;
+import restfulci.shared.domain.GitRunBean;
 import restfulci.shared.domain.RunConfigBean;
 
 @Repository
-public class RunConfigRepositoryImpl implements RunConfigRepository {
-
+public class RemoteGitRepositoryImpl implements RemoteGitRepository {
+	
 	@Override
-	public RunConfigBean getConfig(GitBranchRunBean branchRun) throws IOException, InterruptedException {
+	public void copyToLocal(GitRunBean run, Path localRepoPath) throws IOException, InterruptedException {
 		
-		Path localRepoPath = Files.createTempDirectory("local-repo");
+		if (run instanceof GitBranchRunBean) {
+			copyBranchToLocal((GitBranchRunBean)run, localRepoPath);
+		}
+		else if (run instanceof GitCommitRunBean) {
+			copyCommitToLocal((GitCommitRunBean)run, localRepoPath);
+		}
+	}
+
+	private void copyBranchToLocal(GitBranchRunBean branchRun, Path localRepoPath) throws IOException, InterruptedException {
 		
-		GitClone gitClone = new GitClone(branchRun.getJob().getRemoteOrigin(), localRepoPath.toFile());
+		File targetFolder = localRepoPath.toFile();
+		
+		GitClone gitClone = new GitClone(branchRun.getJob().getRemoteOrigin(), targetFolder);
 		gitClone.setBranchName(branchRun.getBranchName());
 		gitClone.setDepth(1);
 		gitClone.execute();
-		
-		return getConfigFromFilepath(localRepoPath, branchRun.getJob().getConfigFilepath());
 	}
 
 	/*
@@ -38,28 +48,28 @@ public class RunConfigRepositoryImpl implements RunConfigRepository {
 	 * error: Server does not allow request for unadvertised object 1d0e1224b401490610b8cc257bedff35b0689cb5
 	 * ```
 	 */
-	@Override
-	public RunConfigBean getConfig(GitCommitRunBean commitRun) throws IOException, InterruptedException {
+	private void copyCommitToLocal(GitCommitRunBean commitRun, Path localRepoPath) throws IOException, InterruptedException {
 		
-		Path localRepoPath = Files.createTempDirectory("local-repo");
+		File targetFolder = localRepoPath.toFile();
 		
-		GitInit gitInit = new GitInit(localRepoPath.toFile());
+		GitInit gitInit = new GitInit(targetFolder);
 		gitInit.execute();
 		
-		GitFetch gitFetch = new GitFetch(commitRun.getJob().getRemoteOrigin(), localRepoPath.toFile());
+		GitFetch gitFetch = new GitFetch(commitRun.getJob().getRemoteOrigin(), targetFolder);
 		gitFetch.setCommitSha(commitRun.getCommitSha());
 		gitFetch.setDepth(1);
 		gitFetch.execute();
 		
-		GitCheckout gitCheckout = new GitCheckout(localRepoPath.toFile());
+		GitCheckout gitCheckout = new GitCheckout(targetFolder);
 		gitCheckout.setCommitSha(commitRun.getCommitSha());
 		gitCheckout.setForce(true);
 		gitCheckout.execute();
-		
-		return getConfigFromFilepath(localRepoPath, commitRun.getJob().getConfigFilepath());
 	}
 	
-	private RunConfigBean getConfigFromFilepath(Path localRepoPath, String configFilepath) throws IOException {
+	@Override
+	public RunConfigBean getConfigFromFilepath(GitRunBean run, Path localRepoPath) throws IOException {
+		
+		String configFilepath = run.getJob().getConfigFilepath();
 		String yamlContent = String.join("\n", Files.readAllLines(localRepoPath.resolve(configFilepath)));
 		return RunConfigYamlParser.parse(yamlContent);
 	}

@@ -5,6 +5,8 @@ import javax.persistence.Entity;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 
+import org.hibernate.annotations.Type;
+
 import lombok.Getter;
 import lombok.Setter;
 
@@ -14,14 +16,14 @@ import lombok.Setter;
 @Table(name="freestyle_job")
 public class FreestyleJobBean extends JobBean {
 
-	/*
-	 * TODO:
-	 * Any reason to have an OneToMany for different remotes, as the remote
-	 * is not necessarily to be called "origin"?
-	 */
 	@NotNull
-	@Column(name="script")
-	private String script;
+	@Column(name="docker_image")
+	private String dockerImage;
+	
+	@NotNull
+	@Type(type="string-array")
+    @Column(name="command", columnDefinition="text[]")
+	private String[] command;
 	
 	public JobType getType() {
 		return JobType.FREESTYLE;

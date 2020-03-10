@@ -3,11 +3,9 @@ package restfulci.shared.domain;
 import java.util.Date;
 
 import javax.persistence.Column;
+import javax.persistence.Convert;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
 import javax.persistence.Inheritance;
 import javax.persistence.InheritanceType;
 import javax.persistence.JoinColumn;
@@ -29,17 +27,17 @@ import lombok.ToString;
 @Entity
 @Table(name="run")
 @Inheritance(strategy=InheritanceType.JOINED)
-public class RunBean {
-
-	@Id
-	@GeneratedValue(strategy=GenerationType.IDENTITY)
-	@Column(name="id", updatable=false)
-	private Integer id;
+public abstract class RunBean extends BaseEntity {
 	
 	@NotNull
 	@ManyToOne(fetch=FetchType.EAGER)
 	@JoinColumn(name="job_id")
 	private JobBean job;
+	
+	@NotNull
+	@Column(name="phase_shortname")
+	@Convert(converter = RunPhaseConventer.class)
+	private RunPhase phase;
 	
 	@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd hh:mm:ss")
 	@NotNull
@@ -56,4 +54,12 @@ public class RunBean {
 	 * TODO:
 	 * `getDuration()`
 	 */
+	
+	public RunMessageBean toRunMessage() {
+		
+		RunMessageBean runMessage = new RunMessageBean();
+		runMessage.setJobId(job.getId());
+		runMessage.setRunId(id);
+		return runMessage;
+	}
 }

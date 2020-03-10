@@ -24,9 +24,10 @@ public class RunConfigYamlParserTest {
 		assertEquals(runConfig.getVersion(), "1.0");
 		assertEquals(runConfig.getEnvironment().getBuild().getContext(), "./path/to/subproject");
 		assertEquals(runConfig.getEnvironment().getBuild().getDockerfile(), "./Dockerfile");
-		assertEquals(runConfig.getCommands().size(), 2);
-		assertEquals(runConfig.getCommands().get(0).getRun(), "echo 0");
-		assertEquals(runConfig.getCommands().get(1).getRun(), "ls");
+		assertEquals(runConfig.getCommand().size(), 3);
+		assertEquals(runConfig.getCommand().get(0), "bash");
+		assertEquals(runConfig.getCommand().get(1), "-c");
+		assertEquals(runConfig.getCommand().get(2), "\"echo 0\"");
 		assertEquals(runConfig.getResults().size(), 2);
 		assertEquals(runConfig.getResults().get(0).getType(), "junit");
 		assertEquals(runConfig.getResults().get(0).getPath(), "target/surefile-reports");

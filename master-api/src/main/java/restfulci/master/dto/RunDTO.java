@@ -8,9 +8,11 @@ import javax.validation.constraints.Size;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
+import restfulci.shared.domain.FreestyleRunBean;
 import restfulci.shared.domain.GitBranchRunBean;
 import restfulci.shared.domain.GitCommitRunBean;
 import restfulci.shared.domain.RunBean;
+import restfulci.shared.domain.RunPhase;
 
 @Getter
 @Setter
@@ -28,6 +30,7 @@ public class RunDTO {
 		if (branchName != null) {
 			
 			GitBranchRunBean runBean = new GitBranchRunBean();
+			runBean.setPhase(RunPhase.IN_PROGRESS);
 			runBean.setTriggerAt(new Date());
 			runBean.setBranchName(branchName);
 			return runBean;
@@ -36,15 +39,15 @@ public class RunDTO {
 		if (commitSha != null) {
 			
 			GitCommitRunBean runBean = new GitCommitRunBean();
+			runBean.setPhase(RunPhase.IN_PROGRESS);
 			runBean.setTriggerAt(new Date());
 			runBean.setCommitSha(commitSha);
 			return runBean;
 		}
 		
-		throw new IOException();
-		/* 
-		 * TODO:
-		 * Should input a type, rather than completely rely on input content negotiation?
-		 */
+		FreestyleRunBean runBean = new FreestyleRunBean();
+		runBean.setPhase(RunPhase.IN_PROGRESS);
+		runBean.setTriggerAt(new Date());
+		return runBean;
 	}
 }

@@ -5,9 +5,10 @@ environment:
     context: ./path/to/subproject
     dockerfile: ./Dockerfile
 
-commands:
-  - run: echo 0
-  - run: ls
+command:
+  - bash
+  - -c
+  - "\"echo 0\""
 
 results:
   - type: junit
