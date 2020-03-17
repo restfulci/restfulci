@@ -29,21 +29,13 @@ services:
 
   slave-agent:
     build:
-      context: ./slave-agent
-      dockerfile: ./Dockerfile
+      # context: ./slave-agent
+      # dockerfile: ./Dockerfile
+      context: .
+      dockerfile: ./slave-agent/Dockerfile
     depends_on:
       - database
       - rabbitmq
-      - slave-docker
-    tty: true
-    restart: always
-
-  # TODO:
-  # Figure out a way either docker-java can call remote daemon (seems naive
-  # tcp://slave-docker:2375 doesn't work), or need to combine `slave-agent`
-  # (Java) and `slave-docker` to be the same container.
-  slave-docker:
-    image: docker:19.03.6
     volumes:
       # Run not as docker-in-docker but as sibling of host docker.
       # https://jpetazzo.github.io/2015/09/03/do-not-use-docker-in-docker-for-ci/
@@ -64,5 +56,15 @@ services:
       # TODO:
       # Investigate the possibility to use HTTP socket.
       - /var/run/docker.sock:/var/run/docker.sock
+      # TODO:
+      # Currently docker-java doesn't work inside of this container.
+      # Error can be triggered by `curl -X POST` a new run, or
+      # running `mvn test -Dtest=DockerConfigTest -DfailIfNoTests=false`
+      # inside of this container. Error message:
+      # > javax.ws.rs.ProcessingException: java.net.SocketException: Cannot find method "setCreated" in java.net.Socket. Unsupported JVM?
+      # > at restfulci.slave.config.DockerConfigTest.testDockerDaemonConfig(DockerConfigTest.java:34)
+      # > Caused by: java.net.SocketException: Cannot find method "setCreated" in java.net.Socket. Unsupported JVM?
+      # > at restfulci.slave.config.DockerConfigTest.testDockerDaemonConfig(DockerConfigTest.java:34)
+      - ./:/tmp/code
     tty: true
     restart: always

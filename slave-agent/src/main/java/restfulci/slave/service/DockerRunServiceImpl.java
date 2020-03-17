@@ -41,6 +41,8 @@ public class DockerRunServiceImpl implements DockerRunService {
 	public void executeRun(RunMessageBean runMessage) throws InterruptedException, IOException {
 		
 		RunBean run = runRepository.findById(runMessage.getRunId()).get();
+		System.out.println("~~~~~~~~~");
+		System.out.println(run);
 		
 		if (run instanceof FreestyleRunBean) {
 			FreestyleRunBean freestyleRun = (FreestyleRunBean)run;
