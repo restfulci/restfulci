@@ -29,10 +29,8 @@ services:
 
   slave-agent:
     build:
-      # context: ./slave-agent
-      # dockerfile: ./Dockerfile
-      context: .
-      dockerfile: ./slave-agent/Dockerfile
+      context: ./slave-agent
+      dockerfile: ./Dockerfile
     depends_on:
       - database
       - rabbitmq
@@ -56,15 +54,5 @@ services:
       # TODO:
       # Investigate the possibility to use HTTP socket.
       - /var/run/docker.sock:/var/run/docker.sock
-      # TODO:
-      # Currently docker-java doesn't work inside of this container.
-      # Error can be triggered by `curl -X POST` a new run, or
-      # running `mvn test -Dtest=DockerConfigTest -DfailIfNoTests=false`
-      # inside of this container. Error message:
-      # > javax.ws.rs.ProcessingException: java.net.SocketException: Cannot find method "setCreated" in java.net.Socket. Unsupported JVM?
-      # > at restfulci.slave.config.DockerConfigTest.testDockerDaemonConfig(DockerConfigTest.java:34)
-      # > Caused by: java.net.SocketException: Cannot find method "setCreated" in java.net.Socket. Unsupported JVM?
-      # > at restfulci.slave.config.DockerConfigTest.testDockerDaemonConfig(DockerConfigTest.java:34)
-      - ./:/tmp/code
     tty: true
     restart: always

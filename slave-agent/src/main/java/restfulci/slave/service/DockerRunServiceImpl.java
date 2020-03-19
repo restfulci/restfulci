@@ -41,8 +41,6 @@ public class DockerRunServiceImpl implements DockerRunService {
 	public void executeRun(RunMessageBean runMessage) throws InterruptedException, IOException {
 		
 		RunBean run = runRepository.findById(runMessage.getRunId()).get();
-		System.out.println("~~~~~~~~~");
-		System.out.println(run);
 		
 		if (run instanceof FreestyleRunBean) {
 			FreestyleRunBean freestyleRun = (FreestyleRunBean)run;
@@ -107,6 +105,19 @@ public class DockerRunServiceImpl implements DockerRunService {
 		return runCommand(imageId, runConfig.getCommand());
 	}
 
+	/*
+	 * TODO:
+	 * 
+	 * Currently execution will fail if the docker image is not pre-exist
+	 * in the running docker environment. Error message:
+	 * > nested exception is com.github.dockerjava.api.exception.NotFoundException: 
+	 * > No such image: busybox:latest, failedMessage=GenericMessage
+	 * (confirmed in both local and docker)
+	 * 
+	 * In the shell of where slave-agent is running:
+	 * $ docker pull busybox:latest
+	 * will resolve the problem.
+	 */
 	@Override
 	public DockerRunCmdResultBean runCommand(String image, List<String> command) throws InterruptedException {
 		
