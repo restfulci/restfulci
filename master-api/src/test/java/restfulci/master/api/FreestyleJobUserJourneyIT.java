@@ -46,7 +46,7 @@ public class FreestyleJobUserJourneyIT {
 		 * `DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES` is for HATEOAS `_link`.
 		 */
 		objectMapper.configure(SerializationFeature.WRAP_ROOT_VALUE, false);
-		objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false); 
+		objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 		
 		objectWriter = objectMapper.writer().withDefaultPrettyPrinter();
 	}
@@ -57,11 +57,11 @@ public class FreestyleJobUserJourneyIT {
 		final String jobName = "it_freestyle_job_name";
 		Map<String, Object> jobData = new HashMap<String, Object>();
 		jobData.put("name", jobName);
-		jobData.put("dockerImage", "busybox");
+		jobData.put("dockerImage", "busybox:1.31");
 		jobData.put("command", new String[] {"sh", "-c", "echo \"Hello world\""});
 		
 		/*
-		 * curl -X POST -H "Content-Type: application/json" --data '{"name": "manual_job_name", "dockerImage": "busybox", "command": ["sh", "-c", "echo \"Hello world\""]}' localhost:8881/jobs 
+		 * curl -X POST -H "Content-Type: application/json" --data '{"name": "manual_job_name", "dockerImage": "busybox:1.31", "command": ["sh", "-c", "echo \"Hello world\""]}' localhost:8881/jobs
 		 */
 		Map<?, ?> createdJob = objectMapper.readValue(
 				mockMvc.perform(post("/jobs")
@@ -77,7 +77,7 @@ public class FreestyleJobUserJourneyIT {
 		Map<?, ?> queriedJob = objectMapper.readValue(
 				mockMvc.perform(get("/jobs/"+jobId))
 						.andExpect(status().isOk())
-						.andReturn().getResponse().getContentAsString(), 
+						.andReturn().getResponse().getContentAsString(),
 				Map.class);
 		assertEquals(queriedJob.get("name"), jobName);
 		assertEquals(queriedJob.get("type"), "FREESTYLE");
@@ -95,14 +95,14 @@ public class FreestyleJobUserJourneyIT {
 		assertEquals(triggeredRun.get("phase"), "IN_PROGRESS");
 		assertEquals(triggeredRun.get("type"), "FREESTYLE");
 		assertEquals(
-				objectMapper.convertValue(triggeredRun.get("job"), Map.class).get("type"), 
+				objectMapper.convertValue(triggeredRun.get("job"), Map.class).get("type"),
 				"FREESTYLE");
 		
 		Integer runId = (Integer)triggeredRun.get("id");
 		Map<?, ?> queriedRun = objectMapper.readValue(
 				mockMvc.perform(get("/jobs/"+jobId+"/runs/"+runId))
 						.andExpect(status().isOk())
-						.andReturn().getResponse().getContentAsString(), 
+						.andReturn().getResponse().getContentAsString(),
 				Map.class);
 		assertEquals(queriedRun.get("phase"), "IN_PROGRESS");
 		

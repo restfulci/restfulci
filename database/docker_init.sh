@@ -1,5 +1,5 @@
 #!/bin/bash
-set -e
+set -euxo pipefail
 
 # Workaround for
 # https://github.com/docker-library/postgres/issues/474

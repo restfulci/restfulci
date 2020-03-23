@@ -10,6 +10,9 @@ import com.github.dockerjava.core.DefaultDockerClientConfig;
 import com.github.dockerjava.core.DockerClientBuilder;
 import com.github.dockerjava.core.DockerClientConfig;
 
+/*
+ * mvn test -Dtest=DockerConfigTest -DfailIfNoTests=false
+ */
 public class DockerConfigTest {
 
 	@Test

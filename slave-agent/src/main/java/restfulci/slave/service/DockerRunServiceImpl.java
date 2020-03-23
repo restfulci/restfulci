@@ -7,6 +7,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -14,10 +15,13 @@ import org.springframework.stereotype.Service;
 import com.github.dockerjava.api.DockerClient;
 import com.github.dockerjava.api.command.CreateContainerResponse;
 import com.github.dockerjava.api.model.Frame;
+import com.github.dockerjava.api.model.Image;
 import com.github.dockerjava.core.command.BuildImageResultCallback;
 import com.github.dockerjava.core.command.LogContainerResultCallback;
+import com.github.dockerjava.core.command.PullImageResultCallback;
 import com.github.dockerjava.core.command.WaitContainerResultCallback;
 
+import lombok.extern.slf4j.Slf4j;
 import restfulci.shared.dao.RemoteGitRepository;
 import restfulci.shared.dao.RunRepository;
 import restfulci.shared.domain.DockerRunCmdResultBean;
@@ -29,6 +33,7 @@ import restfulci.shared.domain.RunConfigBean;
 import restfulci.shared.domain.RunMessageBean;
 import restfulci.shared.domain.RunPhase;
 
+@Slf4j
 @Service
 public class DockerRunServiceImpl implements DockerRunService {
 	
@@ -66,6 +71,7 @@ public class DockerRunServiceImpl implements DockerRunService {
 	@Override
 	public DockerRunCmdResultBean runFreestyleJob(FreestyleRunBean run) throws InterruptedException {
 		FreestyleJobBean job = run.getJob();
+		pullImage(job.getDockerImage());
 		return runCommand(job.getDockerImage(), Arrays.asList(job.getCommand()));
 	}
 	
@@ -98,25 +104,42 @@ public class DockerRunServiceImpl implements DockerRunService {
 		 * https://github.com/docker-java/docker-java/blob/3.1.5/src/test/java/com/github/dockerjava/cmd/BuildImageCmdIT.java
 		 */
 		String imageId = dockerClient.buildImageCmd(dockerfile)
-	            .withNoCache(true)
-	            .exec(new BuildImageResultCallback())
-	            .awaitImageId();
+				.withNoCache(true)
+				.exec(new BuildImageResultCallback())
+				.awaitImageId();
 		
 		return runCommand(imageId, runConfig.getCommand());
 	}
-
-	@Override
-	public DockerRunCmdResultBean runCommand(String image, List<String> command) throws InterruptedException {
+	
+	private void pullImage(String imageTag) throws InterruptedException {
 		
 		/*
 		 * TODO:
-		 * This may not work if the image is not existing in the docker cache. Observe it
-		 * on CircleCI:
-		 * - Without `docker pull busybox` in command line test fails: https://circleci.com/gh/restfulci/restfulci/72
-		 * - With `docker pull busybox` test passed: https://circleci.com/gh/restfulci/restfulci/76
-		 * To be confirmed later.
+		 * Not exactly sure the behavior if the tag is `:latest`,
+		 * but for fixed version pretty sure it works.
 		 */
-		CreateContainerResponse container = dockerClient.createContainerCmd(image)
+		List<Image> localImages = dockerClient.listImagesCmd().withShowAll(true).exec();
+		for (Image image : localImages) {
+			for (int i = 0; i < image.getRepoTags().length; ++i) {
+				if (image.getRepoTags()[i].equals(imageTag)) {
+					log.info("Docker image already exists in local: "+imageTag);
+					return;
+				}
+			}
+		}
+		
+		log.info("Pulling new docker image from remote server: "+imageTag);
+		dockerClient.pullImageCmd(imageTag)
+				.exec(new PullImageResultCallback())
+				.awaitCompletion(30, TimeUnit.SECONDS);	
+	}
+
+	@Override
+	public DockerRunCmdResultBean runCommand(String imageTag, List<String> command) throws InterruptedException {
+		
+		log.info("Execute command "+command+" in docker image: "+imageTag);
+		
+		CreateContainerResponse container = dockerClient.createContainerCmd(imageTag)
 				.withCmd(command)
 				.exec();
 		

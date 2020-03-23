@@ -56,7 +56,7 @@ public class DockerRunServiceTest {
 		FreestyleJobBean job = new FreestyleJobBean();
 		job.setId(123);
 		job.setName("job");
-		job.setDockerImage("busybox");
+		job.setDockerImage("busybox:1.31");
 		job.setCommand(new String[] {"sh", "-c", "echo \"Hello world\""});
 		
 		FreestyleRunBean run = new FreestyleRunBean();
@@ -81,7 +81,7 @@ public class DockerRunServiceTest {
 		FreestyleJobBean job = new FreestyleJobBean();
 		job.setId(123);
 		job.setName("job");
-		job.setDockerImage("busybox");
+		job.setDockerImage("busybox:1.31");
 		job.setCommand(new String[] {"sh", "-c", "echo \"Hello world\""});
 		
 		FreestyleRunBean run = new FreestyleRunBean();
@@ -95,7 +95,7 @@ public class DockerRunServiceTest {
 		assertEquals(result.getOutput(), "Hello world\n");
 	}
 	
-	@Test 
+	@Test
 	public void testRunGitJob() throws Exception {
 		
 		GitJobBean job = new GitJobBean();
@@ -117,10 +117,10 @@ public class DockerRunServiceTest {
 				Path localRepoPath = (Path) invocation.getArguments()[1];
 				try {
 					Files.copy(
-							new File(getClass().getClassLoader().getResource("docker-run-service-test/restfulci.yml").getFile()).toPath(), 
+							new File(getClass().getClassLoader().getResource("docker-run-service-test/restfulci.yml").getFile()).toPath(),
 							localRepoPath.resolve(".restfulci.yml"));
 					Files.copy(
-							new File(getClass().getClassLoader().getResource("docker-run-service-test/Dockerfile").getFile()).toPath(), 
+							new File(getClass().getClassLoader().getResource("docker-run-service-test/Dockerfile").getFile()).toPath(),
 							localRepoPath.resolve("Dockerfile"));
 				} catch (IOException e) {
 					e.printStackTrace();
@@ -137,7 +137,7 @@ public class DockerRunServiceTest {
 	public void testRunCommand() throws Exception {
 		
 		String[] command = new String[] {"sh", "-c", "echo \"Hello world\""};
-		DockerRunCmdResultBean result = service.runCommand("busybox", Arrays.asList(command));
+		DockerRunCmdResultBean result = service.runCommand("busybox:1.31", Arrays.asList(command));
 		
 		assertEquals(result.getExitCode(), 0);
 		assertEquals(result.getOutput(), "Hello world\n");

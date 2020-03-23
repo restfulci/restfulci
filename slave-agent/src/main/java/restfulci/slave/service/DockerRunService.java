@@ -15,5 +15,5 @@ public interface DockerRunService {
 	public DockerRunCmdResultBean runFreestyleJob(FreestyleRunBean run) throws InterruptedException;
 	public DockerRunCmdResultBean runGitJob(GitRunBean run) throws InterruptedException, IOException;
 	
-	public DockerRunCmdResultBean runCommand(String image, List<String> command) throws InterruptedException;
+	public DockerRunCmdResultBean runCommand(String imageTag, List<String> command) throws InterruptedException;
 }
