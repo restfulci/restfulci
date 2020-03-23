@@ -38,8 +38,13 @@ jobs:
       # This is to support running docker-java related unit tests.
       - setup_remote_docker:
           docker_layer_caching: false
-      - run: docker pull busybox
-      
+
+      # We have logic in docker-java code to automatically pull images if not exist.
+      # However, CircleCI will error out with permission error, so we need to keep this.
+      # > com.github.dockerjava.api.exception.NotFoundException: pull access denied for 83aa35aa1c79,
+      # > repository does not exist or may require 'docker login'
+      - run: docker pull busybox:1.31
+
       - run: mvn test
 
       - run:

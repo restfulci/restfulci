@@ -1,1 +1,1 @@
-FROM busybox:latest
+FROM busybox:1.31
