@@ -16,13 +16,12 @@ import com.github.dockerjava.api.DockerClient;
 import com.github.dockerjava.api.command.CreateContainerResponse;
 import com.github.dockerjava.api.model.Frame;
 import com.github.dockerjava.api.model.Image;
-import com.github.dockerjava.api.model.Info;
-import com.github.dockerjava.api.model.SearchItem;
 import com.github.dockerjava.core.command.BuildImageResultCallback;
 import com.github.dockerjava.core.command.LogContainerResultCallback;
 import com.github.dockerjava.core.command.PullImageResultCallback;
 import com.github.dockerjava.core.command.WaitContainerResultCallback;
 
+import lombok.extern.slf4j.Slf4j;
 import restfulci.shared.dao.RemoteGitRepository;
 import restfulci.shared.dao.RunRepository;
 import restfulci.shared.domain.DockerRunCmdResultBean;
@@ -34,6 +33,7 @@ import restfulci.shared.domain.RunConfigBean;
 import restfulci.shared.domain.RunMessageBean;
 import restfulci.shared.domain.RunPhase;
 
+@Slf4j
 @Service
 public class DockerRunServiceImpl implements DockerRunService {
 	
@@ -122,18 +122,22 @@ public class DockerRunServiceImpl implements DockerRunService {
 		for (Image image : localImages) {
 			for (int i = 0; i < image.getRepoTags().length; ++i) {
 				if (image.getRepoTags()[i].equals(imageTag)) {
+					log.info("Docker image already exists in local: "+imageTag);
 					return;
 				}
 			}
 		}
 		
+		log.info("Pulling new docker image from remote server: "+imageTag);
 		dockerClient.pullImageCmd(imageTag)
 				.exec(new PullImageResultCallback())
-				.awaitCompletion(30, TimeUnit.SECONDS);		
+				.awaitCompletion(30, TimeUnit.SECONDS);	
 	}
 
 	@Override
 	public DockerRunCmdResultBean runCommand(String imageTag, List<String> command) throws InterruptedException {
+		
+		log.info("Execute command "+command+" in docker image: "+imageTag);
 		
 		CreateContainerResponse container = dockerClient.createContainerCmd(imageTag)
 				.withCmd(command)
