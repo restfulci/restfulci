@@ -46,6 +46,12 @@ Job configuration/the logic of a particular job (see list below) should be insid
 * Job command/script.
 * (Dockerized) environment the script can be run onto.
 	* Unlike in CircleCI it needs special format Dockerfiles (chose one of the official ones and extends on your need through `.circleci/config.yml` `run` command, or create a specific one with strong CircleCI constrain), it should be able to re-use the Dockerfile used for the production or dev environment of the related project.
+* External dependencies (database, queueing system, ...):
+	* Should be defined as sidecar containers.
+	 	* Cannot export port and let main script call localhost:port, as that will cause port crashing when multiple jobs are running in the same hosting machine.
+		* Will need to setup network in between containers.
+		* Feature becomes very similar to docker-compose. Wonder if we can use it as a dependent lib.
+	* Alternatively, we can always `RUN apt-get install postgresql` in the main container and access localhost. But that will make user unable to use their prod container for test.
 * A list of environmental variables (used to pass in secrets/credentials).
 	* Will need the actual credentials saved in backend associate with the job itself. The run will error out if it cannot find some values of the secrets/credentials.
 		* First step save plat text in database.
