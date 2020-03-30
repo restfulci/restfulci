@@ -13,18 +13,11 @@ import com.github.dockerjava.core.DockerClientConfig;
 public class DockerConfig {
 
 	@Bean
-	@Profile("local")
-	public DockerClient localDockerClient() {
+	@Profile("dev")
+	public DockerClient devDockerClient() {
 		
 		DockerClientConfig config = DefaultDockerClientConfig.createDefaultConfigBuilder()
-				/*
-				 * Need to disable this specified UNIX socket, otherwise CircleCI
-				 * test will fail.
-				 * 
-				 * TODO:
-				 * We may consider using remote Docker daemon for non-local cases.
-				 */
-//				.withDockerHost("unix:///var/run/docker.sock")
+				.withDockerHost("unix:///var/run/docker.sock")
 				.build();
 		DockerClient dockerClient = DockerClientBuilder.getInstance(config).build();
 		return dockerClient;
@@ -35,12 +28,20 @@ public class DockerConfig {
 	public DockerClient dockerDockerClient() {
 		
 		DockerClientConfig config = DefaultDockerClientConfig.createDefaultConfigBuilder()
+				.withDockerHost("unix:///var/run/docker.sock")
+				.build();
+		DockerClient dockerClient = DockerClientBuilder.getInstance(config).build();
+		return dockerClient;
+	}
+	
+	@Bean
+	@Profile("circleci")
+	public DockerClient circleciDockerClient() {
+		
+		DockerClientConfig config = DefaultDockerClientConfig.createDefaultConfigBuilder()
 				/*
 				 * Need to disable this specified UNIX socket, otherwise CircleCI
 				 * test will fail.
-				 * 
-				 * TODO:
-				 * We may consider using remote Docker daemon for non-local cases.
 				 */
 //				.withDockerHost("unix:///var/run/docker.sock")
 				.build();

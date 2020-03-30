@@ -45,6 +45,10 @@ jobs:
       # > repository does not exist or may require 'docker login'
       - run: docker pull busybox:1.31
 
+      - run: sed -i "s/spring.profiles.active=dev/spring.profiles.active=circleci/g" master-api/src/main/resources/application.properties
+      - run: sed -i "s/spring.profiles.active=dev/spring.profiles.active=circleci/g" master-slave-shared/src/main/resources/application.properties
+      - run: sed -i "s/spring.profiles.active=dev/spring.profiles.active=circleci/g" slave-agent/src/main/resources/application.properties
+
       - run: mvn test
 
       - run:
@@ -61,6 +65,10 @@ jobs:
     steps:
       - checkout
       - inline-postgres/initialize
+
+      - run: sed -i "s/spring.profiles.active=dev/spring.profiles.active=circleci/g" master-api/src/main/resources/application.properties
+      - run: sed -i "s/spring.profiles.active=dev/spring.profiles.active=circleci/g" master-slave-shared/src/main/resources/application.properties
+      - run: sed -i "s/spring.profiles.active=dev/spring.profiles.active=circleci/g" slave-agent/src/main/resources/application.properties
 
       - run: mvn verify -Dskip.unittest=true
 
