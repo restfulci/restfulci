@@ -30,7 +30,9 @@ CREATE TABLE run (
     phase_shortname='C' OR
     phase_shortname='A') DEFAULT 'I',
   trigger_at timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  complete_at timestamp
+  complete_at timestamp,
+  exit_code integer,
+  run_output_object_referral text
 );
 
 CREATE FUNCTION freestyle_job_id_from_run (integer)

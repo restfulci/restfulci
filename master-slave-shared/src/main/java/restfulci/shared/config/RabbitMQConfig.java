@@ -8,12 +8,12 @@ import org.springframework.context.annotation.Profile;
 @Configuration
 public class RabbitMQConfig {
 	
-	@Profile("local")
+	@Profile("dev")
 	@Bean
-	public CachingConnectionFactory localConnectionFactory() {
+	public CachingConnectionFactory devConnectionFactory() {
 		CachingConnectionFactory connectionFactory = new CachingConnectionFactory();
 		connectionFactory.setHost("localhost");
-		connectionFactory.setPort(5672);
+		connectionFactory.setPort(5673);
 		connectionFactory.setUsername("guest");
 		connectionFactory.setPassword("guest");
 		return connectionFactory;
@@ -24,6 +24,17 @@ public class RabbitMQConfig {
 	public CachingConnectionFactory dockerConnectionFactory() {
 		CachingConnectionFactory connectionFactory = new CachingConnectionFactory();
 		connectionFactory.setHost("rabbitmq");
+		connectionFactory.setPort(5672);
+		connectionFactory.setUsername("guest");
+		connectionFactory.setPassword("guest");
+		return connectionFactory;
+	}
+	
+	@Profile("circleci")
+	@Bean
+	public CachingConnectionFactory circleciConnectionFactory() {
+		CachingConnectionFactory connectionFactory = new CachingConnectionFactory();
+		connectionFactory.setHost("localhost");
 		connectionFactory.setPort(5672);
 		connectionFactory.setUsername("guest");
 		connectionFactory.setPassword("guest");

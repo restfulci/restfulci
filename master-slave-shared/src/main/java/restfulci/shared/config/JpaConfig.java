@@ -31,7 +31,7 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 @EnableTransactionManagement
 public class JpaConfig {
 
-	@Autowired DataSource dataSource;
+	@Autowired private DataSource dataSource;
 	
 	@Bean
 	public HibernateJpaVendorAdapter jpaVendorAdapter() {

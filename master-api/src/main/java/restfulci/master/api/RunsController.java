@@ -37,7 +37,13 @@ public class RunsController {
 	
 	@GetMapping("/{runId}")
 	public RunBean getRun(@PathVariable @Min(1) Integer runId) throws IOException {
-
+		
 		return runService.getRun(runId);
+	}
+	
+	@GetMapping("/{runId}/console")
+	public String getRunConsoleOutput(@PathVariable @Min(1) Integer runId) throws Exception {
+	
+		return runService.getRunConsoleOutput(runId);
 	}
 }

@@ -18,7 +18,7 @@ import restfulci.slave.service.DockerRunService;
 @SpringBootApplication(scanBasePackages= {"restfulci.slave", "restfulci.shared"})
 public class SlaveApplication {
 	
-	@Autowired DockerRunService dockerRunService;
+	@Autowired private DockerRunService dockerRunService;
 
 	public static void main(String[] args) {
 		SpringApplication.run(SlaveApplication.class, args);

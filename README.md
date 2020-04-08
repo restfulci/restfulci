@@ -179,7 +179,7 @@ Also, if we want to run a task only based on the what is changed from git, we'll
 
 #### Results where to?
 
-Results should be queried from API endpoint, for example `/jobs/123/tasks/456/results/console` or `/job/123/tasks/456/results/junit` or ... May provide `/jobs/123/results` with JSON return type to provide information on what kind of result that particular job has. Detailed return results can be in [different IANA context-type](https://www.iana.org/assignments/media-types/media-types.xhtml), e.g. JUnit reports in `application/zip` of a folder of XML files. May use some data lake solutions (e.g. Hadoop HDFS (prefer) or AWS S3) to save those result files. Parsing/pretty e.g. JUnit report is completely a frontend plugin.
+Results should be queried from API endpoint, for example `/jobs/123/tasks/456/results/console` or `/job/123/tasks/456/results/junit` or ... May provide `/jobs/123/results` with JSON return type to provide information on what kind of result that particular job has. Detailed return results can be in [different IANA context-type](https://www.iana.org/assignments/media-types/media-types.xhtml), e.g. JUnit reports in `application/zip` of a folder of XML files. May use some data lake solutions (e.g. MinIO (preferred), Hadoop HDFS or AWS S3) to save those result files. Parsing/pretty e.g. JUnit report is completely a frontend plugin.
 
 #### Pipeline where to?
 

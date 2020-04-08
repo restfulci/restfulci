@@ -17,7 +17,6 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.http.MediaType;
-import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -30,10 +29,9 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
 @AutoConfigureMockMvc
-@ActiveProfiles("local")
 public class GitJobUserJourneyIT {
 	
-	@Autowired MockMvc mockMvc;
+	@Autowired private MockMvc mockMvc;
 	
 	private ObjectMapper objectMapper;
 	private ObjectWriter objectWriter;

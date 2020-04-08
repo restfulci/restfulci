@@ -7,7 +7,7 @@ executors:
         environment:
           TEST_DATABASE_URL: postgresql://postgres@localhost/restfulci
 
-      - image: circleci/postgres:11
+      - image: postgres:12.1
         environment:
           POSTGRES_PASSWORD: postgres
 
@@ -28,12 +28,30 @@ orbs:
           - run: psql -U postgres -h localhost -p 5432 -w -c "CREATE DATABASE restfulci OWNER postgres;"
           - run: psql -U postgres -h localhost -d restfulci -p 5432 -w -f database/setup.sql
 
+  inline-minio:
+    commands:
+      installation:
+        steps:
+          - run:
+              name: run minIO server
+              command: |
+                wget https://dl.min.io/server/minio/release/linux-amd64/minio -qO minio
+                chmod +x minio
+                sudo mv minio /usr/local/bin/minio
+                minio server /tmp/data
+              background: true
+              environment:
+                MINIO_UPDATE: 'off'
+                MINIO_ACCESS_KEY: restfulci
+                MINIO_SECRET_KEY: secretpassword
+
 jobs:
   java-unittest:
     executor: java-executor
     steps:
       - checkout
       - inline-postgres/initialize
+      - inline-minio/installation
 
       # This is to support running docker-java related unit tests.
       - setup_remote_docker:
@@ -44,6 +62,10 @@ jobs:
       # > com.github.dockerjava.api.exception.NotFoundException: pull access denied for 83aa35aa1c79,
       # > repository does not exist or may require 'docker login'
       - run: docker pull busybox:1.31
+
+      - run: sed -i "s/spring.profiles.active=dev/spring.profiles.active=circleci/g" master-api/src/main/resources/application.properties
+      - run: sed -i "s/spring.profiles.active=dev/spring.profiles.active=circleci/g" master-slave-shared/src/main/resources/application.properties
+      - run: sed -i "s/spring.profiles.active=dev/spring.profiles.active=circleci/g" slave-agent/src/main/resources/application.properties
 
       - run: mvn test
 
@@ -61,6 +83,11 @@ jobs:
     steps:
       - checkout
       - inline-postgres/initialize
+      - inline-minio/installation
+
+      - run: sed -i "s/spring.profiles.active=dev/spring.profiles.active=circleci/g" master-api/src/main/resources/application.properties
+      - run: sed -i "s/spring.profiles.active=dev/spring.profiles.active=circleci/g" master-slave-shared/src/main/resources/application.properties
+      - run: sed -i "s/spring.profiles.active=dev/spring.profiles.active=circleci/g" slave-agent/src/main/resources/application.properties
 
       - run: mvn verify -Dskip.unittest=true
 

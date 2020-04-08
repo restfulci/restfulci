@@ -1,8 +1,11 @@
 package restfulci.master.service;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 
+import org.apache.commons.io.IOUtils;
 import org.springframework.amqp.core.AmqpAdmin;
 import org.springframework.amqp.core.AmqpTemplate;
 import org.springframework.amqp.core.Queue;
@@ -12,21 +15,21 @@ import org.springframework.stereotype.Service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 
+import io.minio.errors.MinioException;
 import restfulci.master.dto.RunDTO;
+import restfulci.shared.dao.MinioRepository;
 import restfulci.shared.dao.RunRepository;
-import restfulci.shared.domain.GitBranchRunBean;
-import restfulci.shared.domain.GitCommitRunBean;
 import restfulci.shared.domain.JobBean;
 import restfulci.shared.domain.RunBean;
-import restfulci.shared.domain.RunConfigBean;
 
 @Service
 public class RunServiceImpl implements RunService {
 	
 	@Autowired private RunRepository runRepository;
+	@Autowired private MinioRepository minioRepository;
 	
-	@Autowired AmqpAdmin admin;
-	@Autowired AmqpTemplate template;
+	@Autowired private AmqpAdmin admin;
+	@Autowired private AmqpTemplate template;
 
 	@Override
 	public RunBean getRun(Integer runId) throws IOException {
@@ -40,6 +43,14 @@ public class RunServiceImpl implements RunService {
 			}
 	}
 
+	@Override
+	public String getRunConsoleOutput(Integer runId) throws IOException, MinioException {
+		
+		RunBean run = getRun(runId);
+		InputStream stream = minioRepository.getRunOutput(run);
+		return IOUtils.toString(stream, StandardCharsets.UTF_8.name());
+	}
+	
 	@Override
 	public RunBean triggerRun(JobBean job, RunDTO runDTO) throws IOException, InterruptedException {
 		

@@ -17,7 +17,6 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.http.MediaType;
-import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -30,10 +29,9 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
 @AutoConfigureMockMvc
-@ActiveProfiles("local")
 public class FreestyleJobUserJourneyIT {
 	
-	@Autowired MockMvc mockMvc;
+	@Autowired private MockMvc mockMvc;
 	
 	private ObjectMapper objectMapper;
 	private ObjectWriter objectWriter;
@@ -98,6 +96,9 @@ public class FreestyleJobUserJourneyIT {
 				objectMapper.convertValue(triggeredRun.get("job"), Map.class).get("type"),
 				"FREESTYLE");
 		
+		/*
+		 * curl -X GET -H "Content-Type: application/json" localhost:8881/jobs/1/runs/1
+		 */
 		Integer runId = (Integer)triggeredRun.get("id");
 		Map<?, ?> queriedRun = objectMapper.readValue(
 				mockMvc.perform(get("/jobs/"+jobId+"/runs/"+runId))
@@ -106,6 +107,13 @@ public class FreestyleJobUserJourneyIT {
 				Map.class);
 		assertEquals(queriedRun.get("phase"), "IN_PROGRESS");
 		
+		/*
+		 * curl -X GET -H "Content-Type: text/plain" -v localhost:8881/jobs/1/runs/1/console
+		 */
+		
+		/*
+		 * curl -X DELETE localhost:8881/jobs/1
+		 */
 		mockMvc.perform(delete("/jobs/"+jobId))
 				.andExpect(status().isOk());
 	}
