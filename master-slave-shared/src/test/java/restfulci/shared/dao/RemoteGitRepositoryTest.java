@@ -34,7 +34,7 @@ import restfulci.shared.domain.RunConfigBean;
 @SpringBootTest
 public class RemoteGitRepositoryTest {
 	
-	@Autowired RemoteGitRepository repository;
+	@Autowired private RemoteGitRepository repository;
 	
 	@Test
 	public void testCopyToLocalAndGetConfigFromBranchRun(@TempDir File tmpFolder) throws Exception {

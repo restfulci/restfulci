@@ -31,7 +31,7 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 @AutoConfigureMockMvc
 public class FreestyleJobUserJourneyIT {
 	
-	@Autowired MockMvc mockMvc;
+	@Autowired private MockMvc mockMvc;
 	
 	private ObjectMapper objectMapper;
 	private ObjectWriter objectWriter;
@@ -96,6 +96,9 @@ public class FreestyleJobUserJourneyIT {
 				objectMapper.convertValue(triggeredRun.get("job"), Map.class).get("type"),
 				"FREESTYLE");
 		
+		/*
+		 * curl -X GET -H "Content-Type: application/json" localhost:8881/jobs/1/runs/1
+		 */
 		Integer runId = (Integer)triggeredRun.get("id");
 		Map<?, ?> queriedRun = objectMapper.readValue(
 				mockMvc.perform(get("/jobs/"+jobId+"/runs/"+runId))
@@ -104,6 +107,13 @@ public class FreestyleJobUserJourneyIT {
 				Map.class);
 		assertEquals(queriedRun.get("phase"), "IN_PROGRESS");
 		
+		/*
+		 * curl -X GET -H "Content-Type: text/plain" -v localhost:8881/jobs/1/runs/1/console
+		 */
+		
+		/*
+		 * curl -X DELETE localhost:8881/jobs/1
+		 */
 		mockMvc.perform(delete("/jobs/"+jobId))
 				.andExpect(status().isOk());
 	}

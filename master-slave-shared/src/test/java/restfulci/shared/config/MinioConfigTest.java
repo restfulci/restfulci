@@ -14,7 +14,7 @@ import io.minio.MinioClient;
 @SpringBootTest
 public class MinioConfigTest {
 	
-	@Autowired MinioClient minioClient;
+	@Autowired private MinioClient minioClient;
 
 	@Test
 	public void testMinIOConnection() throws Exception {

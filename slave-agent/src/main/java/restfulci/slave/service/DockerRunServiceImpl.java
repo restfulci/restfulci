@@ -1,11 +1,15 @@
 package restfulci.slave.service;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -21,7 +25,9 @@ import com.github.dockerjava.core.command.LogContainerResultCallback;
 import com.github.dockerjava.core.command.PullImageResultCallback;
 import com.github.dockerjava.core.command.WaitContainerResultCallback;
 
+import io.minio.errors.MinioException;
 import lombok.extern.slf4j.Slf4j;
+import restfulci.shared.dao.MinioRepository;
 import restfulci.shared.dao.RemoteGitRepository;
 import restfulci.shared.dao.RunRepository;
 import restfulci.shared.domain.DockerRunCmdResultBean;
@@ -41,31 +47,47 @@ public class DockerRunServiceImpl implements DockerRunService {
 	
 	@Autowired private RunRepository runRepository;
 	@Autowired private RemoteGitRepository remoteGitRepository;
+	@Autowired private MinioRepository minioRepository;
 
 	@Override
 	public void executeRun(RunMessageBean runMessage) throws InterruptedException, IOException {
 		
 		RunBean run = runRepository.findById(runMessage.getRunId()).get();
 		
+		DockerRunCmdResultBean result = null;
 		if (run instanceof FreestyleRunBean) {
 			FreestyleRunBean freestyleRun = (FreestyleRunBean)run;
-			DockerRunCmdResultBean result = runFreestyleJob(freestyleRun);
-			System.out.println(result);
+			result = runFreestyleJob(freestyleRun);
 			
-			run.setPhase(RunPhase.COMPLETE);
-			runRepository.saveAndFlush(run);
 		}
 		else if (run instanceof GitRunBean) {
 			GitRunBean gitRun = (GitRunBean)run;
-			DockerRunCmdResultBean result = runGitJob(gitRun);
-			System.out.println(result);
-			
-			run.setPhase(RunPhase.COMPLETE);
-			runRepository.saveAndFlush(run);
+			result = runGitJob(gitRun);
 		}
 		else {
 			throw new IOException("Input run with wrong type");
 		}
+		
+		System.out.println(result);
+		
+		run.setPhase(RunPhase.COMPLETE);
+		run.setCompleteAt(new Date());
+		run.setExitCode(result.getExitCode());
+		
+		try {
+			/*
+			 * TODO:
+			 * Directly consume InputStream coming from docker execution.
+			 */
+			InputStream contentStream = new ByteArrayInputStream(
+					result.getOutput().getBytes(StandardCharsets.UTF_8));
+			minioRepository.putRunOutputAndUpdateRunBean(run, contentStream);
+		} catch (MinioException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		runRepository.saveAndFlush(run);
 	}
 	
 	@Override

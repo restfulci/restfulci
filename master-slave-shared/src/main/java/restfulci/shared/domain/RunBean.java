@@ -16,6 +16,7 @@ import javax.persistence.TemporalType;
 import javax.validation.constraints.NotNull;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -46,9 +47,16 @@ public abstract class RunBean extends BaseEntity {
 	private Date triggerAt;
 	
 	@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd hh:mm:ss")
-	@Column(name="complete_at", updatable=false)
+	@Column(name="complete_at", updatable=true)
 	@Temporal(TemporalType.TIMESTAMP)
 	private Date completeAt;
+	
+	@Column(name="exit_code", updatable=true)
+	private Integer exitCode;
+	
+	@JsonIgnore
+	@Column(name="run_output_object_referral", updatable=true)
+	private String runOutputObjectReferral;
 	
 	/*
 	 * TODO:

@@ -31,7 +31,7 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 @AutoConfigureMockMvc
 public class GitJobUserJourneyIT {
 	
-	@Autowired MockMvc mockMvc;
+	@Autowired private MockMvc mockMvc;
 	
 	private ObjectMapper objectMapper;
 	private ObjectWriter objectWriter;

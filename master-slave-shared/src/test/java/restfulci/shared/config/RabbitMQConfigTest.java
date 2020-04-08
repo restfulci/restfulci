@@ -23,8 +23,8 @@ public class RabbitMQConfigTest {
 	 * Then how can I 
 	 * > rabbitTemplate.setMessageConverter(new Jackson2JsonMessageConverter());
 	 */
-	@Autowired AmqpAdmin admin;
-	@Autowired AmqpTemplate template;
+	@Autowired private AmqpAdmin admin;
+	@Autowired private AmqpTemplate template;
 
 	@Test
 	public void testRabbitMQConnection() {

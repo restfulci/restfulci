@@ -25,6 +25,7 @@ public class FreestyleRunBeanTest {
 		run.setPhase(RunPhase.IN_PROGRESS);
 		run.setTriggerAt(new Date(0L));
 		run.setCompleteAt(new Date(1000L));
+		run.setExitCode(0);
 		
 		ObjectMapper mapper = new ObjectMapper();
 		assertEquals(
@@ -34,6 +35,7 @@ public class FreestyleRunBeanTest {
 				+ "\"phase\":\"IN_PROGRESS\","
 				+ "\"triggerAt\":\"1970-01-01 12:00:00\","
 				+ "\"completeAt\":\"1970-01-01 12:00:01\","
+				+ "\"exitCode\":0,"
 				+ "\"type\":\"FREESTYLE\"}");
 		assertEquals(
 				mapper.writeValueAsString(job),
