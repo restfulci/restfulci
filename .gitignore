@@ -4,6 +4,9 @@
 # Mac OS
 .DS_Store
 
+# Test reports
+*/test-results/
+
 ### Java ###
 
 # Maven
