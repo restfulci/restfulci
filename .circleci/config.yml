@@ -19,6 +19,12 @@ executors:
       # Customize the JVM maximum heap limit
       MAVEN_OPTS: -Xmx3200m
 
+  python-executor:
+    docker:
+      - image: circleci/python:3.7.3
+
+    working_directory: ~/python
+
 orbs:
   inline-postgres:
     commands:
@@ -100,9 +106,19 @@ jobs:
       - store_test_results:
           path: ~/integration-test-results
 
+  python-linter:
+    executor: python-executor
+    steps:
+      - checkout
+
+      - run: sudo pip3 install pipenv
+      - run: cd e2e-api && pipenv install flake8
+      - run: cd e2e-api && pipenv run flake8 --statistics
+
 workflows:
   version: 2
   build-test-and-deploy:
     jobs:
       - java-unittest
       - java-integration-test
+      - python-linter

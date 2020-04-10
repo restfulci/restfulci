@@ -1,5 +1,7 @@
 package restfulci.shared.domain;
 
+import java.io.File;
+import java.nio.file.Path;
 import java.util.List;
 
 import lombok.Getter;
@@ -37,4 +39,11 @@ public class RunConfigBean {
 	private RunConfigEnvironmentBean environment;
 	private List<String> command;
 	private List<RunConfigResultBean> results;
+	
+	public File getDockerfile(Path localRepoPath) {
+		return localRepoPath
+				.resolve(this.getEnvironment().getBuild().getContext())
+				.resolve(this.getEnvironment().getBuild().getDockerfile())
+				.toFile();
+	}
 }
