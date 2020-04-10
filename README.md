@@ -38,6 +38,8 @@ Framework configuration (see list below) should be setup by API calls. There can
 			* Job config file relative path in git repo.
 		* Freestyle jobs:
 			* Everything.
+  * Job specific input parameters.
+    * It should not be in version controlled config file, because in that case setup of one run will leak to another.
 * Overall config:
 	* What kind of servers (number of cores) can a job run onto. Or this is hard to be customized.
 
@@ -67,8 +69,6 @@ Job configuration/the logic of a particular job (see list below) should be insid
 * Resource quota(?)
 	* If the existing jobs on a slave machine has taking out all the resource quota, new jobs will be blocked to send to that machine. Not sure if that is needed, as we can also use slave CPU percentage to block sending new jobs.
 	* No need to define what kind of slaves (CPU core, ...) the job want to run at, since slaves should be just multi-core boxes with multiple jobs running on it (otherwise we cannot autoscale them based on CPU usage).
-
-TODO: Job specific input parameters.
 
 It doesn't matter if the job config (in repo) and infrastructure-as-code are in the same production repo, as they are with separated deployment anyway (same as whether app code and AWS setup are in the same repo or not, so may apply the same rule for both of them). However, job configuration should probably go in the same place as where the production infrastructure-as-code in.
 

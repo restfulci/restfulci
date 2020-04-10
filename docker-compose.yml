@@ -17,8 +17,6 @@ services:
 
   minio:
     image: minio/minio:RELEASE.2020-04-02T21-34-49Z
-    ports:
-      - "9000:9000"
     environment:
       MINIO_ACCESS_KEY: restfulci
       MINIO_SECRET_KEY: secretpassword
@@ -63,5 +61,18 @@ services:
       # TODO:
       # Investigate the possibility to use HTTP socket.
       - /var/run/docker.sock:/var/run/docker.sock
+      # SSH agent forwarding.
+      #
+      # Doesn't work for mac: https://github.com/docker/for-mac/issues/410
+      # There's a solution https://github.com/uber-common/docker-ssh-agent-forward
+      # but I have not investigate it.
+      #
+      # Have not tested in Linux.
+      #
+      # TODO:
+      # Need to find a solution when setting up infrastructure in Kubernetes.
+      - $SSH_AUTH_SOCK:${SSH_AUTH_SOCK}
+    environment:
+      - SSH_AUTH_SOCK
     tty: true
     restart: always

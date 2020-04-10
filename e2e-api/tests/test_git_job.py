@@ -16,39 +16,38 @@ class TestFreestyleJob(TestCase):
                 "Content-Type": "application/json"
             },
             json={
-                "name": "freestyle_job_name",
-                "dockerImage": "busybox:1.31",
-                "command": [
-                    "sh",
-                    "-c",
-                    "echo \"Hello world\""
-                ]
+                "name": "git_job_name",
+                "remoteOrigin": "https://github.com/restfulci/restfulci-examples.git",
+                "configFilepath": "hello-world/restfulci.yml"
             })
         self.assertEqual(response.status_code, 200)
         response_body = json.loads(response.text)
         job_id = response_body["id"]
-        self.assertEqual(response_body["name"], "freestyle_job_name")
-        self.assertEqual(response_body["type"], "FREESTYLE")
+        self.assertEqual(response_body["name"], "git_job_name")
+        self.assertEqual(response_body["type"], "GIT")
 
         response = requests.get(
             urljoin(self.master_api_url, "/jobs/{}".format(job_id)))
         self.assertEqual(response.status_code, 200)
         response_body = json.loads(response.text)
-        self.assertEqual(response_body["name"], "freestyle_job_name")
-        self.assertEqual(response_body["type"], "FREESTYLE")
+        self.assertEqual(response_body["name"], "git_job_name")
+        self.assertEqual(response_body["type"], "GIT")
 
         response = requests.post(
             urljoin(self.master_api_url, "/jobs/{}/runs".format(job_id)),
             headers={
                 "Content-Type": "application/json"
             },
-            json={})
+            json={
+                "branchName": "master"
+            })
         self.assertEqual(response.status_code, 200)
         response_body = json.loads(response.text)
         run_id = response_body["id"]
         self.assertEqual(response_body["phase"], "IN_PROGRESS")
-        self.assertEqual(response_body["type"], "FREESTYLE")
-        self.assertEqual(response_body["job"]["type"], "FREESTYLE")
+        self.assertEqual(response_body["branchName"], "master")
+        self.assertEqual(response_body["type"], "GIT")
+        self.assertEqual(response_body["job"]["type"], "GIT")
 
         while response_body["phase"] == "IN_PROGRESS":
             response = requests.get(

@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Paths;
 
 import org.junit.jupiter.api.Test;
 
@@ -32,5 +33,9 @@ public class RunConfigYamlParserTest {
 		assertEquals(runConfig.getResults().get(0).getPath(), "target/surefile-reports");
 		assertEquals(runConfig.getResults().get(1).getType(), "junit");
 		assertEquals(runConfig.getResults().get(1).getPath(), "target/failsafe-reports");
+		
+		assertEquals(
+				runConfig.getDockerfile(Paths.get("/")).getCanonicalPath(), 
+				"/path/to/subproject/Dockerfile");
 	}
 }

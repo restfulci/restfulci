@@ -113,9 +113,7 @@ public class DockerRunServiceImpl implements DockerRunService {
 		remoteGitRepository.copyToLocal(run, localRepoPath);
 		RunConfigBean runConfig = remoteGitRepository.getConfigFromFilepath(run, localRepoPath);
 		
-		File dockerfile = localRepoPath
-				.resolve(runConfig.getEnvironment().getBuild().getContext())
-				.resolve(runConfig.getEnvironment().getBuild().getDockerfile()).toFile();
+		File dockerfile = runConfig.getDockerfile(localRepoPath);
 		
 		/*
 		 * TODO:
