@@ -35,7 +35,10 @@ public class RunConfigYamlParserTest {
 		assertEquals(runConfig.getResults().get(1).getPath(), "target/failsafe-reports");
 		
 		assertEquals(
-				runConfig.getDockerfile(Paths.get("/")).getCanonicalPath(), 
-				"/path/to/subproject/Dockerfile");
+				runConfig.getBaseDir(Paths.get("/repo")).getCanonicalPath(), 
+				"/repo/path/to/subproject");
+		assertEquals(
+				runConfig.getDockerfile(Paths.get("/repo")).getCanonicalPath(), 
+				"/repo/path/to/subproject/Dockerfile");
 	}
 }

@@ -1,0 +1,11 @@
+version: 1.0
+
+environment:
+  build:
+    context: .
+    dockerfile: ./Dockerfile-diff-name
+
+command:
+  - sh
+  - -c
+  - "echo \"Hello world\""

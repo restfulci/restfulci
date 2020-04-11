@@ -15,6 +15,7 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.Optional;
 
+import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.invocation.InvocationOnMock;
@@ -96,13 +97,27 @@ public class DockerRunServiceTest {
 	}
 	
 	@Test
-	public void testRunGitJob() throws Exception {
+	public void testRunGitJobDefault() throws Exception {
+		testRunGitJobHelloWorld("git-default");
+	}
+
+	@Test
+	public void testRunGitJobCustomizedBasedir() throws Exception {
+		testRunGitJobHelloWorld("git-customized-basedir");
+	}
+	
+	@Test
+	public void testRunGitJobCustomizedDockerfile() throws Exception {
+		testRunGitJobHelloWorld("git-customized-dockerfile");
+	}
+	
+	private void testRunGitJobHelloWorld(String resourceName) throws Exception {
 		
 		GitJobBean job = new GitJobBean();
 		job.setId(123);
 		job.setName("job");
 		job.setRemoteOrigin("git@github.com:dummy/dummy.git");
-		job.setConfigFilepath(".restfulci.yml");
+		job.setConfigFilepath("restfulci.yml");
 		
 		GitBranchRunBean run = new GitBranchRunBean();
 		run.setId(456);
@@ -116,12 +131,9 @@ public class DockerRunServiceTest {
 			public Void answer(InvocationOnMock invocation) {
 				Path localRepoPath = (Path) invocation.getArguments()[1];
 				try {
-					Files.copy(
-							new File(getClass().getClassLoader().getResource("docker-run-service-test/restfulci.yml").getFile()).toPath(),
-							localRepoPath.resolve(".restfulci.yml"));
-					Files.copy(
-							new File(getClass().getClassLoader().getResource("docker-run-service-test/Dockerfile").getFile()).toPath(),
-							localRepoPath.resolve("Dockerfile"));
+					FileUtils.copyDirectory(
+							new File(getClass().getClassLoader().getResource("docker-run-service-test/"+resourceName).getFile()),
+							localRepoPath.toFile());
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
@@ -132,7 +144,7 @@ public class DockerRunServiceTest {
 		DockerRunCmdResultBean result = service.runGitJob(run);
 		assertEquals(result.getOutput(), "Hello world\n");
 	}
-
+	
 	@Test
 	public void testRunCommand() throws Exception {
 		

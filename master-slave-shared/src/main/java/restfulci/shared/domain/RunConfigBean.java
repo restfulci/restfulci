@@ -40,6 +40,12 @@ public class RunConfigBean {
 	private List<String> command;
 	private List<RunConfigResultBean> results;
 	
+	public File getBaseDir(Path localRepoPath) {
+		return localRepoPath
+				.resolve(this.getEnvironment().getBuild().getContext())
+				.toFile();
+	}
+	
 	public File getDockerfile(Path localRepoPath) {
 		return localRepoPath
 				.resolve(this.getEnvironment().getBuild().getContext())

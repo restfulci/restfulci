@@ -112,18 +112,14 @@ public class DockerRunServiceImpl implements DockerRunService {
 		Path localRepoPath = Files.createTempDirectory("local-repo");
 		remoteGitRepository.copyToLocal(run, localRepoPath);
 		RunConfigBean runConfig = remoteGitRepository.getConfigFromFilepath(run, localRepoPath);
-		
-		File dockerfile = runConfig.getDockerfile(localRepoPath);
-		
-		/*
-		 * TODO:
-		 * Use context.
-		 */
-		
+
 		/*
 		 * https://github.com/docker-java/docker-java/blob/3.1.5/src/test/java/com/github/dockerjava/cmd/BuildImageCmdIT.java
 		 */
-		String imageId = dockerClient.buildImageCmd(dockerfile)
+		String imageId = dockerClient
+				.buildImageCmd()
+				.withBaseDirectory(runConfig.getBaseDir(localRepoPath))
+				.withDockerfile(runConfig.getDockerfile(localRepoPath))
 				.withNoCache(true)
 				.exec(new BuildImageResultCallback())
 				.awaitImageId();
