@@ -1,7 +1,6 @@
 package restfulci.slave.service;
 
 import java.io.ByteArrayInputStream;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
@@ -30,7 +29,6 @@ import lombok.extern.slf4j.Slf4j;
 import restfulci.shared.dao.MinioRepository;
 import restfulci.shared.dao.RemoteGitRepository;
 import restfulci.shared.dao.RunRepository;
-import restfulci.shared.domain.DockerRunCmdResultBean;
 import restfulci.shared.domain.FreestyleJobBean;
 import restfulci.shared.domain.FreestyleRunBean;
 import restfulci.shared.domain.GitRunBean;
@@ -38,6 +36,7 @@ import restfulci.shared.domain.RunBean;
 import restfulci.shared.domain.RunConfigBean;
 import restfulci.shared.domain.RunMessageBean;
 import restfulci.shared.domain.RunPhase;
+import restfulci.slave.dto.DockerRunCmdResultDTO;
 
 @Slf4j
 @Service
@@ -54,7 +53,7 @@ public class DockerRunServiceImpl implements DockerRunService {
 		
 		RunBean run = runRepository.findById(runMessage.getRunId()).get();
 		
-		DockerRunCmdResultBean result = null;
+		DockerRunCmdResultDTO result = null;
 		if (run instanceof FreestyleRunBean) {
 			FreestyleRunBean freestyleRun = (FreestyleRunBean)run;
 			result = runFreestyleJob(freestyleRun);
@@ -91,14 +90,14 @@ public class DockerRunServiceImpl implements DockerRunService {
 	}
 	
 	@Override
-	public DockerRunCmdResultBean runFreestyleJob(FreestyleRunBean run) throws InterruptedException {
+	public DockerRunCmdResultDTO runFreestyleJob(FreestyleRunBean run) throws InterruptedException {
 		FreestyleJobBean job = run.getJob();
 		pullImage(job.getDockerImage());
 		return runCommand(job.getDockerImage(), Arrays.asList(job.getCommand()));
 	}
 	
 	@Override
-	public DockerRunCmdResultBean runGitJob(GitRunBean run) throws InterruptedException, IOException {
+	public DockerRunCmdResultDTO runGitJob(GitRunBean run) throws InterruptedException, IOException {
 		
 		/*
 		 * Steps:
@@ -151,7 +150,7 @@ public class DockerRunServiceImpl implements DockerRunService {
 	}
 
 	@Override
-	public DockerRunCmdResultBean runCommand(String imageTag, List<String> command) throws InterruptedException {
+	public DockerRunCmdResultDTO runCommand(String imageTag, List<String> command) throws InterruptedException {
 		
 		log.info("Execute command "+command+" in docker image: "+imageTag);
 		
@@ -162,7 +161,7 @@ public class DockerRunServiceImpl implements DockerRunService {
 		int timestamp = (int) (System.currentTimeMillis() / 1000);
 		dockerClient.startContainerCmd(container.getId()).exec();
 		
-		DockerRunCmdResultBean result = new DockerRunCmdResultBean();
+		DockerRunCmdResultDTO result = new DockerRunCmdResultDTO();
 
 		int exitCode = dockerClient.waitContainerCmd(container.getId())
 				.exec(new WaitContainerResultCallback())

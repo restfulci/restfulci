@@ -9,7 +9,6 @@ import static org.mockito.Mockito.verify;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Date;
@@ -28,7 +27,6 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import restfulci.shared.dao.RemoteGitRepository;
 import restfulci.shared.dao.RunRepository;
-import restfulci.shared.domain.DockerRunCmdResultBean;
 import restfulci.shared.domain.FreestyleJobBean;
 import restfulci.shared.domain.FreestyleRunBean;
 import restfulci.shared.domain.GitBranchRunBean;
@@ -37,6 +35,7 @@ import restfulci.shared.domain.GitRunBean;
 import restfulci.shared.domain.RunBean;
 import restfulci.shared.domain.RunMessageBean;
 import restfulci.shared.domain.RunPhase;
+import restfulci.slave.dto.DockerRunCmdResultDTO;
 
 @ExtendWith(SpringExtension.class)
 @SpringBootTest
@@ -92,7 +91,7 @@ public class DockerRunServiceTest {
 		run.setTriggerAt(new Date(0L));
 		run.setCompleteAt(new Date(1000L));
 		
-		DockerRunCmdResultBean result = service.runFreestyleJob(run);
+		DockerRunCmdResultDTO result = service.runFreestyleJob(run);
 		assertEquals(result.getOutput(), "Hello world\n");
 	}
 	
@@ -141,7 +140,7 @@ public class DockerRunServiceTest {
 			}
 		 }).when(remoteGitRepository).copyToLocal(any(GitRunBean.class), any(Path.class));
 		
-		DockerRunCmdResultBean result = service.runGitJob(run);
+		DockerRunCmdResultDTO result = service.runGitJob(run);
 		assertEquals(result.getOutput(), "Hello world\n");
 	}
 	
@@ -149,7 +148,7 @@ public class DockerRunServiceTest {
 	public void testRunCommand() throws Exception {
 		
 		String[] command = new String[] {"sh", "-c", "echo \"Hello world\""};
-		DockerRunCmdResultBean result = service.runCommand("busybox:1.31", Arrays.asList(command));
+		DockerRunCmdResultDTO result = service.runCommand("busybox:1.31", Arrays.asList(command));
 		
 		assertEquals(result.getExitCode(), 0);
 		assertEquals(result.getOutput(), "Hello world\n");
