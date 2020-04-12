@@ -31,7 +31,7 @@ public class SlaveApplication {
 			
 			try {
 				RunMessageBean runMessage = objectMapper.readValue(input, RunMessageBean.class);
-				dockerRunService.executeRun(runMessage);
+				dockerRunService.runByMessage(runMessage);
 			} 
 			catch (JsonMappingException e) {
 				e.printStackTrace();

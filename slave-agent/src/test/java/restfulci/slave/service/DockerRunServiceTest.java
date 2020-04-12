@@ -1,7 +1,6 @@
 package restfulci.slave.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
@@ -14,7 +13,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.Optional;
 
@@ -54,7 +52,7 @@ public class DockerRunServiceTest {
 	@SpyBean private RemoteGitRepository remoteGitRepository;
 	
 	@Test
-	public void testExecuteRun() throws Exception{
+	public void testRunFreestyleJob() throws Exception{
 		
 		RunMessageBean runMessage = new RunMessageBean();
 		runMessage.setJobId(123);
@@ -76,38 +74,11 @@ public class DockerRunServiceTest {
 		Optional<RunBean> maybeRun = Optional.of(run);
 		given(runRepository.findById(456)).willReturn(maybeRun);
 		
-		service.executeRun(runMessage);
+		service.runByMessage(runMessage);
 		
 		ArgumentCaptor<RunBean> runCaptor = ArgumentCaptor.forClass(RunBean.class);
 		verify(runRepository, times(1)).saveAndFlush(runCaptor.capture());
 		assertEquals(runCaptor.getValue().getPhase(), RunPhase.COMPLETE);
-		
-		ArgumentCaptor<InputStream> inputStreamCaptor = ArgumentCaptor.forClass(InputStream.class);
-		verify(minioRepository, times(1)).putRunOutputAndUpdateRunBean(eq(run), inputStreamCaptor.capture());
-		assertEquals(IOUtils.toString(inputStreamCaptor.getValue(), StandardCharsets.UTF_8.name()), "Hello world\n");
-	}
-	
-	@Test
-	public void testRunFreestyleJob() throws Exception {
-		
-		FreestyleJobBean job = new FreestyleJobBean();
-		job.setId(123);
-		job.setName("job");
-		job.setDockerImage("busybox:1.31");
-		job.setCommand(new String[] {"sh", "-c", "echo \"Hello world\""});
-		
-		FreestyleRunBean run = new FreestyleRunBean();
-		run.setId(456);
-		run.setJob(job);
-		run.setPhase(RunPhase.IN_PROGRESS);
-		run.setTriggerAt(new Date(0L));
-		
-		service.runFreestyleJob(run);
-		
-		ArgumentCaptor<RunBean> runCaptor = ArgumentCaptor.forClass(RunBean.class);
-		verify(runRepository, times(1)).saveAndFlush(runCaptor.capture());
-		assertEquals(runCaptor.getValue().getPhase(), RunPhase.COMPLETE);
-		assertNotNull(runCaptor.getValue().getCompleteAt());
 		
 		ArgumentCaptor<InputStream> inputStreamCaptor = ArgumentCaptor.forClass(InputStream.class);
 		verify(minioRepository, times(1)).putRunOutputAndUpdateRunBean(eq(run), inputStreamCaptor.capture());
@@ -136,6 +107,10 @@ public class DockerRunServiceTest {
 	
 	private void testRunGitJobHelloWorld(String resourceName) throws Exception {
 		
+		RunMessageBean runMessage = new RunMessageBean();
+		runMessage.setJobId(123);
+		runMessage.setRunId(456);
+		
 		GitJobBean job = new GitJobBean();
 		job.setId(123);
 		job.setName("job");
@@ -149,6 +124,9 @@ public class DockerRunServiceTest {
 		run.setPhase(RunPhase.IN_PROGRESS);
 		run.setTriggerAt(new Date(0L));
 		run.setCompleteAt(new Date(1000L));
+		
+		Optional<RunBean> maybeRun = Optional.of(run);
+		given(runRepository.findById(456)).willReturn(maybeRun);
 		
 		doAnswer(new Answer<Void>() {
 			public Void answer(InvocationOnMock invocation) {
@@ -164,25 +142,7 @@ public class DockerRunServiceTest {
 			}
 		 }).when(remoteGitRepository).copyToLocal(any(GitRunBean.class), any(Path.class));
 		
-		service.runGitJob(run);
-		
-		ArgumentCaptor<RunBean> runCaptor = ArgumentCaptor.forClass(RunBean.class);
-		verify(runRepository, times(1)).saveAndFlush(runCaptor.capture());
-		assertEquals(runCaptor.getValue().getPhase(), RunPhase.COMPLETE);
-		
-		ArgumentCaptor<InputStream> inputStreamCaptor = ArgumentCaptor.forClass(InputStream.class);
-		verify(minioRepository, times(1)).putRunOutputAndUpdateRunBean(eq(run), inputStreamCaptor.capture());
-		assertEquals(IOUtils.toString(inputStreamCaptor.getValue(), StandardCharsets.UTF_8.name()), "Hello world\n");
-	}
-	
-	@Test
-	public void testRunCommand() throws Exception {
-		
-		RunBean run = new FreestyleRunBean();
-		run.setPhase(RunPhase.IN_PROGRESS);
-		
-		String[] command = new String[] {"sh", "-c", "echo \"Hello world\""};
-		service.runCommand(run, "busybox:1.31", Arrays.asList(command));
+		service.runByMessage(runMessage);
 		
 		ArgumentCaptor<RunBean> runCaptor = ArgumentCaptor.forClass(RunBean.class);
 		verify(runRepository, times(1)).saveAndFlush(runCaptor.capture());
