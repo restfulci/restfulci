@@ -1,0 +1,10 @@
+version: 1.0
+
+environment:
+  build:
+    context: .
+    dockerfile: ./Dockerfile
+
+command:
+  - sh
+  - exec.sh

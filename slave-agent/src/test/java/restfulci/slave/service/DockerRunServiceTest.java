@@ -2,6 +2,7 @@ package restfulci.slave.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.times;
@@ -9,14 +10,18 @@ import static org.mockito.Mockito.verify;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.Optional;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,6 +30,7 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
+import restfulci.shared.dao.MinioRepository;
 import restfulci.shared.dao.RemoteGitRepository;
 import restfulci.shared.dao.RunRepository;
 import restfulci.shared.domain.FreestyleJobBean;
@@ -44,6 +50,7 @@ public class DockerRunServiceTest {
 	@Autowired private DockerRunService service;
 	
 	@MockBean private RunRepository runRepository;
+	@MockBean private MinioRepository minioRepository;
 	@SpyBean private RemoteGitRepository remoteGitRepository;
 	
 	@Test
@@ -71,8 +78,13 @@ public class DockerRunServiceTest {
 		
 		service.executeRun(runMessage);
 		
-		run.setPhase(RunPhase.COMPLETE);
-		verify(runRepository, times(1)).saveAndFlush(run);
+		ArgumentCaptor<RunBean> runCaptor = ArgumentCaptor.forClass(RunBean.class);
+		verify(runRepository, times(1)).saveAndFlush(runCaptor.capture());
+		assertEquals(runCaptor.getValue().getPhase(), RunPhase.COMPLETE);
+		
+		ArgumentCaptor<InputStream> inputStreamCaptor = ArgumentCaptor.forClass(InputStream.class);
+		verify(minioRepository, times(1)).putRunOutputAndUpdateRunBean(eq(run), inputStreamCaptor.capture());
+		assertEquals(IOUtils.toString(inputStreamCaptor.getValue(), StandardCharsets.UTF_8.name()), "Hello world\n");
 	}
 	
 	@Test
@@ -108,6 +120,11 @@ public class DockerRunServiceTest {
 	@Test
 	public void testRunGitJobCustomizedDockerfile() throws Exception {
 		testRunGitJobHelloWorld("git-customized-dockerfile");
+	}
+	
+	@Test
+	public void testRunGitJobShellBaked() throws Exception {
+		testRunGitJobHelloWorld("git-shell-baked");
 	}
 	
 	private void testRunGitJobHelloWorld(String resourceName) throws Exception {
