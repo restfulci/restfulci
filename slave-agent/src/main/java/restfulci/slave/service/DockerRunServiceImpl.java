@@ -36,7 +36,6 @@ import restfulci.shared.domain.RunBean;
 import restfulci.shared.domain.RunConfigBean;
 import restfulci.shared.domain.RunMessageBean;
 import restfulci.shared.domain.RunPhase;
-import restfulci.slave.dto.DockerRunCmdResultDTO;
 
 @Slf4j
 @Service
@@ -53,51 +52,28 @@ public class DockerRunServiceImpl implements DockerRunService {
 		
 		RunBean run = runRepository.findById(runMessage.getRunId()).get();
 		
-		DockerRunCmdResultDTO result = null;
 		if (run instanceof FreestyleRunBean) {
 			FreestyleRunBean freestyleRun = (FreestyleRunBean)run;
-			result = runFreestyleJob(freestyleRun);
-			
+			runFreestyleJob(freestyleRun);
 		}
 		else if (run instanceof GitRunBean) {
 			GitRunBean gitRun = (GitRunBean)run;
-			result = runGitJob(gitRun);
+			runGitJob(gitRun);
 		}
 		else {
 			throw new IOException("Input run with wrong type");
 		}
-		
-		System.out.println(result);
-		
-		run.setPhase(RunPhase.COMPLETE);
-		run.setCompleteAt(new Date());
-		run.setExitCode(result.getExitCode());
-		
-		try {
-			/*
-			 * TODO:
-			 * Directly consume InputStream coming from docker execution.
-			 */
-			InputStream contentStream = new ByteArrayInputStream(
-					result.getOutput().getBytes(StandardCharsets.UTF_8));
-			minioRepository.putRunOutputAndUpdateRunBean(run, contentStream);
-		} catch (MinioException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		
-		runRepository.saveAndFlush(run);
 	}
 	
 	@Override
-	public DockerRunCmdResultDTO runFreestyleJob(FreestyleRunBean run) throws InterruptedException {
+	public void runFreestyleJob(FreestyleRunBean run) throws InterruptedException {
 		FreestyleJobBean job = run.getJob();
 		pullImage(job.getDockerImage());
-		return runCommand(job.getDockerImage(), Arrays.asList(job.getCommand()));
+		runCommand(run, job.getDockerImage(), Arrays.asList(job.getCommand()));
 	}
 	
 	@Override
-	public DockerRunCmdResultDTO runGitJob(GitRunBean run) throws InterruptedException, IOException {
+	public void runGitJob(GitRunBean run) throws InterruptedException, IOException {
 		
 		/*
 		 * Steps:
@@ -123,7 +99,7 @@ public class DockerRunServiceImpl implements DockerRunService {
 				.exec(new BuildImageResultCallback())
 				.awaitImageId();
 		
-		return runCommand(imageId, runConfig.getCommand());
+		runCommand(run, imageId, runConfig.getCommand());
 	}
 	
 	private void pullImage(String imageTag) throws InterruptedException {
@@ -150,7 +126,7 @@ public class DockerRunServiceImpl implements DockerRunService {
 	}
 
 	@Override
-	public DockerRunCmdResultDTO runCommand(String imageTag, List<String> command) throws InterruptedException {
+	public void runCommand(RunBean run, String imageTag, List<String> command) throws InterruptedException {
 		
 		log.info("Execute command "+command+" in docker image: "+imageTag);
 		
@@ -161,12 +137,10 @@ public class DockerRunServiceImpl implements DockerRunService {
 		int timestamp = (int) (System.currentTimeMillis() / 1000);
 		dockerClient.startContainerCmd(container.getId()).exec();
 		
-		DockerRunCmdResultDTO result = new DockerRunCmdResultDTO();
-
 		int exitCode = dockerClient.waitContainerCmd(container.getId())
 				.exec(new WaitContainerResultCallback())
 				.awaitStatusCode();
-		result.setExitCode(exitCode);
+		run.setExitCode(exitCode);
 		
 		LogContainerCallbackWrapper loggingCallback = new LogContainerCallbackWrapper();
 		dockerClient.logContainerCmd(container.getId())
@@ -175,9 +149,22 @@ public class DockerRunServiceImpl implements DockerRunService {
 				.withSince(timestamp)
 				.exec(loggingCallback);
 		loggingCallback.awaitCompletion();
-		result.setOutput(loggingCallback.toString());
+		try {
+			/*
+			 * TODO:
+			 * Directly consume InputStream coming from docker execution.
+			 */
+			InputStream contentStream = new ByteArrayInputStream(
+					loggingCallback.toString().getBytes(StandardCharsets.UTF_8));
+			minioRepository.putRunOutputAndUpdateRunBean(run, contentStream);
+		} catch (MinioException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		
-		return result;
+		run.setPhase(RunPhase.COMPLETE);
+		run.setCompleteAt(new Date());
+		runRepository.saveAndFlush(run);
 	}
 	
 	/*

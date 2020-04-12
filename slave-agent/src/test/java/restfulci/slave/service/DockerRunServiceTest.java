@@ -1,6 +1,7 @@
 package restfulci.slave.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
@@ -41,7 +42,6 @@ import restfulci.shared.domain.GitRunBean;
 import restfulci.shared.domain.RunBean;
 import restfulci.shared.domain.RunMessageBean;
 import restfulci.shared.domain.RunPhase;
-import restfulci.slave.dto.DockerRunCmdResultDTO;
 
 @ExtendWith(SpringExtension.class)
 @SpringBootTest
@@ -101,10 +101,17 @@ public class DockerRunServiceTest {
 		run.setJob(job);
 		run.setPhase(RunPhase.IN_PROGRESS);
 		run.setTriggerAt(new Date(0L));
-		run.setCompleteAt(new Date(1000L));
 		
-		DockerRunCmdResultDTO result = service.runFreestyleJob(run);
-		assertEquals(result.getOutput(), "Hello world\n");
+		service.runFreestyleJob(run);
+		
+		ArgumentCaptor<RunBean> runCaptor = ArgumentCaptor.forClass(RunBean.class);
+		verify(runRepository, times(1)).saveAndFlush(runCaptor.capture());
+		assertEquals(runCaptor.getValue().getPhase(), RunPhase.COMPLETE);
+		assertNotNull(runCaptor.getValue().getCompleteAt());
+		
+		ArgumentCaptor<InputStream> inputStreamCaptor = ArgumentCaptor.forClass(InputStream.class);
+		verify(minioRepository, times(1)).putRunOutputAndUpdateRunBean(eq(run), inputStreamCaptor.capture());
+		assertEquals(IOUtils.toString(inputStreamCaptor.getValue(), StandardCharsets.UTF_8.name()), "Hello world\n");
 	}
 	
 	@Test
@@ -157,17 +164,32 @@ public class DockerRunServiceTest {
 			}
 		 }).when(remoteGitRepository).copyToLocal(any(GitRunBean.class), any(Path.class));
 		
-		DockerRunCmdResultDTO result = service.runGitJob(run);
-		assertEquals(result.getOutput(), "Hello world\n");
+		service.runGitJob(run);
+		
+		ArgumentCaptor<RunBean> runCaptor = ArgumentCaptor.forClass(RunBean.class);
+		verify(runRepository, times(1)).saveAndFlush(runCaptor.capture());
+		assertEquals(runCaptor.getValue().getPhase(), RunPhase.COMPLETE);
+		
+		ArgumentCaptor<InputStream> inputStreamCaptor = ArgumentCaptor.forClass(InputStream.class);
+		verify(minioRepository, times(1)).putRunOutputAndUpdateRunBean(eq(run), inputStreamCaptor.capture());
+		assertEquals(IOUtils.toString(inputStreamCaptor.getValue(), StandardCharsets.UTF_8.name()), "Hello world\n");
 	}
 	
 	@Test
 	public void testRunCommand() throws Exception {
 		
-		String[] command = new String[] {"sh", "-c", "echo \"Hello world\""};
-		DockerRunCmdResultDTO result = service.runCommand("busybox:1.31", Arrays.asList(command));
+		RunBean run = new FreestyleRunBean();
+		run.setPhase(RunPhase.IN_PROGRESS);
 		
-		assertEquals(result.getExitCode(), 0);
-		assertEquals(result.getOutput(), "Hello world\n");
+		String[] command = new String[] {"sh", "-c", "echo \"Hello world\""};
+		service.runCommand(run, "busybox:1.31", Arrays.asList(command));
+		
+		ArgumentCaptor<RunBean> runCaptor = ArgumentCaptor.forClass(RunBean.class);
+		verify(runRepository, times(1)).saveAndFlush(runCaptor.capture());
+		assertEquals(runCaptor.getValue().getPhase(), RunPhase.COMPLETE);
+		
+		ArgumentCaptor<InputStream> inputStreamCaptor = ArgumentCaptor.forClass(InputStream.class);
+		verify(minioRepository, times(1)).putRunOutputAndUpdateRunBean(eq(run), inputStreamCaptor.capture());
+		assertEquals(IOUtils.toString(inputStreamCaptor.getValue(), StandardCharsets.UTF_8.name()), "Hello world\n");
 	}
 }
