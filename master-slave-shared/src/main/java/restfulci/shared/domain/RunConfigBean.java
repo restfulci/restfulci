@@ -15,6 +15,7 @@ public class RunConfigBean {
 	@Getter
 	public static class RunConfigEnvironmentBean {
 
+		private String image;
 		private RunConfigBuildBean build;
 	}
 	

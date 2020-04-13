@@ -1,0 +1,15 @@
+version: 1.0
+
+environment:
+  image: busybox:1.31
+
+command:
+  - bash
+  - -c
+  - "\"echo 0\""
+
+results:
+  - type: junit
+    path: target/surefile-reports
+  - type: junit
+    path: target/failsafe-reports

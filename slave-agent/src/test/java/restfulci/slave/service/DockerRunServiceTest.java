@@ -86,8 +86,13 @@ public class DockerRunServiceTest {
 	}
 	
 	@Test
-	public void testRunGitJobDefault() throws Exception {
-		testRunGitJobHelloWorld("git-default");
+	public void testRunGitJobDefaultFromImage() throws Exception {
+		testRunGitJobHelloWorld("git-default-from-image");
+	}
+	
+	@Test
+	public void testRunGitJobDefaultFromBuild() throws Exception {
+		testRunGitJobHelloWorld("git-default-from-build");
 	}
 
 	@Test
