@@ -1,9 +1,12 @@
 package restfulci.slave.service;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -47,7 +50,7 @@ public class DockerRunServiceImpl implements DockerRunService {
 	private void runFreestyleJob(FreestyleRunBean run) throws InterruptedException {
 		FreestyleJobBean job = run.getJob();
 		dockerExec.pullImage(job.getDockerImage());
-		dockerExec.runCommand(run, job.getDockerImage(), Arrays.asList(job.getCommand()));
+		dockerExec.runCommand(run, job.getDockerImage(), Arrays.asList(job.getCommand()), new HashMap<String, File>());
 	}
 	
 	private void runGitJob(GitRunBean run) throws InterruptedException, IOException {
@@ -65,12 +68,17 @@ public class DockerRunServiceImpl implements DockerRunService {
 		remoteGitRepository.copyToLocal(run, localRepoPath);
 		RunConfigBean runConfig = remoteGitRepository.getConfigFromFilepath(run, localRepoPath);
 		
+		Map<String, File> mounts = new HashMap<String, File>();
+		for (RunConfigBean.RunConfigResultBean result : runConfig.getResults()) {
+			mounts.put(result.getPath(), Files.createTempDirectory("result").toFile());
+		}
+		
 		if (runConfig.getEnvironment().getImage() != null) {
-			dockerExec.runCommand(run, runConfig.getEnvironment().getImage(), runConfig.getCommand());
+			dockerExec.runCommand(run, runConfig.getEnvironment().getImage(), runConfig.getCommand(), mounts);
 		}
 		else {
 			String imageId = dockerExec.buildImageAndGetId(localRepoPath, runConfig);
-			dockerExec.runCommand(run, imageId, runConfig.getCommand());
+			dockerExec.runCommand(run, imageId, runConfig.getCommand(), mounts);
 		}
 	}
 }

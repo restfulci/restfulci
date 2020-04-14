@@ -157,4 +157,58 @@ public class DockerRunServiceTest {
 		verify(minioRepository, times(1)).putRunOutputAndUpdateRunBean(eq(run), inputStreamCaptor.capture());
 		assertEquals(IOUtils.toString(inputStreamCaptor.getValue(), StandardCharsets.UTF_8.name()), "Hello world\n");
 	}
+	
+	@Test
+	public void testRunGitJobWithResults() throws Exception {
+		
+		RunMessageBean runMessage = new RunMessageBean();
+		runMessage.setJobId(123);
+		runMessage.setRunId(456);
+		
+		GitJobBean job = new GitJobBean();
+		job.setId(123);
+		job.setName("job");
+		job.setRemoteOrigin("git@github.com:dummy/dummy.git");
+		job.setConfigFilepath("restfulci.yml");
+		
+		GitBranchRunBean run = new GitBranchRunBean();
+		run.setId(456);
+		run.setJob(job);
+		run.setBranchName("master");
+		run.setPhase(RunPhase.IN_PROGRESS);
+		run.setTriggerAt(new Date(0L));
+		run.setCompleteAt(new Date(1000L));
+		
+		Optional<RunBean> maybeRun = Optional.of(run);
+		given(runRepository.findById(456)).willReturn(maybeRun);
+		
+		doAnswer(new Answer<Void>() {
+			public Void answer(InvocationOnMock invocation) {
+				Path localRepoPath = (Path) invocation.getArguments()[1];
+				try {
+					FileUtils.copyDirectory(
+							new File(getClass().getClassLoader().getResource("docker-run-service-test/git-with-results").getFile()),
+							localRepoPath.toFile());
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+				return null;
+			}
+		 }).when(remoteGitRepository).copyToLocal(any(GitRunBean.class), any(Path.class));
+		
+		service.runByMessage(runMessage);
+		
+		ArgumentCaptor<RunBean> runCaptor = ArgumentCaptor.forClass(RunBean.class);
+		verify(runRepository, times(1)).saveAndFlush(runCaptor.capture());
+		assertEquals(runCaptor.getValue().getPhase(), RunPhase.COMPLETE);
+		
+		ArgumentCaptor<InputStream> inputStreamCaptor = ArgumentCaptor.forClass(InputStream.class);
+		verify(minioRepository, times(1)).putRunOutputAndUpdateRunBean(eq(run), inputStreamCaptor.capture());
+		assertEquals(IOUtils.toString(inputStreamCaptor.getValue(), StandardCharsets.UTF_8.name()), "this.txt\n");
+		
+		/*
+		 * TODO:
+		 * Validate result is sending to correct MinIO bucket.
+		 */
+	}
 }

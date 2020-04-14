@@ -1,12 +1,14 @@
 package restfulci.slave.exec;
 
 import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,8 +16,10 @@ import org.springframework.stereotype.Component;
 
 import com.github.dockerjava.api.DockerClient;
 import com.github.dockerjava.api.command.CreateContainerResponse;
+import com.github.dockerjava.api.model.Bind;
 import com.github.dockerjava.api.model.Frame;
 import com.github.dockerjava.api.model.Image;
+import com.github.dockerjava.api.model.Volume;
 import com.github.dockerjava.core.command.BuildImageResultCallback;
 import com.github.dockerjava.core.command.LogContainerResultCallback;
 import com.github.dockerjava.core.command.PullImageResultCallback;
@@ -80,12 +84,24 @@ public class DockerExecImpl implements DockerExec {
 	}
 
 	@Override
-	public void runCommand(RunBean run, String imageTag, List<String> command) throws InterruptedException {
+	public void runCommand(RunBean run, String imageTag, List<String> command, Map<String, File> mounts) throws InterruptedException {
 		
 		log.info("Execute command "+command+" in docker image: "+imageTag);
 		
+		/*
+		 * https://github.com/docker-java/docker-java/blob/3.1.5/src/test/java/com/github/dockerjava/cmd/StartContainerCmdIT.java#L50
+		 */
+		List<Bind> binds = new ArrayList<Bind>();
+		for (Map.Entry<String, File> entry : mounts.entrySet()) {
+			binds.add(new Bind(entry.getValue().getAbsolutePath(), new Volume(entry.getKey())));
+		}
+		
+		/*
+		 * https://github.com/docker-java/docker-java/blob/3.1.5/src/test/java/com/github/dockerjava/cmd/LogContainerCmdIT.java
+		 */
 		CreateContainerResponse container = dockerClient.createContainerCmd(imageTag)
 				.withCmd(command)
+				.withBinds(binds)
 				.exec();
 		
 		int timestamp = (int) (System.currentTimeMillis() / 1000);

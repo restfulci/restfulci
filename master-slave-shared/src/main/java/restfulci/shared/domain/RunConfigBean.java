@@ -2,6 +2,7 @@ package restfulci.shared.domain;
 
 import java.io.File;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 
 import lombok.Getter;
@@ -39,7 +40,7 @@ public class RunConfigBean {
 	
 	private RunConfigEnvironmentBean environment;
 	private List<String> command;
-	private List<RunConfigResultBean> results;
+	private List<RunConfigResultBean> results = new ArrayList<RunConfigResultBean>();
 	
 	public File getBaseDir(Path localRepoPath) {
 		return localRepoPath

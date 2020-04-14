@@ -1,0 +1,13 @@
+version: 1.0
+
+environment:
+  image: busybox:1.31
+
+command:
+  - sh
+  - -c
+  - "mkdir -p /result && touch /result/this.txt && ls /result"
+
+results:
+  - type: junit
+    path: /result

@@ -62,4 +62,15 @@ public class RunConfigYamlParserTest {
 				runConfig.getDockerfile(Paths.get("/repo")).getCanonicalPath(), 
 				"/repo/path/to/subproject/Dockerfile");
 	}
+	
+	@Test
+	public void testWithoutResultsElement() throws IOException {
+		
+		File exampleYamlFile = new File(getClass().getClassLoader().getResource("restfulci-without-results-element.yml").getFile());
+		String yamlContent = String.join("\n", Files.readAllLines(exampleYamlFile.toPath()));
+		
+		RunConfigBean runConfig = RunConfigYamlParser.parse(yamlContent);
+		
+		assertEquals(runConfig.getResults().size(), 0);
+	}
 }
