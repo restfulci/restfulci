@@ -10,5 +10,6 @@ public interface RemoteGitRepository {
 
 	public void copyToLocal(GitRunBean run, Path localRepoPath) throws IOException, InterruptedException;
 	
+	public Path getConfigFilepath(GitRunBean run, Path localRepoPath) throws IOException;
 	public RunConfigBean getConfigFromFilepath(GitRunBean run, Path localRepoPath) throws IOException;
 }

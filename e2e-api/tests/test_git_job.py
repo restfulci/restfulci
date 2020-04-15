@@ -62,6 +62,14 @@ class TestFreestyleJob(TestCase):
         self.assertEqual(response_body["exitCode"], 0)
 
         response = requests.get(
+            urljoin(self.master_api_url, "/jobs/{}/runs/{}/configuration".format(job_id, run_id)),
+            headers={
+                "Content-Type": "text/plain"
+            })
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.text.startswith("version:"))
+
+        response = requests.get(
             urljoin(self.master_api_url, "/jobs/{}/runs/{}/console".format(job_id, run_id)),
             headers={
                 "Content-Type": "text/plain"

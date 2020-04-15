@@ -19,6 +19,7 @@ import io.minio.errors.MinioException;
 import restfulci.master.dto.RunDTO;
 import restfulci.shared.dao.MinioRepository;
 import restfulci.shared.dao.RunRepository;
+import restfulci.shared.domain.GitRunBean;
 import restfulci.shared.domain.JobBean;
 import restfulci.shared.domain.RunBean;
 
@@ -41,6 +42,25 @@ public class RunServiceImpl implements RunService {
 			else {
 				throw new IOException();
 			}
+	}
+	
+	@Override
+	public String getRunConfiguration(Integer runId) throws IOException, MinioException {
+		
+		RunBean run = getRun(runId);
+		
+		if (run instanceof GitRunBean) {
+			GitRunBean gitRun = (GitRunBean)run;
+			InputStream stream = minioRepository.getRunConfiguration(gitRun);
+			return IOUtils.toString(stream, StandardCharsets.UTF_8.name());
+		}
+		else {
+			/*
+			 * TODO:
+			 * Find out a way to record freestyle run configuration in database.
+			 */
+			return null;
+		}
 	}
 
 	@Override
@@ -87,5 +107,4 @@ public class RunServiceImpl implements RunService {
 		
 		return run;
 	}
-
 }

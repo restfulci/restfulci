@@ -41,6 +41,17 @@ public class RunsController {
 		return runService.getRun(runId);
 	}
 	
+	/*
+	 * TODO:
+	 * Return YAML mime type?
+	 * https://stackoverflow.com/questions/332129/yaml-mime-type
+	 */
+	@GetMapping("/{runId}/configuration")
+	public String getRunConfiguration(@PathVariable @Min(1) Integer runId) throws Exception {
+	
+		return runService.getRunConfiguration(runId);
+	}
+	
 	@GetMapping("/{runId}/console")
 	public String getRunConsoleOutput(@PathVariable @Min(1) Integer runId) throws Exception {
 	

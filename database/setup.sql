@@ -35,6 +35,14 @@ CREATE TABLE run (
   run_output_object_referral text
 );
 
+CREATE TABLE run_result (
+  id serial PRIMARY KEY,
+  run_id serial REFERENCES job(id) ON DELETE CASCADE,
+  type text NOT NULL,
+  container_path text NOT NULL,
+  object_referral text
+);
+
 CREATE FUNCTION freestyle_job_id_from_run (integer)
 RETURNS integer AS $return_id$
 DECLARE return_id integer;
@@ -76,6 +84,7 @@ IMMUTABLE;
 
 CREATE TABLE git_run (
   id serial PRIMARY KEY REFERENCES run(id) ON DELETE CASCADE,
+  run_configuration_object_referral text,
   CHECK (git_job_id_from_run(id) IS NOT NULL)
 );
 

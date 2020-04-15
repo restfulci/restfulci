@@ -1,6 +1,7 @@
 package restfulci.slave.service;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -11,6 +12,8 @@ import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import io.minio.errors.MinioException;
+import restfulci.shared.dao.MinioRepository;
 import restfulci.shared.dao.RemoteGitRepository;
 import restfulci.shared.dao.RunRepository;
 import restfulci.shared.domain.FreestyleJobBean;
@@ -28,6 +31,7 @@ public class DockerRunServiceImpl implements DockerRunService {
 	
 	@Autowired private RunRepository runRepository;
 	@Autowired private RemoteGitRepository remoteGitRepository;
+	@Autowired private MinioRepository minioRepository;
 
 	@Override
 	public void runByMessage(RunMessageBean runMessage) throws InterruptedException, IOException {
@@ -66,6 +70,16 @@ public class DockerRunServiceImpl implements DockerRunService {
 		 */
 		Path localRepoPath = Files.createTempDirectory("local-repo");
 		remoteGitRepository.copyToLocal(run, localRepoPath);
+		
+		try {
+			Path configFilepath = remoteGitRepository.getConfigFilepath(run, localRepoPath);
+			minioRepository.putRunConfigurationAndUpdateRunBean(run, new FileInputStream(configFilepath.toFile()));
+			runRepository.saveAndFlush(run);
+		} catch (MinioException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
 		RunConfigBean runConfig = remoteGitRepository.getConfigFromFilepath(run, localRepoPath);
 		
 		/*
