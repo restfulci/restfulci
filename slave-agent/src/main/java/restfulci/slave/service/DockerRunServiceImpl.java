@@ -68,12 +68,25 @@ public class DockerRunServiceImpl implements DockerRunService {
 		remoteGitRepository.copyToLocal(run, localRepoPath);
 		RunConfigBean runConfig = remoteGitRepository.getConfigFromFilepath(run, localRepoPath);
 		
+		/*
+		 * For Docker desktop on Mac, need to edit `Library/Group\ Containers/group.com.docker/settings.json`
+		 * to add `/var/folders`. Otherwise error:
+		 * > com.github.dockerjava.api.exception.InternalServerErrorException: Mounts denied: 
+		 * > The path /var/folders/kp/fz7j3bln4m11rc197xrj4dvc0000gq/T/junit5099823135583804007/results
+		 * > is not shared from OS X and is not known to Docker.
+		 * > You can configure shared paths from Docker -> Preferences... -> File Sharing.
+		 * > See https://docs.docker.com/docker-for-mac/osxfs/#namespaces for more info.
+		 * 
+		 * Notice that both `@TempDir` and `Files.createTempDirectory` 
+		 * are using `/var/folders` to save the file.
+		 */
 		Map<String, File> mounts = new HashMap<String, File>();
 		for (RunConfigBean.RunConfigResultBean result : runConfig.getResults()) {
 			mounts.put(result.getPath(), Files.createTempDirectory("result").toFile());
 		}
 		
 		if (runConfig.getEnvironment().getImage() != null) {
+			dockerExec.pullImage(runConfig.getEnvironment().getImage());
 			dockerExec.runCommand(run, runConfig.getEnvironment().getImage(), runConfig.getCommand(), mounts);
 		}
 		else {

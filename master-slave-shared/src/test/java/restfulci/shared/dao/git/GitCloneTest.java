@@ -7,20 +7,17 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.DisabledIfEnvironmentVariable;
 import org.junit.jupiter.api.io.TempDir;
-
-import restfulci.shared.dao.git.CommandResult;
-import restfulci.shared.dao.git.Executable;
-import restfulci.shared.dao.git.GitClone;
 
 public class GitCloneTest {
 
 	/*
 	 * CircleCI doesn't support git local clone.
 	 */
-	@Disabled
+	@Test
+	@DisabledIfEnvironmentVariable(named="CI", matches="CircleCI")
 	public void testGitCloneFromLocal(@TempDir File tmpFolder) throws Exception {
 		
 		File sourceDirectory = new File(tmpFolder, "source-repo");

@@ -13,8 +13,8 @@ import java.util.Date;
 import java.util.List;
 
 import org.assertj.core.util.Arrays;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.DisabledIfEnvironmentVariable;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.io.TempDir;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,9 +29,9 @@ import restfulci.shared.domain.RunConfigBean;
 /*
  * CircleCI doesn't support git local clone.
  */
-@Disabled
 @ExtendWith(SpringExtension.class)
 @SpringBootTest
+@DisabledIfEnvironmentVariable(named="CI", matches="CircleCI")
 public class RemoteGitRepositoryTest {
 	
 	@Autowired private RemoteGitRepository repository;
@@ -53,7 +53,7 @@ public class RemoteGitRepositoryTest {
 		List<Object> localPathnames = Arrays.asList(targetDirectory.list());
 		
 		assertEquals(localPathnames.size(), 2);
-		assertTrue(localPathnames.contains(".restfulci.yml"));
+		assertTrue(localPathnames.contains("restfulci.yml"));
 		assertTrue(localPathnames.contains(".git"));
 		
 		RunConfigBean runConfig = repository.getConfigFromFilepath(run, targetPath);
@@ -77,7 +77,7 @@ public class RemoteGitRepositoryTest {
 		List<Object> localPathnames = Arrays.asList(targetDirectory.list());
 		
 		assertEquals(localPathnames.size(), 2);
-		assertTrue(localPathnames.contains(".restfulci.yml"));
+		assertTrue(localPathnames.contains("restfulci.yml"));
 		assertTrue(localPathnames.contains(".git"));
 		
 		RunConfigBean runConfig = repository.getConfigFromFilepath(run, targetPath);
@@ -87,8 +87,8 @@ public class RemoteGitRepositoryTest {
 	private String setupRemoteGit(File sourceDirectory) throws InterruptedException, IOException {
 		
 		Files.copy(
-				new File(getClass().getClassLoader().getResource("example-restfulci.yml").getFile()).toPath(), 
-				sourceDirectory.toPath().resolve(".restfulci.yml"));
+				new File(getClass().getClassLoader().getResource("restfulci-from-build.yml").getFile()).toPath(), 
+				sourceDirectory.toPath().resolve("restfulci.yml"));
 		
 		ProcessBuilder builder = new ProcessBuilder("git", "init");
 		builder.directory(sourceDirectory);
@@ -98,7 +98,7 @@ public class RemoteGitRepositoryTest {
 		builder.directory(sourceDirectory);
 		builder.start().waitFor();
 		
-		builder = new ProcessBuilder("git", "commit", "-m", "\"add .restfulci.yml\"");
+		builder = new ProcessBuilder("git", "commit", "-m", "\"add restfulci.yml\"");
 		builder.directory(sourceDirectory);
 		builder.start().waitFor();
 		
@@ -117,7 +117,7 @@ public class RemoteGitRepositoryTest {
 		job.setId(123);
 		job.setName("job");
 		job.setRemoteOrigin("file://"+sourceDirectory.getAbsolutePath());
-		job.setConfigFilepath(".restfulci.yml");
+		job.setConfigFilepath("restfulci.yml");
 		
 		GitBranchRunBean run = new GitBranchRunBean();
 		run.setId(456);
@@ -135,7 +135,7 @@ public class RemoteGitRepositoryTest {
 		job.setId(123);
 		job.setName("job");
 		job.setRemoteOrigin("file://"+sourceDirectory.getAbsolutePath());
-		job.setConfigFilepath(".restfulci.yml");
+		job.setConfigFilepath("restfulci.yml");
 		
 		GitCommitRunBean run = new GitCommitRunBean();
 		run.setId(456);

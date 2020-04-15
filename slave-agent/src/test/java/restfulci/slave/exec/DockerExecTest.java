@@ -13,14 +13,15 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.commons.io.IOUtils;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.DisabledIfEnvironmentVariable;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.io.TempDir;
 import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.annotation.IfProfileValue;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import restfulci.shared.dao.MinioRepository;
@@ -45,6 +46,7 @@ public class DockerExecTest {
 		run.setPhase(RunPhase.IN_PROGRESS);
 		
 		String[] command = new String[] {"sh", "-c", "echo \"Hello world\""};
+		exec.pullImage("busybox:1.31");
 		exec.runCommand(run, "busybox:1.31", Arrays.asList(command), new HashMap<String, File>());
 		
 		ArgumentCaptor<RunBean> runCaptor = ArgumentCaptor.forClass(RunBean.class);
@@ -63,8 +65,8 @@ public class DockerExecTest {
 	 * 
 	 * Should be CircleCI disables docker volume/mount.
 	 */
-	@Disabled
-//	@Test
+	@Test
+	@DisabledIfEnvironmentVariable(named="CI", matches="CircleCI")
 	public void testRunCommandWithMount(@TempDir File tmpFolder) throws Exception {
 		
 		/*
@@ -76,7 +78,8 @@ public class DockerExecTest {
 		 * > You can configure shared paths from Docker -> Preferences... -> File Sharing.
 		 * > See https://docs.docker.com/docker-for-mac/osxfs/#namespaces for more info.
 		 * 
-		 * Both `@TempDir` and `Files.createTempDirectory` have the same problem.
+		 * Notice that both `@TempDir` and `Files.createTempDirectory` 
+		 * are using `/var/folders` to save the file.
 		 */
 		File hostMountPoint = new File(tmpFolder, "result");
 		hostMountPoint.mkdir();
@@ -86,7 +89,13 @@ public class DockerExecTest {
 		
 		RunBean run = new FreestyleRunBean();
 		
-		String[] command = new String[] {"sh", "-c", "mkdir -p /result && touch /result/this.txt && ls /result"};
+		/*
+		 * No need to `mkdir /result`, as docker will create `/result`
+		 * when there's a volume mount `/some/host/path:/result`.
+		 * Alternatively we can `mkdir -p /result` to make it clear.
+		 */
+		String[] command = new String[] {"sh", "-c", "touch /result/this.txt && ls /result"};
+		exec.pullImage("busybox:1.31");
 		exec.runCommand(run, "busybox:1.31", Arrays.asList(command), mounts);
 		
 		ArgumentCaptor<InputStream> inputStreamCaptor = ArgumentCaptor.forClass(InputStream.class);

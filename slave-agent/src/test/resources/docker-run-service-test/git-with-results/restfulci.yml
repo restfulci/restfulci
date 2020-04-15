@@ -6,7 +6,7 @@ environment:
 command:
   - sh
   - -c
-  - "mkdir -p /result && touch /result/this.txt && ls /result"
+  - "touch /result/this.txt && ls /result"
 
 results:
   - type: junit
