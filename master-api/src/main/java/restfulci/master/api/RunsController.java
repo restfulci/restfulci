@@ -6,6 +6,10 @@ import javax.validation.Valid;
 import javax.validation.constraints.Min;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.InputStreamResource;
+import org.springframework.core.io.Resource;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -56,5 +60,18 @@ public class RunsController {
 	public String getRunConsoleOutput(@PathVariable @Min(1) Integer runId) throws Exception {
 	
 		return runService.getRunConsoleOutput(runId);
+	}
+	
+	@GetMapping("/{runId}/results/{runResultId}")
+	public ResponseEntity<Resource> getRunResult(
+			@PathVariable @Min(1) Integer runId,
+			@PathVariable @Min(1) Integer runResultId) throws Exception {
+	
+		InputStreamResource resource = new InputStreamResource(
+				runService.getRunResultStream(runResultId));
+
+		return ResponseEntity.ok()
+				.contentType(MediaType.parseMediaType("application/zip"))
+				.body(resource);
 	}
 }

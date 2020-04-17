@@ -72,6 +72,9 @@ public class DockerExecImpl implements DockerExec {
 		/*
 		 * https://github.com/docker-java/docker-java/blob/3.1.5/src/test/java/com/github/dockerjava/cmd/BuildImageCmdIT.java
 		 */
+		log.info(
+				"Build image from context path "+runConfig.getEnvironment().getBuild().getContext()
+				+ " and Dockerfile path "+runConfig.getEnvironment().getBuild().getDockerfile());
 		String imageId = dockerClient
 				.buildImageCmd()
 				.withBaseDirectory(runConfig.getBaseDir(localRepoPath))
@@ -84,7 +87,11 @@ public class DockerExecImpl implements DockerExec {
 	}
 
 	@Override
-	public void runCommand(RunBean run, String imageTag, List<String> command, Map<String, File> mounts) throws InterruptedException {
+	public void runCommand(
+			RunBean run, 
+			String imageTag, 
+			List<String> command, 
+			Map<RunConfigBean.RunConfigResultBean, File> mounts) throws InterruptedException {
 		
 		log.info("Execute command "+command+" in docker image: "+imageTag);
 		
@@ -92,8 +99,8 @@ public class DockerExecImpl implements DockerExec {
 		 * https://github.com/docker-java/docker-java/blob/3.1.5/src/test/java/com/github/dockerjava/cmd/StartContainerCmdIT.java#L50
 		 */
 		List<Bind> binds = new ArrayList<Bind>();
-		for (Map.Entry<String, File> entry : mounts.entrySet()) {
-			binds.add(new Bind(entry.getValue().getAbsolutePath(), new Volume(entry.getKey())));
+		for (Map.Entry<RunConfigBean.RunConfigResultBean, File> entry : mounts.entrySet()) {
+			binds.add(new Bind(entry.getValue().getAbsolutePath(), new Volume(entry.getKey().getPath())));
 		}
 		
 		/*

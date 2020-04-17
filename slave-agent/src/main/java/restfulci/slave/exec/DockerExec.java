@@ -12,5 +12,9 @@ public interface DockerExec {
 
 	public void pullImage(String imageTag) throws InterruptedException;
 	public String buildImageAndGetId(Path localRepoPath, RunConfigBean runConfig);
-	public void runCommand(RunBean run, String imageTag, List<String> command, Map<String, File> mounts) throws InterruptedException;
+	public void runCommand(
+			RunBean run, 
+			String imageTag, 
+			List<String> command, 
+			Map<RunConfigBean.RunConfigResultBean, File> mounts) throws InterruptedException;
 }

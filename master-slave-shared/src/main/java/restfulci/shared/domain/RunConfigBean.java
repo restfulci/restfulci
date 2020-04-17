@@ -33,6 +33,16 @@ public class RunConfigBean {
 	public static class RunConfigResultBean {
 
 		private String type;
+		
+		/*
+		 * TODO:
+		 * It is a hard limit that this `path` need to be an absolute path inside of
+		 * the container. So when there's a `WORKDIR` setup, you need to include that
+		 * `WORKDIR` into the path. In docker community there are discussion on add
+		 * container relative path into volume mount, but it has no been addressed yet.
+		 * https://github.com/moby/moby/issues/4830
+		 * https://github.com/docker/cli/issues/1203
+		 */
 		private String path;
 	}
 

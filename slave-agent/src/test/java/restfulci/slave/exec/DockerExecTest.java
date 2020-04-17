@@ -21,13 +21,13 @@ import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.test.annotation.IfProfileValue;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import restfulci.shared.dao.MinioRepository;
 import restfulci.shared.dao.RunRepository;
 import restfulci.shared.domain.FreestyleRunBean;
 import restfulci.shared.domain.RunBean;
+import restfulci.shared.domain.RunConfigBean;
 import restfulci.shared.domain.RunPhase;
 
 @ExtendWith(SpringExtension.class)
@@ -47,7 +47,11 @@ public class DockerExecTest {
 		
 		String[] command = new String[] {"sh", "-c", "echo \"Hello world\""};
 		exec.pullImage("busybox:1.31");
-		exec.runCommand(run, "busybox:1.31", Arrays.asList(command), new HashMap<String, File>());
+		exec.runCommand(
+				run, 
+				"busybox:1.31", 
+				Arrays.asList(command), 
+				new HashMap<RunConfigBean.RunConfigResultBean, File>());
 		
 		ArgumentCaptor<RunBean> runCaptor = ArgumentCaptor.forClass(RunBean.class);
 		verify(runRepository, times(1)).saveAndFlush(runCaptor.capture());
@@ -84,8 +88,10 @@ public class DockerExecTest {
 		File hostMountPoint = new File(tmpFolder, "result");
 		hostMountPoint.mkdir();
 		
-		Map<String, File> mounts = new HashMap<String, File>();
-		mounts.put("/result", hostMountPoint);
+		RunConfigBean.RunConfigResultBean runConfigResult = new RunConfigBean.RunConfigResultBean();
+		runConfigResult.setPath("/result");
+		Map<RunConfigBean.RunConfigResultBean, File> mounts = new HashMap<RunConfigBean.RunConfigResultBean, File>();
+		mounts.put(runConfigResult, hostMountPoint);
 		
 		RunBean run = new FreestyleRunBean();
 		

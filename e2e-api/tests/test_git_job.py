@@ -9,7 +9,31 @@ class TestFreestyleJob(TestCase):
 
     master_api_url = "http://localhost:8881"
 
-    def test(self):
+    def test_hello_world(self):
+
+        def validate_console_log(response):
+            self.assertEqual(response.text, "Hello world\n")
+
+        self._test_skeleton("hello-world", validate_console_log)
+
+    def test_shellscript(self):
+
+        def validate_console_log(response):
+            self.assertEqual(response.text, "Hello world\n")
+
+        self._test_skeleton("shellscript", validate_console_log)
+
+    def test_python_pytest(self):
+
+        def validate_console_log(response):
+            self.assertTrue("test session starts" in response.text)
+            self.assertTrue("PASSED" in response.text)
+            self.assertTrue("generated xml file: /code/test-results/report.xml" in response.text)
+
+        self._test_skeleton("python-pytest", validate_console_log)
+
+    def _test_skeleton(self, project_name, validate_console_log=None):
+
         response = requests.post(
             urljoin(self.master_api_url, "/jobs"),
             headers={
@@ -18,7 +42,7 @@ class TestFreestyleJob(TestCase):
             json={
                 "name": "git_job_name",
                 "remoteOrigin": "https://github.com/restfulci/restfulci-examples.git",
-                "configFilepath": "hello-world/restfulci.yml"
+                "configFilepath": "{}/restfulci.yml".format(project_name)
             })
         self.assertEqual(response.status_code, 200)
         response_body = json.loads(response.text)
@@ -60,6 +84,7 @@ class TestFreestyleJob(TestCase):
             sleep(1)
         self.assertEqual(response_body["phase"], "COMPLETE")
         self.assertEqual(response_body["exitCode"], 0)
+        print(response_body)
 
         response = requests.get(
             urljoin(self.master_api_url, "/jobs/{}/runs/{}/configuration".format(job_id, run_id)),
@@ -69,13 +94,14 @@ class TestFreestyleJob(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertTrue(response.text.startswith("version:"))
 
-        response = requests.get(
-            urljoin(self.master_api_url, "/jobs/{}/runs/{}/console".format(job_id, run_id)),
-            headers={
-                "Content-Type": "text/plain"
-            })
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.text, "Hello world\n")
+        if validate_console_log:
+            response = requests.get(
+                urljoin(self.master_api_url, "/jobs/{}/runs/{}/console".format(job_id, run_id)),
+                headers={
+                    "Content-Type": "text/plain"
+                })
+            self.assertEqual(response.status_code, 200)
+            validate_console_log(response)
 
         requests.delete(
             urljoin(self.master_api_url, "/jobs/{}".format(job_id)),

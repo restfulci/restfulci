@@ -19,14 +19,17 @@ import io.minio.errors.MinioException;
 import restfulci.master.dto.RunDTO;
 import restfulci.shared.dao.MinioRepository;
 import restfulci.shared.dao.RunRepository;
+import restfulci.shared.dao.RunResultRepository;
 import restfulci.shared.domain.GitRunBean;
 import restfulci.shared.domain.JobBean;
 import restfulci.shared.domain.RunBean;
+import restfulci.shared.domain.RunResultBean;
 
 @Service
 public class RunServiceImpl implements RunService {
 	
 	@Autowired private RunRepository runRepository;
+	@Autowired private RunResultRepository runResultRepository;
 	@Autowired private MinioRepository minioRepository;
 	
 	@Autowired private AmqpAdmin admin;
@@ -35,13 +38,13 @@ public class RunServiceImpl implements RunService {
 	@Override
 	public RunBean getRun(Integer runId) throws IOException {
 			
-			Optional<RunBean> runs = runRepository.findById(runId);
-			if (runs.isPresent()) {
-				return runs.get();
-			}
-			else {
-				throw new IOException();
-			}
+		Optional<RunBean> runs = runRepository.findById(runId);
+		if (runs.isPresent()) {
+			return runs.get();
+		}
+		else {
+			throw new IOException();
+		}
 	}
 	
 	@Override
@@ -76,6 +79,14 @@ public class RunServiceImpl implements RunService {
 		
 		RunBean run = runDTO.toBean();
 		run.setJob(job);
+		/*
+		 * No need to do it, as we are saving by `runRepository` rather
+		 * than `jobRepository`.
+		 * 
+		 * This also help us to avoid the need of loading all runs belong
+		 * to the same job. 
+		 */
+//		job.getRuns().add(run);
 		runRepository.saveAndFlush(run);
 		
 		ObjectMapper objectMapper = new ObjectMapper();
@@ -106,5 +117,25 @@ public class RunServiceImpl implements RunService {
 //		}
 		
 		return run;
+	}
+	
+	@Override
+	public RunResultBean getRunResult(Integer runResultId) throws IOException {
+		
+		Optional<RunResultBean> runResults = runResultRepository.findById(runResultId);
+		if (runResults.isPresent()) {
+			return runResults.get();
+		}
+		else {
+			throw new IOException();
+		}
+	}
+	
+	@Override
+	public InputStream getRunResultStream(Integer runResultId) throws IOException, MinioException {
+		
+		RunResultBean runResult = getRunResult(runResultId);
+		InputStream stream = minioRepository.getRunResult(runResult);
+		return stream;
 	}
 }

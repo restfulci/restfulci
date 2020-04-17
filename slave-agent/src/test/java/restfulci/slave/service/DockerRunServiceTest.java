@@ -1,7 +1,6 @@
 package restfulci.slave.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -22,6 +21,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.io.TempDir;
 import org.mockito.ArgumentCaptor;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
@@ -30,10 +30,12 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
+import org.zeroturnaround.zip.ZipUtil;
 
 import restfulci.shared.dao.MinioRepository;
 import restfulci.shared.dao.RemoteGitRepository;
 import restfulci.shared.dao.RunRepository;
+import restfulci.shared.dao.RunResultRepository;
 import restfulci.shared.domain.FreestyleJobBean;
 import restfulci.shared.domain.FreestyleRunBean;
 import restfulci.shared.domain.GitBranchRunBean;
@@ -42,6 +44,7 @@ import restfulci.shared.domain.GitRunBean;
 import restfulci.shared.domain.RunBean;
 import restfulci.shared.domain.RunMessageBean;
 import restfulci.shared.domain.RunPhase;
+import restfulci.shared.domain.RunResultBean;
 
 @ExtendWith(SpringExtension.class)
 @SpringBootTest
@@ -50,6 +53,7 @@ public class DockerRunServiceTest {
 	@Autowired private DockerRunService service;
 	
 	@MockBean private RunRepository runRepository;
+	@MockBean private RunResultRepository runResultRepository;
 	@MockBean private MinioRepository minioRepository;
 	@SpyBean private RemoteGitRepository remoteGitRepository;
 	
@@ -171,7 +175,7 @@ public class DockerRunServiceTest {
 	}
 	
 	@Test
-	public void testRunGitJobWithResults() throws Exception {
+	public void testRunGitJobWithResults(@TempDir File tempFolder) throws Exception {
 		
 		RunMessageBean runMessage = new RunMessageBean();
 		runMessage.setJobId(123);
@@ -216,19 +220,31 @@ public class DockerRunServiceTest {
 		assertEquals(runCaptor.getValue().getPhase(), RunPhase.COMPLETE);
 //		assertNotNull(runCaptor.getValue().getRunOutputObjectReferral());
 		
+		ArgumentCaptor<RunResultBean> runResultCaptor = ArgumentCaptor.forClass(RunResultBean.class);
+		verify(runResultRepository, times(1)).saveAndFlush(runResultCaptor.capture());
+		assertEquals(runResultCaptor.getValue().getType(), "junit");
+		assertEquals(runResultCaptor.getValue().getContainerPath(), "/result");
+		
 		ArgumentCaptor<InputStream> inputStreamCaptor = ArgumentCaptor.forClass(InputStream.class);
+		
 		verify(minioRepository, times(1)).putRunConfigurationAndUpdateRunBean(eq(run), inputStreamCaptor.capture());
 		assertEquals(
 				IOUtils.toString(inputStreamCaptor.getValue(), StandardCharsets.UTF_8.name()),
 				FileUtils.readFileToString(
 						new File(getClass().getClassLoader().getResource("docker-run-service-test/git-with-results/restfulci.yml").getFile()), 
 						StandardCharsets.UTF_8));
+		
 		verify(minioRepository, times(1)).putRunOutputAndUpdateRunBean(eq(run), inputStreamCaptor.capture());
 		assertEquals(IOUtils.toString(inputStreamCaptor.getValue(), StandardCharsets.UTF_8.name()), "this.txt\n");
 		
-		/*
-		 * TODO:
-		 * Validate result is sending to correct MinIO bucket.
-		 */
+		verify(minioRepository, times(1)).putRunResultAndUpdateRunResultBean(
+				eq(runResultCaptor.getValue()), inputStreamCaptor.capture());
+		File zipFile = new File(tempFolder, "zip.zip");
+		File resultFolder = new File(tempFolder, "result");
+		resultFolder.mkdir();
+		FileUtils.copyInputStreamToFile(inputStreamCaptor.getValue(), zipFile);
+		ZipUtil.unpack(zipFile, resultFolder);
+		assertEquals(resultFolder.list().length, 1);
+		assertEquals(resultFolder.list()[0], "this.txt");
 	}
 }
