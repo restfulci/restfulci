@@ -20,6 +20,7 @@ import java.util.Optional;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.DisabledIfEnvironmentVariable;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.io.TempDir;
 import org.mockito.ArgumentCaptor;
@@ -158,9 +159,13 @@ public class DockerRunServiceTest {
 		service.runByMessage(runMessage);
 		
 		ArgumentCaptor<RunBean> runCaptor = ArgumentCaptor.forClass(RunBean.class);
-		verify(runRepository, times(2)).saveAndFlush(runCaptor.capture());
+		verify(runRepository, times(1)).saveAndFlush(runCaptor.capture());
 		assertTrue(runCaptor.getValue() instanceof GitRunBean);
 		assertEquals(runCaptor.getValue().getPhase(), RunPhase.COMPLETE);
+		/*
+		 * Cannot assert this, as the set logic is in `minioRepository`
+		 * which is mocked here.
+		 */
 //		assertNotNull(runCaptor.getValue().getRunOutputObjectReferral());
 		
 		ArgumentCaptor<InputStream> inputStreamCaptor = ArgumentCaptor.forClass(InputStream.class);
@@ -174,7 +179,15 @@ public class DockerRunServiceTest {
 		assertEquals(IOUtils.toString(inputStreamCaptor.getValue(), StandardCharsets.UTF_8.name()), "Hello world\n");
 	}
 	
+	/*
+	 * This test can pass locally but will fail CircleCI with error:
+	 * > org.zeroturnaround.zip.ZipException: Given directory 
+	 * > '/tmp/result17110808655528955129' doesn't contain any files!
+	 * 
+	 * Should be CircleCI disables docker volume/mount.
+	 */
 	@Test
+	@DisabledIfEnvironmentVariable(named="CI", matches="CircleCI")
 	public void testRunGitJobWithResults(@TempDir File tempFolder) throws Exception {
 		
 		RunMessageBean runMessage = new RunMessageBean();
@@ -215,16 +228,14 @@ public class DockerRunServiceTest {
 		service.runByMessage(runMessage);
 		
 		ArgumentCaptor<RunBean> runCaptor = ArgumentCaptor.forClass(RunBean.class);
-		verify(runRepository, times(2)).saveAndFlush(runCaptor.capture());
+		verify(runRepository, times(1)).saveAndFlush(runCaptor.capture());
 		assertTrue(runCaptor.getValue() instanceof GitRunBean);
 		assertEquals(runCaptor.getValue().getPhase(), RunPhase.COMPLETE);
-//		assertNotNull(runCaptor.getValue().getRunOutputObjectReferral());
-		
-		ArgumentCaptor<RunResultBean> runResultCaptor = ArgumentCaptor.forClass(RunResultBean.class);
-		verify(runResultRepository, times(1)).saveAndFlush(runResultCaptor.capture());
-		assertEquals(runResultCaptor.getValue().getType(), "junit");
-		assertEquals(runResultCaptor.getValue().getContainerPath(), "/result");
-		
+		assertEquals(runCaptor.getValue().getRunResults().size(), 1);
+		RunResultBean runResult = runCaptor.getValue().getRunResults().get(0);
+		assertEquals(runResult.getType(), "junit");
+		assertEquals(runResult.getContainerPath(), "/result");
+	
 		ArgumentCaptor<InputStream> inputStreamCaptor = ArgumentCaptor.forClass(InputStream.class);
 		
 		verify(minioRepository, times(1)).putRunConfigurationAndUpdateRunBean(eq(run), inputStreamCaptor.capture());
@@ -238,7 +249,7 @@ public class DockerRunServiceTest {
 		assertEquals(IOUtils.toString(inputStreamCaptor.getValue(), StandardCharsets.UTF_8.name()), "this.txt\n");
 		
 		verify(minioRepository, times(1)).putRunResultAndUpdateRunResultBean(
-				eq(runResultCaptor.getValue()), inputStreamCaptor.capture());
+				eq(runResult), inputStreamCaptor.capture());
 		File zipFile = new File(tempFolder, "zip.zip");
 		File resultFolder = new File(tempFolder, "result");
 		resultFolder.mkdir();

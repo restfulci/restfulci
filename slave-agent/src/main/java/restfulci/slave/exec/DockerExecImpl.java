@@ -6,7 +6,6 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -28,10 +27,8 @@ import com.github.dockerjava.core.command.WaitContainerResultCallback;
 import io.minio.errors.MinioException;
 import lombok.extern.slf4j.Slf4j;
 import restfulci.shared.dao.MinioRepository;
-import restfulci.shared.dao.RunRepository;
 import restfulci.shared.domain.RunBean;
 import restfulci.shared.domain.RunConfigBean;
-import restfulci.shared.domain.RunPhase;
 
 @Slf4j
 @Component
@@ -39,7 +36,6 @@ public class DockerExecImpl implements DockerExec {
 	
 	@Autowired private DockerClient dockerClient;
 	
-	@Autowired private RunRepository runRepository;
 	@Autowired private MinioRepository minioRepository;
 
 	@Override
@@ -87,7 +83,7 @@ public class DockerExecImpl implements DockerExec {
 	}
 
 	@Override
-	public void runCommand(
+	public void runCommandAndUpdateRunBean(
 			RunBean run, 
 			String imageTag, 
 			List<String> command, 
@@ -118,6 +114,7 @@ public class DockerExecImpl implements DockerExec {
 				.exec(new WaitContainerResultCallback())
 				.awaitStatusCode();
 		run.setExitCode(exitCode);
+		log.info("Execute command exit code: "+exitCode);
 		
 		LogContainerCallbackWrapper loggingCallback = new LogContainerCallbackWrapper();
 		dockerClient.logContainerCmd(container.getId())
@@ -134,14 +131,11 @@ public class DockerExecImpl implements DockerExec {
 			InputStream contentStream = new ByteArrayInputStream(
 					loggingCallback.toString().getBytes(StandardCharsets.UTF_8));
 			minioRepository.putRunOutputAndUpdateRunBean(run, contentStream);
+			log.info("Execute command output: \n"+loggingCallback.toString());
 		} catch (MinioException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		
-		run.setPhase(RunPhase.COMPLETE);
-		run.setCompleteAt(new Date());
-		runRepository.saveAndFlush(run);
 	}
 
 	/*

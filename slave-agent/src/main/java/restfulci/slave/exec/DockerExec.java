@@ -12,7 +12,7 @@ public interface DockerExec {
 
 	public void pullImage(String imageTag) throws InterruptedException;
 	public String buildImageAndGetId(Path localRepoPath, RunConfigBean runConfig);
-	public void runCommand(
+	public void runCommandAndUpdateRunBean(
 			RunBean run, 
 			String imageTag, 
 			List<String> command, 

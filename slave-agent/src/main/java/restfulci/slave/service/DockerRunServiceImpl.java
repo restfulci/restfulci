@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -18,13 +19,13 @@ import lombok.extern.slf4j.Slf4j;
 import restfulci.shared.dao.MinioRepository;
 import restfulci.shared.dao.RemoteGitRepository;
 import restfulci.shared.dao.RunRepository;
-import restfulci.shared.dao.RunResultRepository;
 import restfulci.shared.domain.FreestyleJobBean;
 import restfulci.shared.domain.FreestyleRunBean;
 import restfulci.shared.domain.GitRunBean;
 import restfulci.shared.domain.RunBean;
 import restfulci.shared.domain.RunConfigBean;
 import restfulci.shared.domain.RunMessageBean;
+import restfulci.shared.domain.RunPhase;
 import restfulci.shared.domain.RunResultBean;
 import restfulci.slave.exec.DockerExec;
 
@@ -35,7 +36,6 @@ public class DockerRunServiceImpl implements DockerRunService {
 	@Autowired private DockerExec dockerExec;
 	
 	@Autowired private RunRepository runRepository;
-	@Autowired private RunResultRepository runResultRepository;
 	@Autowired private RemoteGitRepository remoteGitRepository;
 	@Autowired private MinioRepository minioRepository;
 
@@ -55,12 +55,16 @@ public class DockerRunServiceImpl implements DockerRunService {
 		else {
 			throw new IOException("Input run with wrong type");
 		}
+		
+		run.setPhase(RunPhase.COMPLETE);
+		run.setCompleteAt(new Date());
+		runRepository.saveAndFlush(run);
 	}
 	
 	private void runFreestyleJob(FreestyleRunBean run) throws InterruptedException {
 		FreestyleJobBean job = run.getJob();
 		dockerExec.pullImage(job.getDockerImage());
-		dockerExec.runCommand(
+		dockerExec.runCommandAndUpdateRunBean(
 				run, job.getDockerImage(), 
 				Arrays.asList(job.getCommand()), 
 				new HashMap<RunConfigBean.RunConfigResultBean, File>());
@@ -89,7 +93,6 @@ public class DockerRunServiceImpl implements DockerRunService {
 			log.info("Save configuration file");
 			Path configFilepath = remoteGitRepository.getConfigFilepath(run, localRepoPath);
 			minioRepository.putRunConfigurationAndUpdateRunBean(run, new FileInputStream(configFilepath.toFile()));
-			runRepository.saveAndFlush(run);
 		} 
 		catch (MinioException e) {
 			// TODO Auto-generated catch block
@@ -117,11 +120,11 @@ public class DockerRunServiceImpl implements DockerRunService {
 		
 		if (runConfig.getEnvironment().getImage() != null) {
 			dockerExec.pullImage(runConfig.getEnvironment().getImage());
-			dockerExec.runCommand(run, runConfig.getEnvironment().getImage(), runConfig.getCommand(), mounts);
+			dockerExec.runCommandAndUpdateRunBean(run, runConfig.getEnvironment().getImage(), runConfig.getCommand(), mounts);
 		}
 		else {
 			String imageId = dockerExec.buildImageAndGetId(localRepoPath, runConfig);
-			dockerExec.runCommand(run, imageId, runConfig.getCommand(), mounts);
+			dockerExec.runCommandAndUpdateRunBean(run, imageId, runConfig.getCommand(), mounts);
 		}
 		
 		for (Map.Entry<RunConfigBean.RunConfigResultBean, File> entry : mounts.entrySet()) {
@@ -145,23 +148,22 @@ public class DockerRunServiceImpl implements DockerRunService {
 			
 			/*
 			 * TODO:
-			 * Currently there's a bug that /jobs/{}/runs/{} always give
-			 * [] runResult. Looks like this line has never been arrived.
-			 * 
-			 * It maybe because of the multiple runRepository.saveAndFlush(),
-			 * and the 2nd execution's initial saveAndFlush() reset the 
-			 * original runResults to [].
-			 * Or maybe spring terminated this thread after RabbitMQ message
-			 * get delivered and it starts a new one.
-			 * 
-slave-agent_1  | 2020-04-17 04:34:55.362  INFO 1 --- [in-0.runqueue-1] r.slave.service.DockerRunServiceImpl     : Save configuration file
-slave-agent_1  | 2020-04-17 04:34:55.416  INFO 1 --- [in-0.runqueue-1] restfulci.slave.exec.DockerExecImpl      : Build image from context path ./python-pytest and Dockerfile path ./Dockerfile
-slave-agent_1  | 2020-04-17 04:34:59.997  INFO 1 --- [in-0.runqueue-1] restfulci.slave.exec.DockerExecImpl      : Execute command [pytest] in docker image: c244baf6a8cf
-slave-agent_1  | 2020-04-17 04:35:00.863  INFO 1 --- [in-0.runqueue-1] r.slave.service.DockerRunServiceImpl     : Zip run result: /code/test-results
-slave-agent_1  | 2020-04-17 04:35:02.278  INFO 1 --- [in-0.runqueue-1] r.slave.service.DockerRunServiceImpl     : Save configuration file
-slave-agent_1  | 2020-04-17 04:35:02.356  INFO 1 --- [in-0.runqueue-1] restfulci.slave.exec.DockerExecImpl      : Build image from context path ./python-pytest and Dockerfile path ./Dockerfile
-slave-agent_1  | 2020-04-17 04:35:06.884  INFO 1 --- [in-0.runqueue-1] restfulci.slave.exec.DockerExecImpl      : Execute command [pytest] in docker image: 1f916286902b
-slave-agent_1  | 2020-04-17 04:35:09.730 ERROR 1 --- [in-0.runqueue-1] o.s.integration.handler.LoggingHandler   : org.springframework.messaging.Message
+			 * Currently for complicated job RabbitMQ message will be delivered multiple
+			 * times, and it finally will error out (error message not consistent) as our
+			 * job is not idempotent/may contain race conditions.
+slave-agent_1  | 2020-04-18 03:57:27.724  INFO 1 --- [in-0.runqueue-1] r.slave.service.DockerRunServiceImpl     : Save configuration file
+slave-agent_1  | 2020-04-18 03:57:27.774  INFO 1 --- [in-0.runqueue-1] restfulci.slave.exec.DockerExecImpl      : Build image from context path ./python-pytest and Dockerfile path ./Dockerfile
+slave-agent_1  | 2020-04-18 03:57:33.197  INFO 1 --- [in-0.runqueue-1] restfulci.slave.exec.DockerExecImpl      : Execute command [pytest && ls /code/test-results] in docker image: 59c29fbabdb9
+slave-agent_1  | 2020-04-18 03:57:34.944  INFO 1 --- [in-0.runqueue-1] r.slave.service.DockerRunServiceImpl     : Save configuration file
+slave-agent_1  | 2020-04-18 03:57:34.993  INFO 1 --- [in-0.runqueue-1] restfulci.slave.exec.DockerExecImpl      : Build image from context path ./python-pytest and Dockerfile path ./Dockerfile
+slave-agent_1  | 2020-04-18 03:57:39.874  INFO 1 --- [in-0.runqueue-1] restfulci.slave.exec.DockerExecImpl      : Execute command [pytest && ls /code/test-results] in docker image: 5fc22554c7a1
+slave-agent_1  | 2020-04-18 03:57:42.650  INFO 1 --- [in-0.runqueue-1] r.slave.service.DockerRunServiceImpl     : Save configuration file
+slave-agent_1  | 2020-04-18 03:57:42.704  INFO 1 --- [in-0.runqueue-1] restfulci.slave.exec.DockerExecImpl      : Build image from context path ./python-pytest and Dockerfile path ./Dockerfile
+slave-agent_1  | 2020-04-18 03:57:47.400  INFO 1 --- [in-0.runqueue-1] restfulci.slave.exec.DockerExecImpl      : Execute command [pytest && ls /code/test-results] in docker image: bff5ead19919
+slave-agent_1  | 2020-04-18 03:57:47.855 ERROR 1 --- [in-0.runqueue-1] o.s.integration.handler.LoggingHandler   : org.springframework.messaging.MessageHandlingException: error occurred during processing message in 'MethodInvokingMessageProcessor' [org.springframework.integration.handler.MethodInvokingMessageProcessor@68b0fcde]; nested exception is com.github.dockerjava.api.exception.BadRequestException: OCI runtime create failed: container_linux.go:349: starting container process caused "exec: \"pytest && ls /code/test-results\": stat pytest && ls /code/test-results: no such file or directory": unknown, failedMessage=GenericMessage [payload=byte[32], headers={amqp_receivedDeliveryMode=PERSISTENT, amqp_receivedExchange=, amqp_deliveryTag=4, deliveryAttempt=3, amqp_consumerQueue=executeRun-in-0.runqueue, amqp_redelivered=false, amqp_receivedRoutingKey=executeRun-in-0.runqueue, amqp_contentEncoding=UTF-8, id=97078da0-4e29-17f8-8277-d79403277890, amqp_consumerTag=amq.ctag-8uWQnIZWuQU5ivUYfDOntA, sourceData=(Body:'{
+slave-agent_1  |   "jobId" : 5,
+slave-agent_1  |   "runId" : 5
+slave-agent_1  | }' MessageProperties [headers={}, contentType=text/plain, contentEncoding=UTF-8, contentLength=0, receivedDeliveryMode=PERSISTENT, priority=0, redelivered=false, receivedExchange=, receivedRoutingKey=executeRun-in-0.runqueue, deliveryTag=4, consumerTag=amq.ctag-8uWQnIZWuQU5ivUYfDOntA, consumerQueue=executeRun-in-0.runqueue]), contentType=text/plain, timestamp=1587182247376}]
 			 */
 			log.info("Save run result: "+entry.getKey().getPath());
 			runResult.setRun(run);
@@ -173,7 +175,6 @@ slave-agent_1  | 2020-04-17 04:35:09.730 ERROR 1 --- [in-0.runqueue-1] o.s.integ
 			 * to the same run. 
 			 */
 			run.getRunResults().add(runResult);
-			runResultRepository.saveAndFlush(runResult);
 		}
 	}
 }

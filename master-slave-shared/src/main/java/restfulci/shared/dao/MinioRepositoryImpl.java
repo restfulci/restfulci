@@ -6,12 +6,14 @@ import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 
 import org.apache.commons.io.input.NullInputStream;
+import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
 import io.minio.MinioClient;
 import io.minio.PutObjectOptions;
 import io.minio.errors.MinioException;
+import restfulci.shared.domain.BaseEntity;
 import restfulci.shared.domain.GitRunBean;
 import restfulci.shared.domain.RunBean;
 import restfulci.shared.domain.RunResultBean;
@@ -97,65 +99,73 @@ public class MinioRepositoryImpl implements MinioRepository {
 		}
 	}
 	
-	private String getRunOutputObjectName(RunBean runBean) {
-		return runBean.getId().toString();
+	private String getOjectName(BaseEntity entity) {
+		
+		if (entity.getId() != null) {
+			return entity.getId().toString();
+		}
+		else {
+			/*
+			 * This is for the situation the runBean has not been saved
+			 * yet so it doesn't have an ID.
+			 */
+			return RandomStringUtils.random(10);
+		}
 	}
 
 	@Override
 	public void putRunOutputAndUpdateRunBean(RunBean runBean, InputStream contentStream) throws MinioException {
-		minioPut(runOutputBucketName, getRunOutputObjectName(runBean), contentStream);
-		runBean.setRunOutputObjectReferral(getRunOutputObjectName(runBean));
+		
+		String runOutputObjectName = getOjectName(runBean);
+		minioPut(runOutputBucketName, runOutputObjectName, contentStream);
+		runBean.setRunOutputObjectReferral(runOutputObjectName);
 	}
 
 	@Override
 	public InputStream getRunOutput(RunBean runBean) throws MinioException {
-		return minioGet(runOutputBucketName, getRunOutputObjectName(runBean));
+		return minioGet(runOutputBucketName, runBean.getRunOutputObjectReferral());
 	}
 
 	@Override
 	public void removeRunOutput(RunBean runBean) throws MinioException {
-		minioRemove(runOutputBucketName, getRunOutputObjectName(runBean));
-	}
-	
-	private String getRunConfigurationObjectName(GitRunBean runBean) {
-		return runBean.getId().toString();
+		minioRemove(runOutputBucketName, runBean.getRunOutputObjectReferral());
 	}
 
 	@Override
 	public void putRunConfigurationAndUpdateRunBean(GitRunBean gitRunBean, InputStream contentStream) throws MinioException {
-		minioPut(runConfigurationBucketName, getRunConfigurationObjectName(gitRunBean), contentStream);
-		gitRunBean.setRunConfigurationObjectReferral(getRunConfigurationObjectName(gitRunBean));
+		
+		String runConfigurationObjectName = getOjectName(gitRunBean);
+		minioPut(runConfigurationBucketName, runConfigurationObjectName, contentStream);
+		gitRunBean.setRunConfigurationObjectReferral(runConfigurationObjectName);
 	}
 
 	@Override
 	public InputStream getRunConfiguration(GitRunBean gitRunBean) throws MinioException {
-		return minioGet(runConfigurationBucketName, getRunConfigurationObjectName(gitRunBean));
+		return minioGet(runConfigurationBucketName, gitRunBean.getRunConfigurationObjectReferral());
 	}
 
 	@Override
 	public void removeRunConfiguration(GitRunBean gitRunBean) throws MinioException {
-		minioRemove(runConfigurationBucketName, getRunConfigurationObjectName(gitRunBean));
+		minioRemove(runConfigurationBucketName, gitRunBean.getRunConfigurationObjectReferral());
 		gitRunBean.setRunConfigurationObjectReferral(null);
-	}
-	
-	private String getRunResultObjectName(RunResultBean runResultBean) {
-		return runResultBean.getId().toString();
 	}
 
 	@Override
 	public void putRunResultAndUpdateRunResultBean(RunResultBean runResultBean, InputStream contentStream) throws MinioException {
-		minioPut(runResultBucketName, getRunResultObjectName(runResultBean), contentStream);
-		runResultBean.setObjectReferral(getRunResultObjectName(runResultBean));
+		
+		String runResultObjectName = getOjectName(runResultBean);
+		minioPut(runResultBucketName, runResultObjectName, contentStream);
+		runResultBean.setObjectReferral(runResultObjectName);
 	}
 
 	@Override
 	public InputStream getRunResult(RunResultBean runResultBean) throws MinioException {
-		return minioGet(runResultBucketName, getRunResultObjectName(runResultBean));
+		return minioGet(runResultBucketName, runResultBean.getObjectReferral());
 	}
 
 	@Override
 	public void removeRunResult(RunResultBean runResultBean) throws MinioException {
-		minioRemove(runResultBucketName, getRunResultObjectName(runResultBean));
+		minioRemove(runResultBucketName, runResultBean.getObjectReferral());
 		runResultBean.setObjectReferral(null);
 	}
 

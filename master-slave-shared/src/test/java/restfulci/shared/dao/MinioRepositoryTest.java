@@ -37,4 +37,19 @@ public class MinioRepositoryTest {
 		
 		repository.removeRunOutput(run);
 	}
+	
+	@Test
+	public void testPutAndGetRunOutputWhenRunIdIsNull() throws Exception {
+		
+		FreestyleRunBean run = new FreestyleRunBean();
+		
+		InputStream contentStream = new ByteArrayInputStream("hello".getBytes(StandardCharsets.UTF_8));
+		repository.putRunOutputAndUpdateRunBean(run, contentStream);
+		
+		InputStream stream = repository.getRunOutput(run);
+		String outputText = IOUtils.toString(stream, StandardCharsets.UTF_8.name());
+		assertEquals(outputText, "hello");
+		
+		repository.removeRunOutput(run);
+	}
 }

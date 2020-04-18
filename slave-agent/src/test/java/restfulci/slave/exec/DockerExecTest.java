@@ -28,7 +28,6 @@ import restfulci.shared.dao.RunRepository;
 import restfulci.shared.domain.FreestyleRunBean;
 import restfulci.shared.domain.RunBean;
 import restfulci.shared.domain.RunConfigBean;
-import restfulci.shared.domain.RunPhase;
 
 @ExtendWith(SpringExtension.class)
 @SpringBootTest
@@ -43,19 +42,21 @@ public class DockerExecTest {
 	public void testRunCommand() throws Exception {
 		
 		RunBean run = new FreestyleRunBean();
-		run.setPhase(RunPhase.IN_PROGRESS);
 		
 		String[] command = new String[] {"sh", "-c", "echo \"Hello world\""};
 		exec.pullImage("busybox:1.31");
-		exec.runCommand(
+		exec.runCommandAndUpdateRunBean(
 				run, 
 				"busybox:1.31", 
 				Arrays.asList(command), 
 				new HashMap<RunConfigBean.RunConfigResultBean, File>());
 		
-		ArgumentCaptor<RunBean> runCaptor = ArgumentCaptor.forClass(RunBean.class);
-		verify(runRepository, times(1)).saveAndFlush(runCaptor.capture());
-		assertEquals(runCaptor.getValue().getPhase(), RunPhase.COMPLETE);
+		assertEquals(run.getExitCode(), 0);
+		/*
+		 * Cannot assert this, as the set logic is in `minioRepository`
+		 * which is mocked here.
+		 */
+//		assertNotNull(run.getRunOutputObjectReferral());
 		
 		ArgumentCaptor<InputStream> inputStreamCaptor = ArgumentCaptor.forClass(InputStream.class);
 		verify(minioRepository, times(1)).putRunOutputAndUpdateRunBean(eq(run), inputStreamCaptor.capture());
@@ -102,7 +103,10 @@ public class DockerExecTest {
 		 */
 		String[] command = new String[] {"sh", "-c", "touch /result/this.txt && ls /result"};
 		exec.pullImage("busybox:1.31");
-		exec.runCommand(run, "busybox:1.31", Arrays.asList(command), mounts);
+		exec.runCommandAndUpdateRunBean(run, "busybox:1.31", Arrays.asList(command), mounts);
+		
+		assertEquals(run.getExitCode(), 0);
+//		assertNotNull(run.getRunOutputObjectReferral());
 		
 		ArgumentCaptor<InputStream> inputStreamCaptor = ArgumentCaptor.forClass(InputStream.class);
 		verify(minioRepository, times(1)).putRunOutputAndUpdateRunBean(eq(run), inputStreamCaptor.capture());
