@@ -1,8 +1,11 @@
 import json
+import os
 import requests
+from tempfile import NamedTemporaryFile
 from time import sleep
 from unittest import TestCase
 from urllib.parse import urljoin
+from zipfile import ZipFile
 
 
 class TestFreestyleJob(TestCase):
@@ -23,14 +26,15 @@ class TestFreestyleJob(TestCase):
         def validate_console_log(response):
             self.assertEqual(response.text, "this.txt\n")
 
-        def validate_results(run_result_id_run_result_map, run_result_response_map):
+        def validate_results(run_result_id_run_result_map, run_result_response_zip_map):
             self.assertEqual(len(run_result_id_run_result_map), 1)
-            for id, response in run_result_response_map.items():
+            for id, response_zip in run_result_response_zip_map.items():
                 self.assertEqual(run_result_id_run_result_map[id]["type"], "plain-text")
                 self.assertEqual(run_result_id_run_result_map[id]["containerPath"], "/result")
-                # TODO:
-                # Validate ZIP file content.
-                print(id, run_result_id_run_result_map[id], response.text)
+
+                with ZipFile(response_zip) as result_zip:
+                    self.assertEqual(len(result_zip.infolist()), 1)
+                    self.assertEqual(result_zip.infolist()[0].filename, "this.txt")
 
         self._test_skeleton(
             "shellscript",
@@ -44,15 +48,24 @@ class TestFreestyleJob(TestCase):
             self.assertTrue("PASSED" in response.text)
             self.assertTrue("generated xml file: /code/test-results/report.xml" in response.text)
 
-        def validate_results(run_result_id_run_result_map, run_result_response_map):
+        def validate_results(run_result_id_run_result_map, run_result_response_zip_map):
             self.assertEqual(len(run_result_id_run_result_map), 1)
-            for id, response in run_result_response_map.items():
+            for id, response_zip in run_result_response_zip_map.items():
                 self.assertEqual(run_result_id_run_result_map[id]["type"], "junit")
                 self.assertEqual(run_result_id_run_result_map[id]["containerPath"], "/code/test-results")
-                # TODO:
-                # Validate ZIP file content.
 
-        self._test_skeleton("python-pytest", validate_console_log)
+                with ZipFile(response_zip) as result_zip:
+                    self.assertEqual(len(result_zip.infolist()), 1)
+                    self.assertEqual(result_zip.infolist()[0].filename, "report.xml")
+                    with result_zip.open('report.xml') as report:
+                        report_content = report.read().decode()
+                        self.assertTrue("testsuite" in report_content)
+                        self.assertTrue("testcase" in report_content)
+
+        self._test_skeleton(
+            "python-pytest",
+            validate_console_log=validate_console_log,
+            validate_results=validate_results)
 
     def _test_skeleton(self, project_name, validate_console_log=None, validate_results=None):
 
@@ -106,7 +119,6 @@ class TestFreestyleJob(TestCase):
             sleep(1)
         self.assertEqual(response_body["phase"], "COMPLETE")
         self.assertEqual(response_body["exitCode"], 0)
-        print(response_body)
         if validate_results:
             run_results = response_body["runResults"]
 
@@ -129,7 +141,7 @@ class TestFreestyleJob(TestCase):
 
         if validate_results:
             run_result_id_run_result_map = {}
-            run_result_id_response_map = {}
+            run_result_id_response_zip_map = {}
             for run_result in run_results:
                 response = requests.get(
                     urljoin(
@@ -137,11 +149,23 @@ class TestFreestyleJob(TestCase):
                         "/jobs/{}/runs/{}/results/{}".format(job_id, run_id, run_result["id"])),
                     headers={
                         "Content-Type": "application/zip"
-                    })
+                    },
+                    stream=True)
                 self.assertEqual(response.status_code, 200)
+
+                # Need `delete=False` because ZipFile can only read a closed file.
+                fp = NamedTemporaryFile(delete=False)
+                for chunk in response.iter_content(chunk_size=128):
+                    fp.write(chunk)
+                fp.close()
+
                 run_result_id_run_result_map[run_result["id"]] = run_result
-                run_result_id_response_map[run_result["id"]] = response
-            validate_results(run_result_id_run_result_map, run_result_id_response_map)
+                run_result_id_response_zip_map[run_result["id"]] = fp.name
+
+            validate_results(run_result_id_run_result_map, run_result_id_response_zip_map)
+
+            for id, response_zip in run_result_id_response_zip_map.items():
+                os.remove(response_zip)
 
         requests.delete(
             urljoin(self.master_api_url, "/jobs/{}".format(job_id)),

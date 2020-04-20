@@ -66,6 +66,11 @@ services:
       # and actual docker is running in host, we'll need to map the host `/tmp`
       # back to container so the Java application inside of container can see the
       # change.
+      #
+      # TODO:
+      # Consider using a directory other than the default of `Files.createTempDirectory`,
+      # so we don't need to volume mount `/tmp` which is used by a lot of other
+      # applications both in host machine and inside of the container.
       - /tmp:/tmp
       # SSH agent forwarding.
       #

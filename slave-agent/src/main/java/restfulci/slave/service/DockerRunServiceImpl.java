@@ -140,6 +140,11 @@ public class DockerRunServiceImpl implements DockerRunService {
 			 * 
 			 * When this error raises, Spring will reload the message and retry
 			 * multiple (~3) times before showing the error.
+			 * 
+			 * TODO:
+			 * Consider using a directory other than the default of `Files.createTempDirectory`,
+			 * so we don't need to volume mount `/tmp` which is used by a lot of other
+			 * applications both in host machine and inside of the container.
 			 */
 			mounts.put(result, Files.createTempDirectory("result-").toFile());
 		}
