@@ -15,5 +15,12 @@ class RunConfigYamlParser {
 		
 		RunConfigBean runConfig = yaml.load(yamlContent);
 		return runConfig;
+		
+		/*
+		 * TODO:
+		 * Validate YAML file. Non-null element, either image/build, ...
+		 * Not sure if that can be defined through annotations, or there need to
+		 * be if-else here.
+		 */
 	}
 }

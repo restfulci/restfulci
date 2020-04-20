@@ -1,0 +1,9 @@
+version: 1.0
+
+environment:
+  image: busybox:1.31
+
+command:
+  - bash
+  - -c
+  - "\"echo 0\""

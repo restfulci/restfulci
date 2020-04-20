@@ -17,6 +17,11 @@ import lombok.ToString;
 @Inheritance(strategy=InheritanceType.JOINED)
 public class FreestyleRunBean extends RunBean {
 	
+	/*
+	 * TODO:
+	 * Record configuration (script, parameter) of the current run.
+	 */
+	
 	public FreestyleJobBean getJob() {
 		return (FreestyleJobBean)super.getJob();
 	}

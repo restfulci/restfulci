@@ -1,0 +1,11 @@
+version: 1.0
+
+environment:
+  build:
+    context: ./subfolder
+    dockerfile: ./Dockerfile
+
+command:
+  - sh
+  - -c
+  - "echo \"Hello world\""

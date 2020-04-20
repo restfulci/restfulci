@@ -39,6 +39,11 @@
             <artifactId>docker-java</artifactId>
             <version>3.1.5</version>
         </dependency>
+        <dependency>
+            <groupId>org.zeroturnaround</groupId>
+            <artifactId>zt-zip</artifactId>
+            <version>1.14</version>
+        </dependency>
 
         <!-- Test -->
         <dependency>

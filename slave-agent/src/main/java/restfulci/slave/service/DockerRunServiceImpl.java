@@ -1,36 +1,24 @@
 package restfulci.slave.service;
 
-import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
-import java.util.List;
-import java.util.concurrent.TimeUnit;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
-import com.github.dockerjava.api.DockerClient;
-import com.github.dockerjava.api.command.CreateContainerResponse;
-import com.github.dockerjava.api.model.Frame;
-import com.github.dockerjava.api.model.Image;
-import com.github.dockerjava.core.command.BuildImageResultCallback;
-import com.github.dockerjava.core.command.LogContainerResultCallback;
-import com.github.dockerjava.core.command.PullImageResultCallback;
-import com.github.dockerjava.core.command.WaitContainerResultCallback;
+import org.zeroturnaround.zip.ZipUtil;
 
 import io.minio.errors.MinioException;
 import lombok.extern.slf4j.Slf4j;
 import restfulci.shared.dao.MinioRepository;
 import restfulci.shared.dao.RemoteGitRepository;
 import restfulci.shared.dao.RunRepository;
-import restfulci.shared.domain.DockerRunCmdResultBean;
 import restfulci.shared.domain.FreestyleJobBean;
 import restfulci.shared.domain.FreestyleRunBean;
 import restfulci.shared.domain.GitRunBean;
@@ -38,67 +26,56 @@ import restfulci.shared.domain.RunBean;
 import restfulci.shared.domain.RunConfigBean;
 import restfulci.shared.domain.RunMessageBean;
 import restfulci.shared.domain.RunPhase;
+import restfulci.shared.domain.RunResultBean;
+import restfulci.slave.exec.DockerExec;
 
 @Slf4j
 @Service
 public class DockerRunServiceImpl implements DockerRunService {
 	
-	@Autowired private DockerClient dockerClient;
+	@Autowired private DockerExec dockerExec;
 	
 	@Autowired private RunRepository runRepository;
 	@Autowired private RemoteGitRepository remoteGitRepository;
 	@Autowired private MinioRepository minioRepository;
 
 	@Override
-	public void executeRun(RunMessageBean runMessage) throws InterruptedException, IOException {
+	public void runByMessage(RunMessageBean runMessage) throws InterruptedException, IOException {
 		
 		RunBean run = runRepository.findById(runMessage.getRunId()).get();
 		
-		DockerRunCmdResultBean result = null;
 		if (run instanceof FreestyleRunBean) {
 			FreestyleRunBean freestyleRun = (FreestyleRunBean)run;
-			result = runFreestyleJob(freestyleRun);
-			
+			runFreestyleJob(freestyleRun);
 		}
 		else if (run instanceof GitRunBean) {
 			GitRunBean gitRun = (GitRunBean)run;
-			result = runGitJob(gitRun);
+			runGitJob(gitRun);
 		}
 		else {
 			throw new IOException("Input run with wrong type");
 		}
 		
-		System.out.println(result);
-		
 		run.setPhase(RunPhase.COMPLETE);
 		run.setCompleteAt(new Date());
-		run.setExitCode(result.getExitCode());
-		
-		try {
-			/*
-			 * TODO:
-			 * Directly consume InputStream coming from docker execution.
-			 */
-			InputStream contentStream = new ByteArrayInputStream(
-					result.getOutput().getBytes(StandardCharsets.UTF_8));
-			minioRepository.putRunOutputAndUpdateRunBean(run, contentStream);
-		} catch (MinioException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		
 		runRepository.saveAndFlush(run);
 	}
 	
-	@Override
-	public DockerRunCmdResultBean runFreestyleJob(FreestyleRunBean run) throws InterruptedException {
+	private void runFreestyleJob(FreestyleRunBean run) throws InterruptedException {
 		FreestyleJobBean job = run.getJob();
-		pullImage(job.getDockerImage());
-		return runCommand(job.getDockerImage(), Arrays.asList(job.getCommand()));
+		dockerExec.pullImage(job.getDockerImage());
+		dockerExec.runCommandAndUpdateRunBean(
+				run, job.getDockerImage(), 
+				Arrays.asList(job.getCommand()), 
+				new HashMap<RunConfigBean.RunConfigResultBean, File>());
+		
+		/*
+		 * TODO:
+		 * Freestyle job should be able to very easily support saving result as well.
+		 */
 	}
 	
-	@Override
-	public DockerRunCmdResultBean runGitJob(GitRunBean run) throws InterruptedException, IOException {
+	private void runGitJob(GitRunBean run) throws InterruptedException, IOException {
 		
 		/*
 		 * Steps:
@@ -111,108 +88,106 @@ public class DockerRunServiceImpl implements DockerRunService {
 		 */
 		Path localRepoPath = Files.createTempDirectory("local-repo");
 		remoteGitRepository.copyToLocal(run, localRepoPath);
+		
+		try {
+			log.info("Save configuration file");
+			Path configFilepath = remoteGitRepository.getConfigFilepath(run, localRepoPath);
+			minioRepository.putRunConfigurationAndUpdateRunBean(run, new FileInputStream(configFilepath.toFile()));
+		} 
+		catch (MinioException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
 		RunConfigBean runConfig = remoteGitRepository.getConfigFromFilepath(run, localRepoPath);
 		
-		File dockerfile = runConfig.getDockerfile(localRepoPath);
-		
 		/*
-		 * TODO:
-		 * Use context.
+		 * For Docker desktop on Mac, need to edit `Library/Group\ Containers/group.com.docker/settings.json`
+		 * to add `/var/folders`. Otherwise unit test (execute on Mac / not inside of container) error:
+		 * > com.github.dockerjava.api.exception.InternalServerErrorException: Mounts denied: 
+		 * > The path /var/folders/kp/fz7j3bln4m11rc197xrj4dvc0000gq/T/junit5099823135583804007/results
+		 * > is not shared from OS X and is not known to Docker.
+		 * > You can configure shared paths from Docker -> Preferences... -> File Sharing.
+		 * > See https://docs.docker.com/docker-for-mac/osxfs/#namespaces for more info.
+		 * 
+		 * Notice that both `@TempDir` and `Files.createTempDirectory` 
+		 * are using `/var/folders` (Mac) or `/tmp` (linux) to save the file.
 		 */
+		Map<RunConfigBean.RunConfigResultBean, File> mounts = new HashMap<RunConfigBean.RunConfigResultBean, File>();
+		for (RunConfigBean.RunConfigResultBean result : runConfig.getResults()) {
+			
+			/*
+			 * Note:
+			 * 
+			 * In actual run inside of the container, this temporary folder created
+			 * by `Files.createTempDirectory` is created inside of the docker container.
+			 * As docker container uses Alpine, it is under `/tmp`.
+			 * 
+			 * However, as for container docker we pass in socket `-v /var/run/docker.sock:/var/run/docker.sock`
+			 * when we use volume mount to pass the result out inside of `DockerExec`,
+			 * the result will be sent to `/tmp` in hosting machine where 
+			 * the docker application is running.
+			 * 
+			 * Therefore, to actually see the result/docker volume change in the
+			 * Java application inside of the container, we'll need to not only
+			 * `-v /var/run/docker.sock:/var/run/docker.sock` but also `-v /tmp:/tmp`.
+			 * Otherwise we'll see empty content under this folder:
+			 * > slave-agent_1  | 2020-04-19 04:05:47.812  INFO 1 --- [in-0.runqueue-1] r.slave.service.DockerRunServiceImpl     : Zip run result: /result
+			 * > slave-agent_1  | Content: [] temperarily saved at /tmp/result-4099381032373732624
+			 * and zip error:
+			 * > nested exception is org.zeroturnaround.zip.ZipException: Given directory 
+			 * > '/tmp/result-966542229242736184' doesn't contain any files!
+			 * 
+			 * When this error raises, Spring will reload the message and retry
+			 * multiple (~3) times before showing the error.
+			 * 
+			 * TODO:
+			 * Consider using a directory other than the default of `Files.createTempDirectory`,
+			 * so we don't need to volume mount `/tmp` which is used by a lot of other
+			 * applications both in host machine and inside of the container.
+			 */
+			mounts.put(result, Files.createTempDirectory("result-").toFile());
+		}
 		
-		/*
-		 * https://github.com/docker-java/docker-java/blob/3.1.5/src/test/java/com/github/dockerjava/cmd/BuildImageCmdIT.java
-		 */
-		String imageId = dockerClient.buildImageCmd(dockerfile)
-				.withNoCache(true)
-				.exec(new BuildImageResultCallback())
-				.awaitImageId();
+		if (runConfig.getEnvironment().getImage() != null) {
+			dockerExec.pullImage(runConfig.getEnvironment().getImage());
+			dockerExec.runCommandAndUpdateRunBean(run, runConfig.getEnvironment().getImage(), runConfig.getCommand(), mounts);
+		}
+		else {
+			String imageId = dockerExec.buildImageAndGetId(localRepoPath, runConfig);
+			dockerExec.runCommandAndUpdateRunBean(run, imageId, runConfig.getCommand(), mounts);
+		}
 		
-		return runCommand(imageId, runConfig.getCommand());
-	}
-	
-	private void pullImage(String imageTag) throws InterruptedException {
-		
-		/*
-		 * TODO:
-		 * Not exactly sure the behavior if the tag is `:latest`,
-		 * but for fixed version pretty sure it works.
-		 */
-		List<Image> localImages = dockerClient.listImagesCmd().withShowAll(true).exec();
-		for (Image image : localImages) {
-			for (int i = 0; i < image.getRepoTags().length; ++i) {
-				if (image.getRepoTags()[i].equals(imageTag)) {
-					log.info("Docker image already exists in local: "+imageTag);
-					return;
-				}
+		for (Map.Entry<RunConfigBean.RunConfigResultBean, File> entry : mounts.entrySet()) {
+			
+			log.info("Zip run result: "+entry.getKey().getPath()+"\n"
+					+"Content: "+Arrays.toString(entry.getValue().list())
+					+" temperarily saved at "+entry.getValue());
+			File zipFile = Files.createTempFile("result", ".zip").toFile();
+			ZipUtil.pack(entry.getValue(), zipFile);
+			
+			RunResultBean runResult = new RunResultBean();
+			
+			try {
+				runResult.setContainerPath(entry.getKey().getPath());
+				runResult.setType(entry.getKey().getType());
+				minioRepository.putRunResultAndUpdateRunResultBean(
+						runResult, new FileInputStream(zipFile));
+			} 
+			catch (MinioException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
 			}
-		}
-		
-		log.info("Pulling new docker image from remote server: "+imageTag);
-		dockerClient.pullImageCmd(imageTag)
-				.exec(new PullImageResultCallback())
-				.awaitCompletion(30, TimeUnit.SECONDS);	
-	}
-
-	@Override
-	public DockerRunCmdResultBean runCommand(String imageTag, List<String> command) throws InterruptedException {
-		
-		log.info("Execute command "+command+" in docker image: "+imageTag);
-		
-		CreateContainerResponse container = dockerClient.createContainerCmd(imageTag)
-				.withCmd(command)
-				.exec();
-		
-		int timestamp = (int) (System.currentTimeMillis() / 1000);
-		dockerClient.startContainerCmd(container.getId()).exec();
-		
-		DockerRunCmdResultBean result = new DockerRunCmdResultBean();
-
-		int exitCode = dockerClient.waitContainerCmd(container.getId())
-				.exec(new WaitContainerResultCallback())
-				.awaitStatusCode();
-		result.setExitCode(exitCode);
-		
-		LogContainerCallbackWrapper loggingCallback = new LogContainerCallbackWrapper();
-		dockerClient.logContainerCmd(container.getId())
-				.withStdErr(true)
-				.withStdOut(true)
-				.withSince(timestamp)
-				.exec(loggingCallback);
-		loggingCallback.awaitCompletion();
-		result.setOutput(loggingCallback.toString());
-		
-		return result;
-	}
-	
-	/*
-	 * Copyright (c) docker-java
-	 * https://github.com/docker-java/docker-java/blob/3.1.5/src/test/java/com/github/dockerjava/utils/LogContainerTestCallback.java#L3
-	 */
-	private class LogContainerCallbackWrapper extends LogContainerResultCallback {
-		protected final StringBuffer log = new StringBuffer();
-
-		List<Frame> collectedFrames = new ArrayList<Frame>();
-
-		boolean collectFrames = false;
-
-		public LogContainerCallbackWrapper() {
-			this(false);
-		}
-
-		public LogContainerCallbackWrapper(boolean collectFrames) {
-			this.collectFrames = collectFrames;
-		}
-
-		@Override
-		public void onNext(Frame frame) {
-			if (collectFrames) collectedFrames.add(frame);
-			log.append(new String(frame.getPayload()));
-		}
-
-		@Override
-		public String toString() {
-			return log.toString();
+			log.info("Save run result: "+entry.getKey().getPath());
+			runResult.setRun(run);
+			/*
+			 * No need to do it, as we are saving by `runResultRepository` rather
+			 * than `runRepository`.
+			 * 
+			 * This also help us to avoid the need of loading all results belong
+			 * to the same run. 
+			 */
+			run.getRunResults().add(runResult);
 		}
 	}
 }

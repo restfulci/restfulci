@@ -1,0 +1,13 @@
+version: 1.0
+
+environment:
+  image: busybox:1.31
+
+command:
+  - sh
+  - -c
+  - "touch /result/this.txt && ls /result"
+
+results:
+  - type: plain-text
+    path: /result

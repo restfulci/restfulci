@@ -67,10 +67,15 @@ public class RemoteGitRepositoryImpl implements RemoteGitRepository {
 	}
 	
 	@Override
+	public Path getConfigFilepath(GitRunBean run, Path localRepoPath) throws IOException {
+		String configFilepath = run.getJob().getConfigFilepath();
+		return localRepoPath.resolve(configFilepath);
+	}
+	
+	@Override
 	public RunConfigBean getConfigFromFilepath(GitRunBean run, Path localRepoPath) throws IOException {
 		
-		String configFilepath = run.getJob().getConfigFilepath();
-		String yamlContent = String.join("\n", Files.readAllLines(localRepoPath.resolve(configFilepath)));
+		String yamlContent = String.join("\n", Files.readAllLines(getConfigFilepath(run, localRepoPath)));
 		return RunConfigYamlParser.parse(yamlContent);
 	}
 }

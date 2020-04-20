@@ -17,6 +17,7 @@ executors:
 
     environment:
       # Customize the JVM maximum heap limit
+      CI: CircleCI
       MAVEN_OPTS: -Xmx3200m
 
   python-executor:
@@ -62,12 +63,6 @@ jobs:
       # This is to support running docker-java related unit tests.
       - setup_remote_docker:
           docker_layer_caching: false
-
-      # We have logic in docker-java code to automatically pull images if not exist.
-      # However, CircleCI will error out with permission error, so we need to keep this.
-      # > com.github.dockerjava.api.exception.NotFoundException: pull access denied for 83aa35aa1c79,
-      # > repository does not exist or may require 'docker login'
-      - run: docker pull busybox:1.31
 
       - run: sed -i "s/spring.profiles.active=dev/spring.profiles.active=circleci/g" master-api/src/main/resources/application.properties
       - run: sed -i "s/spring.profiles.active=dev/spring.profiles.active=circleci/g" master-slave-shared/src/main/resources/application.properties
