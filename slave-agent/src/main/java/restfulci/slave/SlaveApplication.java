@@ -12,9 +12,12 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import lombok.extern.slf4j.Slf4j;
 import restfulci.shared.domain.RunMessageBean;
+import restfulci.slave.exec.DockerExecImpl;
 import restfulci.slave.service.DockerRunService;
 
+@Slf4j
 @SpringBootApplication(scanBasePackages= {"restfulci.slave", "restfulci.shared"})
 public class SlaveApplication {
 	
@@ -31,6 +34,7 @@ public class SlaveApplication {
 			
 			try {
 				RunMessageBean runMessage = objectMapper.readValue(input, RunMessageBean.class);
+				log.info("Receive message: "+runMessage);
 				dockerRunService.runByMessage(runMessage);
 			} 
 			catch (JsonMappingException e) {

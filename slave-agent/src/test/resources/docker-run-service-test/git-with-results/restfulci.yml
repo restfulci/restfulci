@@ -9,5 +9,5 @@ command:
   - "touch /result/this.txt && ls /result"
 
 results:
-  - type: junit
+  - type: plain-text
     path: /result

@@ -103,7 +103,7 @@ public class DockerRunServiceImpl implements DockerRunService {
 		
 		/*
 		 * For Docker desktop on Mac, need to edit `Library/Group\ Containers/group.com.docker/settings.json`
-		 * to add `/var/folders`. Otherwise error:
+		 * to add `/var/folders`. Otherwise unit test (execute on Mac / not inside of container) error:
 		 * > com.github.dockerjava.api.exception.InternalServerErrorException: Mounts denied: 
 		 * > The path /var/folders/kp/fz7j3bln4m11rc197xrj4dvc0000gq/T/junit5099823135583804007/results
 		 * > is not shared from OS X and is not known to Docker.
@@ -111,11 +111,37 @@ public class DockerRunServiceImpl implements DockerRunService {
 		 * > See https://docs.docker.com/docker-for-mac/osxfs/#namespaces for more info.
 		 * 
 		 * Notice that both `@TempDir` and `Files.createTempDirectory` 
-		 * are using `/var/folders` to save the file.
+		 * are using `/var/folders` (Mac) or `/tmp` (linux) to save the file.
 		 */
 		Map<RunConfigBean.RunConfigResultBean, File> mounts = new HashMap<RunConfigBean.RunConfigResultBean, File>();
 		for (RunConfigBean.RunConfigResultBean result : runConfig.getResults()) {
-			mounts.put(result, Files.createTempDirectory("result").toFile());
+			
+			/*
+			 * Note:
+			 * 
+			 * In actual run inside of the container, this temporary folder created
+			 * by `Files.createTempDirectory` is created inside of the docker container.
+			 * As docker container uses Alpine, it is under `/tmp`.
+			 * 
+			 * However, as for container docker we pass in socket `-v /var/run/docker.sock:/var/run/docker.sock`
+			 * when we use volume mount to pass the result out inside of `DockerExec`,
+			 * the result will be sent to `/tmp` in hosting machine where 
+			 * the docker application is running.
+			 * 
+			 * Therefore, to actually see the result/docker volume change in the
+			 * Java application inside of the container, we'll need to not only
+			 * `-v /var/run/docker.sock:/var/run/docker.sock` but also `-v /tmp:/tmp`.
+			 * Otherwise we'll see empty content under this folder:
+			 * > slave-agent_1  | 2020-04-19 04:05:47.812  INFO 1 --- [in-0.runqueue-1] r.slave.service.DockerRunServiceImpl     : Zip run result: /result
+			 * > slave-agent_1  | Content: [] temperarily saved at /tmp/result-4099381032373732624
+			 * and zip error:
+			 * > nested exception is org.zeroturnaround.zip.ZipException: Given directory 
+			 * > '/tmp/result-966542229242736184' doesn't contain any files!
+			 * 
+			 * When this error raises, Spring will reload the message and retry
+			 * multiple (~3) times before showing the error.
+			 */
+			mounts.put(result, Files.createTempDirectory("result-").toFile());
 		}
 		
 		if (runConfig.getEnvironment().getImage() != null) {
@@ -129,7 +155,9 @@ public class DockerRunServiceImpl implements DockerRunService {
 		
 		for (Map.Entry<RunConfigBean.RunConfigResultBean, File> entry : mounts.entrySet()) {
 			
-			log.info("Zip run result: "+entry.getKey().getPath());
+			log.info("Zip run result: "+entry.getKey().getPath()+"\n"
+					+"Content: "+Arrays.toString(entry.getValue().list())
+					+" temperarily saved at "+entry.getValue());
 			File zipFile = Files.createTempFile("result", ".zip").toFile();
 			ZipUtil.pack(entry.getValue(), zipFile);
 			
@@ -145,26 +173,6 @@ public class DockerRunServiceImpl implements DockerRunService {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-			
-			/*
-			 * TODO:
-			 * Currently for complicated job RabbitMQ message will be delivered multiple
-			 * times, and it finally will error out (error message not consistent) as our
-			 * job is not idempotent/may contain race conditions.
-slave-agent_1  | 2020-04-18 03:57:27.724  INFO 1 --- [in-0.runqueue-1] r.slave.service.DockerRunServiceImpl     : Save configuration file
-slave-agent_1  | 2020-04-18 03:57:27.774  INFO 1 --- [in-0.runqueue-1] restfulci.slave.exec.DockerExecImpl      : Build image from context path ./python-pytest and Dockerfile path ./Dockerfile
-slave-agent_1  | 2020-04-18 03:57:33.197  INFO 1 --- [in-0.runqueue-1] restfulci.slave.exec.DockerExecImpl      : Execute command [pytest && ls /code/test-results] in docker image: 59c29fbabdb9
-slave-agent_1  | 2020-04-18 03:57:34.944  INFO 1 --- [in-0.runqueue-1] r.slave.service.DockerRunServiceImpl     : Save configuration file
-slave-agent_1  | 2020-04-18 03:57:34.993  INFO 1 --- [in-0.runqueue-1] restfulci.slave.exec.DockerExecImpl      : Build image from context path ./python-pytest and Dockerfile path ./Dockerfile
-slave-agent_1  | 2020-04-18 03:57:39.874  INFO 1 --- [in-0.runqueue-1] restfulci.slave.exec.DockerExecImpl      : Execute command [pytest && ls /code/test-results] in docker image: 5fc22554c7a1
-slave-agent_1  | 2020-04-18 03:57:42.650  INFO 1 --- [in-0.runqueue-1] r.slave.service.DockerRunServiceImpl     : Save configuration file
-slave-agent_1  | 2020-04-18 03:57:42.704  INFO 1 --- [in-0.runqueue-1] restfulci.slave.exec.DockerExecImpl      : Build image from context path ./python-pytest and Dockerfile path ./Dockerfile
-slave-agent_1  | 2020-04-18 03:57:47.400  INFO 1 --- [in-0.runqueue-1] restfulci.slave.exec.DockerExecImpl      : Execute command [pytest && ls /code/test-results] in docker image: bff5ead19919
-slave-agent_1  | 2020-04-18 03:57:47.855 ERROR 1 --- [in-0.runqueue-1] o.s.integration.handler.LoggingHandler   : org.springframework.messaging.MessageHandlingException: error occurred during processing message in 'MethodInvokingMessageProcessor' [org.springframework.integration.handler.MethodInvokingMessageProcessor@68b0fcde]; nested exception is com.github.dockerjava.api.exception.BadRequestException: OCI runtime create failed: container_linux.go:349: starting container process caused "exec: \"pytest && ls /code/test-results\": stat pytest && ls /code/test-results: no such file or directory": unknown, failedMessage=GenericMessage [payload=byte[32], headers={amqp_receivedDeliveryMode=PERSISTENT, amqp_receivedExchange=, amqp_deliveryTag=4, deliveryAttempt=3, amqp_consumerQueue=executeRun-in-0.runqueue, amqp_redelivered=false, amqp_receivedRoutingKey=executeRun-in-0.runqueue, amqp_contentEncoding=UTF-8, id=97078da0-4e29-17f8-8277-d79403277890, amqp_consumerTag=amq.ctag-8uWQnIZWuQU5ivUYfDOntA, sourceData=(Body:'{
-slave-agent_1  |   "jobId" : 5,
-slave-agent_1  |   "runId" : 5
-slave-agent_1  | }' MessageProperties [headers={}, contentType=text/plain, contentEncoding=UTF-8, contentLength=0, receivedDeliveryMode=PERSISTENT, priority=0, redelivered=false, receivedExchange=, receivedRoutingKey=executeRun-in-0.runqueue, deliveryTag=4, consumerTag=amq.ctag-8uWQnIZWuQU5ivUYfDOntA, consumerQueue=executeRun-in-0.runqueue]), contentType=text/plain, timestamp=1587182247376}]
-			 */
 			log.info("Save run result: "+entry.getKey().getPath());
 			runResult.setRun(run);
 			/*

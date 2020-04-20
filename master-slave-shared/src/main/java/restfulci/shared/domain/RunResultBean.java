@@ -21,6 +21,7 @@ import lombok.ToString;
 @Table(name="run_result")
 public class RunResultBean extends BaseEntity {
 	
+	@JsonIgnore
 	@NotNull
 	@ManyToOne(fetch=FetchType.EAGER)
 	@JoinColumn(name="run_id")

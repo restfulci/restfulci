@@ -233,7 +233,7 @@ public class DockerRunServiceTest {
 		assertEquals(runCaptor.getValue().getPhase(), RunPhase.COMPLETE);
 		assertEquals(runCaptor.getValue().getRunResults().size(), 1);
 		RunResultBean runResult = runCaptor.getValue().getRunResults().get(0);
-		assertEquals(runResult.getType(), "junit");
+		assertEquals(runResult.getType(), "plain-text");
 		assertEquals(runResult.getContainerPath(), "/result");
 	
 		ArgumentCaptor<InputStream> inputStreamCaptor = ArgumentCaptor.forClass(InputStream.class);
