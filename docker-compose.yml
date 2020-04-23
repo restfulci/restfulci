@@ -22,7 +22,8 @@ services:
       MINIO_SECRET_KEY: secretpassword
     command: server /data
 
-  master-api:
+  master-api-server:
+    # image: restfulci/master-api-server:a4a3616f02500023ae3d339da19dc47cc1550d66
     build:
       context: ./master-api
       dockerfile: ./Dockerfile
@@ -34,7 +35,8 @@ services:
     tty: true
     restart: always
 
-  slave-agent:
+  slave-executor:
+    # image: restfulci/slave-executor:a4a3616f02500023ae3d339da19dc47cc1550d66
     build:
       context: ./slave-agent
       dockerfile: ./Dockerfile
@@ -53,10 +55,6 @@ services:
       # docker image provides a way to enable TCP socket, but that requires
       # docker-in-docker.
       #
-      # TODO:
-      # Make a decision whether we want to keep `slave-agent` and `slave-docker`
-      # as different services, and enable TCP socket, or we should just
-      # `FROM docker` and install Java to let the slave agent talk to local docker.
       #
       # TODO:
       # Investigate the possibility to use HTTP socket.

@@ -4,6 +4,17 @@ executors:
   java-executor:
     docker:
       - image: circleci/openjdk:11.0.2-jdk
+
+    working_directory: /tmp/java
+
+    environment:
+      # Customize the JVM maximum heap limit
+      CI: CircleCI
+      MAVEN_OPTS: -Xmx3200m
+
+  java-with-sidecar-executor:
+    docker:
+      - image: circleci/openjdk:11.0.2-jdk
         environment:
           TEST_DATABASE_URL: postgresql://postgres@localhost/restfulci
 
@@ -54,7 +65,7 @@ orbs:
 
 jobs:
   java-unittest:
-    executor: java-executor
+    executor: java-with-sidecar-executor
     steps:
       - checkout
       - inline-postgres/initialize
@@ -80,7 +91,7 @@ jobs:
           path: ~/unittest-results
 
   java-integration-test:
-    executor: java-executor
+    executor: java-with-sidecar-executor
     steps:
       - checkout
       - inline-postgres/initialize
@@ -110,6 +121,41 @@ jobs:
       - run: cd e2e-api && pipenv install flake8
       - run: cd e2e-api && pipenv run flake8 --statistics
 
+  java-build-docker-push:
+    executor: java-executor
+    steps:
+      - checkout
+
+      - setup_remote_docker:
+          docker_layer_caching: false
+
+      # TODO:
+      # Pass in environment variable for active profile, so
+      # (1) We don't need to change it here.
+      # (2) dev/staging/production/... can share the same image.
+      - run: sed -i "s/spring.profiles.active=dev/spring.profiles.active=docker/g" master-api/src/main/resources/application.properties
+      - run: sed -i "s/spring.profiles.active=dev/spring.profiles.active=docker/g" master-slave-shared/src/main/resources/application.properties
+      - run: sed -i "s/spring.profiles.active=dev/spring.profiles.active=docker/g" slave-agent/src/main/resources/application.properties
+
+      - run: mvn package -Dskip.unittest=true -Dskip.it=true
+
+      - run:
+          name: Build and push master docker image
+          command: |
+            cd master-api && docker build -t restfulci/master-api-server:$CIRCLE_SHA1 .
+            echo $DOCKER_PWD | docker login -u $DOCKER_ID --password-stdin
+            docker push restfulci/master-api-server:$CIRCLE_SHA1
+
+      - run:
+          name: Build and push slave docker image
+          command: |
+            cd slave-agent && docker build -t restfulci/slave-executor:$CIRCLE_SHA1 .
+            echo $DOCKER_PWD | docker login -u $DOCKER_ID --password-stdin
+            docker push restfulci/slave-executor:$CIRCLE_SHA1
+    # branches:
+    #   only:
+    #     - master
+
 workflows:
   version: 2
   build-test-and-deploy:
@@ -117,3 +163,9 @@ workflows:
       - java-unittest
       - java-integration-test
       - python-linter
+
+      - java-build-docker-push
+          # requires:
+          #   - java-unittest
+          #   - java-integration-test
+          #   - python-linter
