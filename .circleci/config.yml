@@ -136,9 +136,6 @@ jobs:
             cd slave-agent && docker build -t restfulci/slave-executor:$CIRCLE_SHA1 .
             echo $DOCKER_PWD | docker login -u $DOCKER_ID --password-stdin
             docker push restfulci/slave-executor:$CIRCLE_SHA1
-    # branches:
-    #   only:
-    #     - master
 
 workflows:
   version: 2
@@ -148,8 +145,11 @@ workflows:
       - java-integration-test
       - python-linter
 
-      - java-build-docker-push
-          # requires:
-          #   - java-unittest
-          #   - java-integration-test
-          #   - python-linter
+      - java-build-docker-push:
+          requires:
+            - java-unittest
+            - java-integration-test
+            - python-linter
+          filters:
+            branches:
+              only: master

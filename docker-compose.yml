@@ -23,7 +23,7 @@ services:
     command: server /data
 
   master-api-server:
-    # image: restfulci/master-api-server:a4a3616f02500023ae3d339da19dc47cc1550d66
+    # image: restfulci/master-api-server:23163d0d60250397bed88a7ddd378c16faedf5c1
     build:
       context: ./master-api
       dockerfile: ./Dockerfile
@@ -38,7 +38,7 @@ services:
     restart: always
 
   slave-executor:
-    # image: restfulci/slave-executor:a4a3616f02500023ae3d339da19dc47cc1550d66
+    # image: restfulci/slave-executor:23163d0d60250397bed88a7ddd378c16faedf5c1
     build:
       context: ./slave-agent
       dockerfile: ./Dockerfile
