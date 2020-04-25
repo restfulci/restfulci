@@ -9,7 +9,6 @@ executors:
 
     environment:
       # Customize the JVM maximum heap limit
-      CI: CircleCI
       MAVEN_OPTS: -Xmx3200m
 
   java-with-sidecar-executor:
@@ -27,8 +26,9 @@ executors:
     working_directory: /tmp/java
 
     environment:
-      # Customize the JVM maximum heap limit
       CI: CircleCI
+      SPRING_PROFILES_ACTIVE: circleci
+      # Customize the JVM maximum heap limit
       MAVEN_OPTS: -Xmx3200m
 
   python-executor:
@@ -75,10 +75,6 @@ jobs:
       - setup_remote_docker:
           docker_layer_caching: false
 
-      - run: sed -i "s/spring.profiles.active=dev/spring.profiles.active=circleci/g" master-api/src/main/resources/application.properties
-      - run: sed -i "s/spring.profiles.active=dev/spring.profiles.active=circleci/g" master-slave-shared/src/main/resources/application.properties
-      - run: sed -i "s/spring.profiles.active=dev/spring.profiles.active=circleci/g" slave-agent/src/main/resources/application.properties
-
       - run: mvn test
 
       - run:
@@ -96,10 +92,6 @@ jobs:
       - checkout
       - inline-postgres/initialize
       - inline-minio/installation
-
-      - run: sed -i "s/spring.profiles.active=dev/spring.profiles.active=circleci/g" master-api/src/main/resources/application.properties
-      - run: sed -i "s/spring.profiles.active=dev/spring.profiles.active=circleci/g" master-slave-shared/src/main/resources/application.properties
-      - run: sed -i "s/spring.profiles.active=dev/spring.profiles.active=circleci/g" slave-agent/src/main/resources/application.properties
 
       - run: mvn verify -Dskip.unittest=true
 
@@ -128,14 +120,6 @@ jobs:
 
       - setup_remote_docker:
           docker_layer_caching: false
-
-      # TODO:
-      # Pass in environment variable for active profile, so
-      # (1) We don't need to change it here.
-      # (2) dev/staging/production/... can share the same image.
-      - run: sed -i "s/spring.profiles.active=dev/spring.profiles.active=docker/g" master-api/src/main/resources/application.properties
-      - run: sed -i "s/spring.profiles.active=dev/spring.profiles.active=docker/g" master-slave-shared/src/main/resources/application.properties
-      - run: sed -i "s/spring.profiles.active=dev/spring.profiles.active=docker/g" slave-agent/src/main/resources/application.properties
 
       - run: mvn package -Dskip.unittest=true -Dskip.it=true
 
