@@ -14,7 +14,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import lombok.extern.slf4j.Slf4j;
 import restfulci.shared.domain.RunMessageBean;
-import restfulci.slave.exec.DockerExecImpl;
 import restfulci.slave.service.DockerRunService;
 
 @Slf4j

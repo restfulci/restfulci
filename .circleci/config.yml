@@ -4,6 +4,16 @@ executors:
   java-executor:
     docker:
       - image: circleci/openjdk:11.0.2-jdk
+
+    working_directory: /tmp/java
+
+    environment:
+      # Customize the JVM maximum heap limit
+      MAVEN_OPTS: -Xmx3200m
+
+  java-with-sidecar-executor:
+    docker:
+      - image: circleci/openjdk:11.0.2-jdk
         environment:
           TEST_DATABASE_URL: postgresql://postgres@localhost/restfulci
 
@@ -16,8 +26,9 @@ executors:
     working_directory: /tmp/java
 
     environment:
-      # Customize the JVM maximum heap limit
       CI: CircleCI
+      SPRING_PROFILES_ACTIVE: circleci
+      # Customize the JVM maximum heap limit
       MAVEN_OPTS: -Xmx3200m
 
   python-executor:
@@ -54,7 +65,7 @@ orbs:
 
 jobs:
   java-unittest:
-    executor: java-executor
+    executor: java-with-sidecar-executor
     steps:
       - checkout
       - inline-postgres/initialize
@@ -63,10 +74,6 @@ jobs:
       # This is to support running docker-java related unit tests.
       - setup_remote_docker:
           docker_layer_caching: false
-
-      - run: sed -i "s/spring.profiles.active=dev/spring.profiles.active=circleci/g" master-api/src/main/resources/application.properties
-      - run: sed -i "s/spring.profiles.active=dev/spring.profiles.active=circleci/g" master-slave-shared/src/main/resources/application.properties
-      - run: sed -i "s/spring.profiles.active=dev/spring.profiles.active=circleci/g" slave-agent/src/main/resources/application.properties
 
       - run: mvn test
 
@@ -80,15 +87,11 @@ jobs:
           path: ~/unittest-results
 
   java-integration-test:
-    executor: java-executor
+    executor: java-with-sidecar-executor
     steps:
       - checkout
       - inline-postgres/initialize
       - inline-minio/installation
-
-      - run: sed -i "s/spring.profiles.active=dev/spring.profiles.active=circleci/g" master-api/src/main/resources/application.properties
-      - run: sed -i "s/spring.profiles.active=dev/spring.profiles.active=circleci/g" master-slave-shared/src/main/resources/application.properties
-      - run: sed -i "s/spring.profiles.active=dev/spring.profiles.active=circleci/g" slave-agent/src/main/resources/application.properties
 
       - run: mvn verify -Dskip.unittest=true
 
@@ -110,6 +113,30 @@ jobs:
       - run: cd e2e-api && pipenv install flake8
       - run: cd e2e-api && pipenv run flake8 --statistics
 
+  java-build-docker-push:
+    executor: java-executor
+    steps:
+      - checkout
+
+      - setup_remote_docker:
+          docker_layer_caching: false
+
+      - run: mvn package -Dskip.unittest=true -Dskip.it=true
+
+      - run:
+          name: Build and push master docker image
+          command: |
+            cd master-api && docker build -t restfulci/master-api-server:$CIRCLE_SHA1 .
+            echo $DOCKER_PWD | docker login -u $DOCKER_ID --password-stdin
+            docker push restfulci/master-api-server:$CIRCLE_SHA1
+
+      - run:
+          name: Build and push slave docker image
+          command: |
+            cd slave-agent && docker build -t restfulci/slave-executor:$CIRCLE_SHA1 .
+            echo $DOCKER_PWD | docker login -u $DOCKER_ID --password-stdin
+            docker push restfulci/slave-executor:$CIRCLE_SHA1
+
 workflows:
   version: 2
   build-test-and-deploy:
@@ -117,3 +144,12 @@ workflows:
       - java-unittest
       - java-integration-test
       - python-linter
+
+      - java-build-docker-push:
+          requires:
+            - java-unittest
+            - java-integration-test
+            - python-linter
+          filters:
+            branches:
+              only: master
