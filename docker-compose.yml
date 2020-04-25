@@ -1,7 +1,7 @@
 version: "3"
 services:
 
-  database:
+  postgres:
     image: postgres:12.1
     volumes:
       - ./database:/database
@@ -32,7 +32,7 @@ services:
     ports:
       - "8881:8080"
     depends_on:
-      - database
+      - postgres
       - rabbitmq
     tty: true
     restart: always
@@ -84,7 +84,7 @@ services:
       - SSH_AUTH_SOCK
       - SPRING_PROFILES_ACTIVE=docker
     depends_on:
-      - database
+      - postgres
       - rabbitmq
     tty: true
     restart: always
