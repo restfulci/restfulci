@@ -1,0 +1,28 @@
+apiVersion: apps/v1
+
+kind: Deployment
+metadata:
+  name: restfulci-slave-executor
+spec:
+  replicas: 1
+  revisionHistoryLimit: 3
+  selector:
+    matchLabels:
+      app: slave-executor
+  template:
+    metadata:
+      labels:
+        app: slave-executor
+    spec:
+      containers:
+      - name: slave-executor
+        image: restfulci/slave-executor:23163d0d60250397bed88a7ddd378c16faedf5c1
+        resources:
+          requests:
+            cpu: 400m
+        env:
+        - name: SPRING_PROFILES_ACTIVE
+          value: kubernetes
+        # TODO:
+        # Access host docker socket:
+        # https://estl.tech/accessing-docker-from-a-kubernetes-pod-68996709c04b

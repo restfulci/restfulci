@@ -1,9 +1,12 @@
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: postgres
+  name: restfulci-postgres
 spec:
   replicas: 1
+  selector:
+    matchLabels:
+      app: postgres
   template:
     metadata:
       labels:
@@ -17,7 +20,10 @@ spec:
             - containerPort: 5432
           envFrom:
             - configMapRef:
-                name: postgres-config
+                name: restfulci-postgres
+          resources:
+            requests:
+              cpu: 50m
       #     volumeMounts:
       #       - mountPath: /var/lib/postgresql/data
       #         name: postgredb
