@@ -32,6 +32,17 @@ public class DatabaseConfig {
 		return dataSource;
 	}
 	
+	@Profile("kubernetes")
+	@Bean
+	public DataSource kubernetesDataSource() {
+		DriverManagerDataSource dataSource = new DriverManagerDataSource();
+		dataSource.setDriverClassName("org.postgresql.Driver");
+		dataSource.setUrl("jdbc:postgresql://restfulci-postgres:5432/restfulci");
+		dataSource.setUsername("postgres");
+		dataSource.setPassword("postgres");
+		return dataSource;
+	}
+	
 	@Profile("circleci")
 	@Bean
 	public DataSource circleciDataSource() {

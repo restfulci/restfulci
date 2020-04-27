@@ -5,7 +5,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   # This name uniquely identifies the Deployment
-  name: minio
+  name: restfulci-minio
 spec:
   selector:
     matchLabels:
@@ -26,7 +26,7 @@ spec:
         # This volume is based on PVC
         persistentVolumeClaim:
           # Name of the PVC created earlier
-          claimName: minio-pv-claim
+          claimName: restfulci-minio-pv-claim
       containers:
       - name: minio
         # Volume mounts for this container
@@ -42,9 +42,9 @@ spec:
         env:
         # MinIO access key and secret key
         - name: MINIO_ACCESS_KEY
-          value: "minio"
+          value: "restfulci"
         - name: MINIO_SECRET_KEY
-          value: "minio123"
+          value: "secretpassword"
         ports:
         - containerPort: 9000
         # Readiness probe detects situations when MinIO server instance
