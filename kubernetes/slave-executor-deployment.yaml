@@ -16,13 +16,27 @@ spec:
     spec:
       containers:
       - name: slave-executor
-        image: restfulci/slave-executor:23163d0d60250397bed88a7ddd378c16faedf5c1
+        image: restfulci/slave-executor:124d6d8d01c39f161d8fb444ca9a1eb96b40d104
         resources:
           requests:
             cpu: 400m
         env:
         - name: SPRING_PROFILES_ACTIVE
           value: kubernetes
+        # Setting up docker sibling. Refer to
+        # https://estl.tech/accessing-docker-from-a-kubernetes-pod-68996709c04b
+        # https://devops.stackexchange.com/a/2507
+        # https://stackoverflow.com/a/56462354/2467072
+        #
+        # An alternative approach we may investigate later:
+        # https://applatix.com/case-docker-docker-kubernetes-part/ (part 1 and 2)
+        volumeMounts:
+        - name: docker-sock
+          mountPath: "/var/run/docker.sock"
+      volumes:
+      - name: docker-sock
+        hostPath:
+          path: /var/run/docker.sock
         # TODO:
         # Access host docker socket:
         # https://estl.tech/accessing-docker-from-a-kubernetes-pod-68996709c04b

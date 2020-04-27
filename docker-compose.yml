@@ -54,7 +54,6 @@ services:
       # docker image provides a way to enable TCP socket, but that requires
       # docker-in-docker.
       #
-      #
       # TODO:
       # Investigate the possibility to use HTTP socket.
       - /var/run/docker.sock:/var/run/docker.sock

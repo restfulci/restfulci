@@ -1,5 +1,5 @@
 ```
-gcloud container clusters create restfulci --num-nodes=2
+gcloud container clusters create restfulci --num-nodes=3
 gcloud container clusters get-credentials restfulci
 
 kubectl create -f kubernetes --save-config

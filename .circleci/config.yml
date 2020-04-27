@@ -150,6 +150,6 @@ workflows:
             - java-unittest
             - java-integration-test
             - python-linter
-          # filters:
-          #   branches:
-          #     only: master
+          filters:
+            branches:
+              only: master
