@@ -10,7 +10,8 @@ from zipfile import ZipFile
 
 class TestFreestyleJob(TestCase):
 
-    master_api_url = "http://localhost:8881"
+    # master_api_url = "http://localhost:8881"
+    master_api_url = "http://35.229.105.19"
 
     def test_hello_world(self):
 

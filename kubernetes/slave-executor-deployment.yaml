@@ -32,11 +32,19 @@ spec:
         # https://applatix.com/case-docker-docker-kubernetes-part/ (part 1 and 2)
         volumeMounts:
         - name: docker-sock
-          mountPath: "/var/run/docker.sock"
+          mountPath: /var/run/docker.sock
+        # TODO:
+        # Cannot map /tmp to host, otherwise will face error:
+        # > 2020-04-29 03:59:09.939  INFO 1 --- [in-0.runqueue-1]
+        # > o.apache.http.impl.execchain.RetryExec   : I/O exception (java.io.IOException)
+        # > caught when processing request to {}->unix://localhost:80: Couldn't load native library
+        #
+        # - name: tmp
+        #   mountPath: /tmp
       volumes:
       - name: docker-sock
         hostPath:
           path: /var/run/docker.sock
-        # TODO:
-        # Access host docker socket:
-        # https://estl.tech/accessing-docker-from-a-kubernetes-pod-68996709c04b
+      # - name: tmp
+      #   hostPath:
+      #     path: /tmp
