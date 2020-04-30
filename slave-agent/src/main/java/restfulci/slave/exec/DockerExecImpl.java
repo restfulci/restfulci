@@ -41,26 +41,18 @@ public class DockerExecImpl implements DockerExec {
 	@Override
 	public void pullImage(String imageTag) throws InterruptedException {
 
-		/*
-		 * TODO:
-		 * Not exactly sure the behavior if the tag is `:latest`,
-		 * but for fixed version pretty sure it works.
-		 */
+		if (!imageTag.contains(":")) {
+			imageTag += ":latest";
+		}
+		
 		List<Image> localImages = dockerClient.listImagesCmd().withShowAll(true).exec();
 		for (Image image : localImages) {
-			/*
-			 * TODO: 
-			 * Below line doesn't work for GKE. It will error out with message:
-			 * > slave-executor Caused by: java.lang.NullPointerException                                                                                            │
-			 * > slave-executor     at restfulci.slave.exec.DockerExecImpl.pullImage(DockerExecImpl.java:51)
-			 * 
-			 * Manually `docker pull` the relevant image before running the E2E test
-			 * will resolve the problem. 
-			 */
-			for (int i = 0; i < image.getRepoTags().length; ++i) {
-				if (image.getRepoTags()[i].equals(imageTag)) {
-					log.info("Docker image already exists in local: "+imageTag);
-					return;
+			if (image.getRepoTags() != null) {
+				for (int i = 0; i < image.getRepoTags().length; ++i) {
+					if (image.getRepoTags()[i].equals(imageTag)) {
+						log.info("Docker image already exists in local: "+imageTag);
+						return;
+					}
 				}
 			}
 		}

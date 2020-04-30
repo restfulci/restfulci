@@ -39,6 +39,13 @@ public class DockerExecTest {
 	@MockBean private MinioRepository minioRepository;
 	
 	@Test
+	public void testPullImage() throws Exception {
+		exec.pullImage("busybox");
+		exec.pullImage("busybox:1.31");
+		exec.pullImage("busybox:latest");
+	}
+	
+	@Test
 	public void testRunCommand() throws Exception {
 		
 		RunBean run = new FreestyleRunBean();
