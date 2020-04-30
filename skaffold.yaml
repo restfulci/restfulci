@@ -19,7 +19,6 @@ deploy:
     - kubernetes/minio-standalone-deployment.yaml
     - kubernetes/minio-standalone-pvc.yaml
     - kubernetes/minio-standalone-service.yaml
-    - kubernetes/postgres-configmap.yaml
     - kubernetes/postgres-deployment.yaml
     - kubernetes/postgres-service.yaml
     - kubernetes/rabbitmq-deployment.yaml

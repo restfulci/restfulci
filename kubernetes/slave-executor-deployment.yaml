@@ -34,17 +34,22 @@ spec:
         - name: docker-sock
           mountPath: /var/run/docker.sock
         # TODO:
-        # Cannot map /tmp to host, otherwise will face error:
-        # > 2020-04-29 03:59:09.939  INFO 1 --- [in-0.runqueue-1]
-        # > o.apache.http.impl.execchain.RetryExec   : I/O exception (java.io.IOException)
-        # > caught when processing request to {}->unix://localhost:80: Couldn't load native library
+        # Cannot map /tmp to host, otherwise will face error (all tests, not only the ones with
+        # result involved):
+        # > javax.ws.rs.ProcessingException: java.io.IOException: Couldn't load native library
+        # > ...
+        # > caused by: java.lang.NoClassDefFoundError: Could not initialize class org.newsclub.net.unix.NativeUnixSocket
+        # > at org.newsclub.net.unix.AFUNIXSocket.setIsCreated(AFUNIXSocket.java:54)
         #
-        # - name: tmp
-        #   mountPath: /tmp
+        # However, if map /tmp and run
+        # > /restfulci-examples/python-pytest # docker build -t foo . && docker run -v /tmp/bbb:/code/test-results -it foo pytest
+        # we can successfully map the result back to slave-executor's /tmp.
+        - name: tmp
+          mountPath: /tmp
       volumes:
       - name: docker-sock
         hostPath:
           path: /var/run/docker.sock
-      # - name: tmp
-      #   hostPath:
-      #     path: /tmp
+      - name: tmp
+        hostPath:
+          path: /tmp

@@ -19,6 +19,8 @@ executors:
 
       - image: postgres:12.1
         environment:
+          POSTGRES_DB: restfulci
+          POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
 
       - image: rabbitmq:3.8.2
@@ -43,7 +45,6 @@ orbs:
       initialize:
         steps:
           - run: sudo apt-get update || sudo apt-get update && sudo apt install postgresql-client
-          - run: psql -U postgres -h localhost -p 5432 -w -c "CREATE DATABASE restfulci OWNER postgres;"
           - run: psql -U postgres -h localhost -d restfulci -p 5432 -w -f database/setup.sql
 
   inline-minio:

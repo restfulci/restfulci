@@ -17,17 +17,22 @@ spec:
           image: postgres:12.1
           imagePullPolicy: "IfNotPresent"
           ports:
-            - containerPort: 5432
-          envFrom:
-            - configMapRef:
-                name: restfulci-postgres
+          - containerPort: 5432
+          env:
+          - name: POSTGRES_DB
+            value: restfulci
+          - name: POSTGRES_USER
+            value: postgres
+          - name: POSTGRES_PASSWORD
+            value: postgres
+          # TODO:
+          # We never deploy the database schema to this pod,
+          # why it is working and passing E2E tests?!
+          #
+          # We should add a ConfigMap which contains the schema,
+          # and potentially generate it from file through Kustomize
+          # configMapGenerator:
+          # https://kubectl.docs.kubernetes.io/pages/app_management/secrets_and_configmaps.html
           resources:
             requests:
               cpu: 50m
-      #     volumeMounts:
-      #       - mountPath: /var/lib/postgresql/data
-      #         name: postgredb
-      # volumes:
-      #   - name: postgredb
-      #     persistentVolumeClaim:
-      #       claimName: postgres-pv-claim
