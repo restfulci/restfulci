@@ -26,13 +26,20 @@ spec:
           - name: POSTGRES_PASSWORD
             value: postgres
           # TODO:
-          # We never deploy the database schema to this pod,
-          # why it is working and passing E2E tests?!
+          # We never deploy the database schema to this pod. E2E tests still work,
+          # because Hibernates will automatically deploy the database tables.
+          # However, we lost the postgres functions:
+          # > restfulci=# \df+
           #
-          # We should add a ConfigMap which contains the schema,
+          # We should either add a ConfigMap which contains the schema,
           # and potentially generate it from file through Kustomize
           # configMapGenerator:
           # https://kubectl.docs.kubernetes.io/pages/app_management/secrets_and_configmaps.html
+          #
+          # Or we can bake `setup.sql` into `/docker-entrypoint-initdb.d` into
+          # an image (need a docker hub storage then). It is kind of less
+          # important, because we probably need to handle liquibase (as a Kubernetes
+          # job) anyway.
           resources:
             requests:
               cpu: 50m

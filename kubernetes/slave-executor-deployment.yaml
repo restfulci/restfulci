@@ -44,12 +44,12 @@ spec:
         # However, if map /tmp and run
         # > /restfulci-examples/python-pytest # docker build -t foo . && docker run -v /tmp/bbb:/code/test-results -it foo pytest
         # we can successfully map the result back to slave-executor's /tmp.
-        - name: tmp
-          mountPath: /tmp
+        # - name: tmp
+        #   mountPath: /tmp
       volumes:
       - name: docker-sock
         hostPath:
           path: /var/run/docker.sock
-      - name: tmp
-        hostPath:
-          path: /tmp
+      # - name: tmp
+      #   hostPath:
+      #     path: /tmp

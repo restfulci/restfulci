@@ -94,6 +94,24 @@ public class DockerExecImpl implements DockerExec {
 		
 		/*
 		 * https://github.com/docker-java/docker-java/blob/3.1.5/src/test/java/com/github/dockerjava/cmd/StartContainerCmdIT.java#L50
+		 * 
+		 * TODO:
+		 * Currently doesn't work in Kubernetes if we map `/tmp` with host.
+		 * Otherwise will face error (all tests, not only the ones with
+		 * result involved):
+		 * > javax.ws.rs.ProcessingException: java.io.IOException: Couldn't load native library
+		 * > ...
+		 * > caused by: java.lang.NoClassDefFoundError: Could not initialize class org.newsclub.net.unix.NativeUnixSocket
+		 * > at org.newsclub.net.unix.AFUNIXSocket.setIsCreated(AFUNIXSocket.java:54)
+		 * 
+		 * Tried to comment out `.withDockerHost("unix:///var/run/docker.sock")` but that doesn't work.
+		 *
+		 * However, if map /tmp and run
+		 * > /restfulci-examples/python-pytest # docker build -t foo . && docker run -v /tmp/bbb:/code/test-results -it foo pytest
+		 * we can successfully map the result back to slave-executor's /tmp.
+		 * 
+		 * Seems a docker-java bug. May check if it helps to upgrade/downgrade docker-java version.
+		 * https://stackoverflow.com/questions/57339358/how-to-run-a-docker-container-from-within-java
 		 */
 		List<Bind> binds = new ArrayList<Bind>();
 		for (Map.Entry<RunConfigBean.RunConfigResultBean, File> entry : mounts.entrySet()) {
