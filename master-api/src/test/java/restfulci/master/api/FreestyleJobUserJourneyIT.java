@@ -59,7 +59,7 @@ public class FreestyleJobUserJourneyIT {
 		jobData.put("command", new String[] {"sh", "-c", "echo \"Hello world\""});
 		
 		/*
-		 * curl -X POST -H "Content-Type: application/json" --data '{"name": "manual_job_name", "dockerImage": "busybox:1.31", "command": ["sh", "-c", "echo \"Hello world\""]}' localhost:8881/jobs
+		 * curl -X POST -H "Content-Type: application/json" --data '{"name": "manual_freestyle_job_name", "dockerImage": "busybox:1.31", "command": ["sh", "-c", "echo \"Hello world\""]}' localhost:8881/jobs
 		 */
 		Map<?, ?> createdJob = objectMapper.readValue(
 				mockMvc.perform(post("/jobs")

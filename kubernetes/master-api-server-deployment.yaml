@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+
+kind: Deployment
+metadata:
+  name: restfulci-master-api-server
+spec:
+  replicas: 1
+  revisionHistoryLimit: 3
+  selector:
+    matchLabels:
+      app: master-api-server
+  template:
+    metadata:
+      labels:
+        app: master-api-server
+    spec:
+      containers:
+      - name: master-api-server
+        image: restfulci/master-api-server:124d6d8d01c39f161d8fb444ca9a1eb96b40d104
+        ports:
+        - containerPort: 8080
+        env:
+        - name: SPRING_PROFILES_ACTIVE
+          value: kubernetes
+        resources:
+          requests:
+            cpu: 50m

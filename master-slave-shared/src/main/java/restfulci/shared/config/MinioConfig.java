@@ -28,6 +28,15 @@ public class MinioConfig {
 				"secretpassword");
 	}
 	
+	@Profile("kubernetes")
+	@Bean
+	public MinioClient kubernetesMinioClient() throws MinioException {
+		return new MinioClient(
+				"http://restfulci-minio:9000",
+				"restfulci", 
+				"secretpassword");
+	}
+	
 	@Profile("circleci")
 	@Bean
 	public MinioClient circleciMinioClient() throws MinioException {

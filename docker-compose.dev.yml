@@ -1,16 +1,17 @@
 version: "3"
 services:
 
-  database:
+  postgres:
     image: postgres:12.1
     ports:
       - "5433:5432"
     volumes:
-      - ./database:/database
-      - ./database/docker_init.sh:/docker-entrypoint-initdb.d/docker_init.sh
-    restart: always
+      - ./database/setup.sql:/docker-entrypoint-initdb.d/setup.sql
     environment:
-      POSTGRES_PASSWORD: postgres
+      - POSTGRES_DB=restfulci
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    restart: always
 
   rabbitmq:
     image: rabbitmq:3.8.2-management

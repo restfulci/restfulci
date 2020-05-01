@@ -30,6 +30,17 @@ public class RabbitMQConfig {
 		return connectionFactory;
 	}
 	
+	@Profile("kubernetes")
+	@Bean
+	public CachingConnectionFactory kubernetesConnectionFactory() {
+		CachingConnectionFactory connectionFactory = new CachingConnectionFactory();
+		connectionFactory.setHost("restfulci-rabbitmq");
+		connectionFactory.setPort(5672);
+		connectionFactory.setUsername("guest");
+		connectionFactory.setPassword("guest");
+		return connectionFactory;
+	}
+	
 	@Profile("circleci")
 	@Bean
 	public CachingConnectionFactory circleciConnectionFactory() {

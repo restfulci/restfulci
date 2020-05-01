@@ -35,6 +35,17 @@ public class DockerConfig {
 	}
 	
 	@Bean
+	@Profile("kubernetes")
+	public DockerClient kubernetesDockerClient() {
+		
+		DockerClientConfig config = DefaultDockerClientConfig.createDefaultConfigBuilder()
+				.withDockerHost("unix:///var/run/docker.sock")
+				.build();
+		DockerClient dockerClient = DockerClientBuilder.getInstance(config).build();
+		return dockerClient;
+	}
+	
+	@Bean
 	@Profile("circleci")
 	public DockerClient circleciDockerClient() {
 		

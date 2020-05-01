@@ -1,0 +1,55 @@
+apiVersion: apps/v1
+
+kind: Deployment
+metadata:
+  name: restfulci-slave-executor
+spec:
+  replicas: 1
+  revisionHistoryLimit: 3
+  selector:
+    matchLabels:
+      app: slave-executor
+  template:
+    metadata:
+      labels:
+        app: slave-executor
+    spec:
+      containers:
+      - name: slave-executor
+        image: restfulci/slave-executor:124d6d8d01c39f161d8fb444ca9a1eb96b40d104
+        resources:
+          requests:
+            cpu: 400m
+        env:
+        - name: SPRING_PROFILES_ACTIVE
+          value: kubernetes
+        # Setting up docker sibling. Refer to
+        # https://estl.tech/accessing-docker-from-a-kubernetes-pod-68996709c04b
+        # https://devops.stackexchange.com/a/2507
+        # https://stackoverflow.com/a/56462354/2467072
+        #
+        # An alternative approach we may investigate later:
+        # https://applatix.com/case-docker-docker-kubernetes-part/ (part 1 and 2)
+        volumeMounts:
+        - name: docker-sock
+          mountPath: /var/run/docker.sock
+        # TODO:
+        # Cannot map /tmp to host, otherwise will face error (all tests, not only the ones with
+        # result involved):
+        # > javax.ws.rs.ProcessingException: java.io.IOException: Couldn't load native library
+        # > ...
+        # > caused by: java.lang.NoClassDefFoundError: Could not initialize class org.newsclub.net.unix.NativeUnixSocket
+        # > at org.newsclub.net.unix.AFUNIXSocket.setIsCreated(AFUNIXSocket.java:54)
+        #
+        # However, if map /tmp and run
+        # > /restfulci-examples/python-pytest # docker build -t foo . && docker run -v /tmp/bbb:/code/test-results -it foo pytest
+        # we can successfully map the result back to slave-executor's /tmp.
+        # - name: tmp
+        #   mountPath: /tmp
+      volumes:
+      - name: docker-sock
+        hostPath:
+          path: /var/run/docker.sock
+      # - name: tmp
+      #   hostPath:
+      #     path: /tmp

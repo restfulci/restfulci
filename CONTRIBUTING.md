@@ -8,7 +8,7 @@
 * Persistent storages are through `docker-compose.dev.yml`.
 
 ```
-docker-compose -f docker-compose.dev.yml rm -v -f database
+docker-compose -f docker-compose.dev.yml rm -v -f postgres
 docker-compose -f docker-compose.dev.yml up
 mvn test
 ```

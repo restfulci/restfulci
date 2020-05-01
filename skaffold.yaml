@@ -1,0 +1,26 @@
+apiVersion: skaffold/v2beta2
+kind: Config
+metadata:
+  name: restfulci
+build:
+  tagPolicy:
+    gitCommit:
+      variant: CommitSha
+  artifacts:
+  - image: restfulci/master-api-server
+    context: master-api
+  - image: restfulci/slave-executor
+    context: slave-agent
+deploy:
+  kubectl:
+    manifests:
+    - kubernetes/master-api-server-deployment.yaml
+    - kubernetes/master-api-server-service.yaml
+    - kubernetes/minio-standalone-deployment.yaml
+    - kubernetes/minio-standalone-pvc.yaml
+    - kubernetes/minio-standalone-service.yaml
+    - kubernetes/postgres-deployment.yaml
+    - kubernetes/postgres-service.yaml
+    - kubernetes/rabbitmq-deployment.yaml
+    - kubernetes/rabbitmq-service.yaml
+    - kubernetes/slave-executor-deployment.yaml

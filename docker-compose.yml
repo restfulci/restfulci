@@ -1,17 +1,23 @@
 version: "3"
 services:
 
-  database:
+  postgres:
     image: postgres:12.1
     volumes:
-      - ./database:/database
-      - ./database/docker_init.sh:/docker-entrypoint-initdb.d/docker_init.sh
+      - ./database/setup.sql:/docker-entrypoint-initdb.d/setup.sql
     environment:
+      - POSTGRES_DB=restfulci
+      - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
     restart: always
 
   rabbitmq:
     image: rabbitmq:3.8.2-management
+    # TODO:
+    # add queue setup:
+    # https://stackoverflow.com/a/42251266/2467072
+    # https://devops.datenkollektiv.de/creating-a-custom-rabbitmq-container-with-preconfigured-queues.html
+    # https://medium.com/@thomasdecaux/deploy-rabbitmq-with-docker-static-configuration-23ad39cdbf39
     ports:
       - "15673:15672"
 
@@ -32,7 +38,7 @@ services:
     ports:
       - "8881:8080"
     depends_on:
-      - database
+      - postgres
       - rabbitmq
     tty: true
     restart: always
@@ -53,7 +59,6 @@ services:
       #
       # docker image provides a way to enable TCP socket, but that requires
       # docker-in-docker.
-      #
       #
       # TODO:
       # Investigate the possibility to use HTTP socket.
@@ -84,7 +89,7 @@ services:
       - SSH_AUTH_SOCK
       - SPRING_PROFILES_ACTIVE=docker
     depends_on:
-      - database
+      - postgres
       - rabbitmq
     tty: true
     restart: always

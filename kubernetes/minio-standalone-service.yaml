@@ -1,0 +1,17 @@
+# Fork https://raw.githubusercontent.com/minio/minio/master/docs/orchestration/kubernetes/minio-standalone-service.yaml
+# Refer to https://github.com/minio/minio/blob/master/docs/orchestration/kubernetes/k8s-yaml.md
+
+apiVersion: v1
+kind: Service
+metadata:
+  # This name uniquely identifies the service
+  name: restfulci-minio
+spec:
+  type: LoadBalancer
+  ports:
+  - port: 9000
+    targetPort: 9000
+    protocol: TCP
+  selector:
+    # Looks for labels `app:minio` in the namespace and applies the spec
+    app: minio
