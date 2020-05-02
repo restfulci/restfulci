@@ -21,6 +21,14 @@ CREATE TABLE git_job (
   config_filepath text NOT NULL
 );
 
+CREATE TABLE parameter (
+  id serial PRIMARY KEY,
+  job_id serial REFERENCES job(id) ON DELETE CASCADE,
+  name text NOT NULL CHECK (name ~ '^[A-Z_][A-Z0-9_]*$'),
+  default_value text,
+  choices text[]
+);
+
 CREATE TABLE run (
   id serial PRIMARY KEY,
   job_id serial REFERENCES job(id) ON DELETE CASCADE,
@@ -96,4 +104,11 @@ CREATE TABLE git_branch_run (
 CREATE TABLE git_commit_run (
   id serial PRIMARY KEY REFERENCES git_run(id) ON DELETE CASCADE,
   commit_sha text
+);
+
+CREATE TABLE input (
+  id serial PRIMARY KEY,
+  run_id serial REFERENCES run(id) ON DELETE CASCADE,
+  name text NOT NULL CHECK (name ~ '^[A-Z_][A-Z0-9_]*$'),
+  value text
 );

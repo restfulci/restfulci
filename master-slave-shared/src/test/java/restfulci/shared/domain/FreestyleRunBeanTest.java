@@ -40,6 +40,10 @@ public class FreestyleRunBeanTest {
 				+ "\"type\":\"FREESTYLE\"}");
 		assertEquals(
 				mapper.writeValueAsString(job),
-				"{\"id\":123,\"name\":\"job\",\"dockerImage\":\"busybox:1.31\",\"command\":[\"echo\",\"0\"],\"type\":\"FREESTYLE\"}");
+				"{\"id\":123,"
+				+ "\"name\":\"job\","
+				+ "\"dockerImage\":\"busybox:1.31\","
+				+ "\"command\":[\"echo\",\"0\"],"
+				+ "\"type\":\"FREESTYLE\"}");
 	}
 }

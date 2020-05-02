@@ -25,12 +25,8 @@ public class FreestyleJobBean extends JobBean {
     @Column(name="command", columnDefinition="text[]")
 	private String[] command;
 	
+	@Override
 	public JobType getType() {
 		return JobType.FREESTYLE;
 	}
-	
-	/*
-	 * TODO:
-	 * Add input parameters
-	 */
 }

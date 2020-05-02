@@ -21,6 +21,8 @@ import javax.validation.constraints.NotNull;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -38,6 +40,10 @@ public abstract class RunBean extends BaseEntity {
 	@ManyToOne(fetch=FetchType.EAGER)
 	@JoinColumn(name="job_id")
 	private JobBean job;
+	
+	@JsonInclude(Include.NON_EMPTY)
+	@OneToMany(targetEntity=InputBean.class, fetch=FetchType.EAGER, cascade=CascadeType.ALL, mappedBy="run")
+	private List<InputBean> inputs = new ArrayList<InputBean>();
 	
 	@NotNull
 	@Column(name="phase_shortname")
