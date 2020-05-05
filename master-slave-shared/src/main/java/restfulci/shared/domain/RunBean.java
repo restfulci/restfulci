@@ -42,7 +42,7 @@ public abstract class RunBean extends BaseEntity {
 	private JobBean job;
 	
 	@JsonInclude(Include.NON_EMPTY)
-	@OneToMany(targetEntity=InputBean.class, fetch=FetchType.EAGER, cascade=CascadeType.ALL, mappedBy="run")
+	@OneToMany(targetEntity=InputBean.class, fetch=FetchType.LAZY, cascade=CascadeType.ALL, mappedBy="run")
 	private List<InputBean> inputs = new ArrayList<InputBean>();
 	
 	@NotNull
@@ -68,6 +68,17 @@ public abstract class RunBean extends BaseEntity {
 	@Column(name="run_output_object_referral", updatable=true)
 	private String runOutputObjectReferral;
 	
+	/*
+	 * TODO:
+	 * Looks like we can have only one @OneToMany FetchType.EAGER throughout
+	 * the code base (not a single domain class). Otherwise we'll face error:
+	 * > Factory method 'entityManagerFactory' threw exception; nested exception 
+	 * > is javax.persistence.PersistenceException: [PersistenceUnit: default] 
+	 * > Unable to build Hibernate SessionFactory; nested exception is 
+	 * > org.hibernate.loader.MultipleBagFetchException: cannot simultaneously 
+	 * > fetch multiple bags: [restfulci.shared.domain.JobBean.parameters, 
+	 * > restfulci.shared.domain.RunBean.runResults, restfulci.shared.domain.RunBean.inputs]
+	 */
 	@OneToMany(targetEntity=RunResultBean.class, fetch=FetchType.EAGER, cascade=CascadeType.ALL, mappedBy="run")
 	private List<RunResultBean> runResults = new ArrayList<RunResultBean>();
 	

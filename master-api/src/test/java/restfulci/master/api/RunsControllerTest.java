@@ -3,6 +3,7 @@ package restfulci.master.api;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import org.apache.commons.io.input.NullInputStream;
@@ -24,7 +25,7 @@ public class RunsControllerTest {
 	@MockBean private RunService runService;
 
 	@Test
-	public void greetingShouldReturnMessageFromService() throws Exception {
+	public void testRunResultContentType() throws Exception {
 		when(runService.getRunResultStream(any(Integer.class))).thenReturn(new NullInputStream(0));
 		this.mockMvc.perform(get("/jobs/1/runs/1/results/1"))
 //				.andDo(print())

@@ -53,7 +53,7 @@ public abstract class JobBean extends BaseEntity {
 	 * (2) We want to be able to generate an input form in the UI.
 	 */
 	@JsonInclude(Include.NON_EMPTY)
-	@OneToMany(targetEntity=ParameterBean.class, fetch=FetchType.EAGER, cascade=CascadeType.ALL, mappedBy="job")
+	@OneToMany(targetEntity=ParameterBean.class, fetch=FetchType.LAZY, cascade=CascadeType.ALL, mappedBy="job")
 	private List<ParameterBean> parameters = new ArrayList<ParameterBean>();
 	
 	public void addParameter(ParameterBean parameter) {

@@ -25,7 +25,6 @@ import lombok.ToString;
 @Table(name="parameter")
 public class ParameterBean extends BaseEntity {
 	
-	@NotNull
 	@ManyToOne(fetch=FetchType.EAGER)
 	@JoinColumn(name="job_id")
 	@JsonIgnore

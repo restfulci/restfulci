@@ -38,12 +38,12 @@ public class ParameterBeanTest {
 		
 		ParameterBean simpleParameter = new ParameterBean();
 		simpleParameter.setId(4);
-		simpleParameter.setName("simple");
+		simpleParameter.setName("SIMPLE");
 		job.addParameter(simpleParameter);
 		
 		ParameterBean complexParameter = new ParameterBean();
 		complexParameter.setId(5);
-		complexParameter.setName("complex");
+		complexParameter.setName("COMPLEX");
 		complexParameter.setDefaultValue("foo");
 		complexParameter.setChoices(new String[]{"foo", "bar"});
 		job.addParameter(complexParameter);
@@ -54,8 +54,8 @@ public class ParameterBeanTest {
 				"{\"id\":123,"
 				+ "\"name\":\"job\","
 				+ "\"parameters\":["
-				+ "{\"id\":4,\"name\":\"simple\"},"
-				+ "{\"id\":5,\"name\":\"complex\",\"defaultValue\":\"foo\",\"choices\":[\"foo\",\"bar\"]}"
+				+ "{\"id\":4,\"name\":\"SIMPLE\"},"
+				+ "{\"id\":5,\"name\":\"COMPLEX\",\"defaultValue\":\"foo\",\"choices\":[\"foo\",\"bar\"]}"
 				+ "],"
 				+ "\"remoteOrigin\":\"git@github.com:dummy/dummy.git\","
 				+ "\"configFilepath\":\".restfulci.yml\","
