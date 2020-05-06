@@ -1,6 +1,8 @@
 package restfulci.shared.domain;
 
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
@@ -44,6 +46,10 @@ public abstract class RunBean extends BaseEntity {
 	@JsonInclude(Include.NON_EMPTY)
 	@OneToMany(targetEntity=InputBean.class, fetch=FetchType.LAZY, cascade=CascadeType.ALL, mappedBy="run")
 	private List<InputBean> inputs = new ArrayList<InputBean>();
+
+	public void addInput(InputBean input) {
+		inputs.add(input);
+	}
 	
 	@NotNull
 	@Column(name="phase_shortname")
@@ -86,6 +92,26 @@ public abstract class RunBean extends BaseEntity {
 	 * TODO:
 	 * `getDuration()`
 	 */
+	
+	public void validateInput() throws IOException {
+		
+		for (InputBean input : inputs) {
+			ParameterBean parameter = job.getParameter(input.getName());
+			
+			if (parameter == null) {
+				throw new IOException("Input "+input.getName()+" is not in the associated job's parameter list");
+			}
+			
+			if (parameter.getChoices() == null) {
+				continue;
+			}
+			else {
+				if (!Arrays.asList(parameter.getChoices()).contains(input.getValue())) {
+					throw new IOException("Input "+input.getName()+" has invalid value "+input.getValue());
+				}
+			}
+		}
+	}
 	
 	public RunMessageBean toRunMessage() {
 		

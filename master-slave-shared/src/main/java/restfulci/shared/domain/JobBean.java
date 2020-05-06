@@ -60,5 +60,18 @@ public abstract class JobBean extends BaseEntity {
 		parameters.add(parameter);
 	}
 	
+	public ParameterBean getParameter(String name) {
+		/*
+		 * TODO:
+		 * A lazy evaluated lookup table.
+		 */
+		for (ParameterBean parameter : parameters) {
+			if (parameter.getName().equals(name)) {
+				return parameter;
+			}
+		}
+		return null;
+	}
+	
 	public abstract JobType getType();
 }

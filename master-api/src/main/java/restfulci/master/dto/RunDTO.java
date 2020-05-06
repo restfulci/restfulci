@@ -2,52 +2,61 @@ package restfulci.master.dto;
 
 import java.io.IOException;
 import java.util.Date;
+import java.util.HashMap;
 
-import javax.validation.constraints.Size;
-
-import lombok.Getter;
-import lombok.Setter;
-import lombok.ToString;
 import restfulci.shared.domain.FreestyleRunBean;
 import restfulci.shared.domain.GitBranchRunBean;
 import restfulci.shared.domain.GitCommitRunBean;
+import restfulci.shared.domain.InputBean;
 import restfulci.shared.domain.RunBean;
 import restfulci.shared.domain.RunPhase;
 
-@Getter
-@Setter
-@ToString
-public class RunDTO {
+public class RunDTO extends HashMap<String, String> {
 
-	@Size(max=128)
-	private String branchName;
-	
-	@Size(min=41, max=41)
-	private String commitSha;
-	
-	public RunBean toBean() throws IOException {
-		
-		if (branchName != null) {
+	private static final long serialVersionUID = 1L;
+
+	public RunBean toRunBean() throws IOException {
+
+		RunBean runBean;
+
+		if (containsKey("branchName")) {
 			
-			GitBranchRunBean runBean = new GitBranchRunBean();
-			runBean.setPhase(RunPhase.IN_PROGRESS);
-			runBean.setTriggerAt(new Date());
-			runBean.setBranchName(branchName);
-			return runBean;
-		}
-		
-		if (commitSha != null) {
+			GitBranchRunBean gitBranchRunBean = new GitBranchRunBean();
+			gitBranchRunBean.setBranchName(get("branchName"));
+			runBean = gitBranchRunBean;
+		} 
+		else if (containsKey("commitSha")) {
 			
-			GitCommitRunBean runBean = new GitCommitRunBean();
-			runBean.setPhase(RunPhase.IN_PROGRESS);
-			runBean.setTriggerAt(new Date());
-			runBean.setCommitSha(commitSha);
-			return runBean;
+			GitCommitRunBean gitCommitRunBean = new GitCommitRunBean();
+			gitCommitRunBean.setCommitSha(get("commitSha"));
+			runBean = gitCommitRunBean;	
+		} 
+		else {
+			
+			runBean = new FreestyleRunBean();
 		}
-		
-		FreestyleRunBean runBean = new FreestyleRunBean();
+
+		for (String key : keySet()) {
+			if (!key.equals("branchName") && !key.equals("commitSha")) {
+				
+				InputBean input = new InputBean();
+				input.setRun(runBean);
+				input.setName(key);
+				input.setValue(get(key));
+				
+				runBean.addInput(input);
+			}
+		}
+
 		runBean.setPhase(RunPhase.IN_PROGRESS);
 		runBean.setTriggerAt(new Date());
+		
+		/*
+		 * TODO:
+		 * Validate RunBean and InputBean, and raise associated exceptions.
+		 * https://www.baeldung.com/javax-validation
+		 */
+		
 		return runBean;
 	}
 }

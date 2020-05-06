@@ -46,6 +46,7 @@ public class JobServiceImpl implements JobService {
 	public JobBean addParameter(JobBean job, ParameterBean parameter) {
 		
 		job.addParameter(parameter);
+		parameter.setJob(job);
 		jobRepository.saveAndFlush(job);
 		return job;
 	}

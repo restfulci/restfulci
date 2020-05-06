@@ -77,8 +77,9 @@ public class RunServiceImpl implements RunService {
 	@Override
 	public RunBean triggerRun(JobBean job, RunDTO runDTO) throws IOException, InterruptedException {
 		
-		RunBean run = runDTO.toBean();
+		RunBean run = runDTO.toRunBean();
 		run.setJob(job);
+		run.validateInput();
 		/*
 		 * No need to do it, as we are saving by `runRepository` rather
 		 * than `jobRepository`.
