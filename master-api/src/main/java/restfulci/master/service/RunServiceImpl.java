@@ -40,7 +40,12 @@ public class RunServiceImpl implements RunService {
 			
 		Optional<RunBean> runs = runRepository.findById(runId);
 		if (runs.isPresent()) {
-			return runs.get();
+			RunBean run = runs.get();
+			/*
+			 * Load inputs since `FetchType.LAZY`.
+			 */
+			run.getInputs().size();
+			return run;
 		}
 		else {
 			throw new IOException();

@@ -7,6 +7,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -80,9 +81,31 @@ public class GitJobUserJourneyIT {
 		assertEquals(queriedJob.get("name"), jobName);
 		assertEquals(queriedJob.get("type"), "GIT");
 		
+		Map<String, Object> parameterData = new HashMap<String, Object>();
+		parameterData.put("name", "ENV");
+		parameterData.put("defaultValue", "staging");
+		parameterData.put("choices", new String[] {"staging", "production"});
+		
+		Map<?, ?> parameterAddedJob = objectMapper.readValue(
+				mockMvc.perform(post("/jobs/"+jobId+"/parameters")
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(objectWriter.writeValueAsString(parameterData)))
+						.andExpect(status().isOk())
+						.andReturn().getResponse().getContentAsString(),
+				Map.class);
+		assertEquals(parameterAddedJob.get("name"), jobName);
+		assertEquals(parameterAddedJob.get("type"), "GIT");
+		assertEquals(objectMapper.convertValue(parameterAddedJob.get("parameters"), List.class).size(), 1);
+		assertEquals(
+				objectMapper.convertValue(
+						objectMapper.convertValue(parameterAddedJob.get("parameters"), List.class).get(0),
+						Map.class).get("name"), 
+				"ENV");
+		
 		final String branchName = "master";
 		Map<String, String> runData = new HashMap<String, String>();
 		runData.put("branchName", branchName);
+		runData.put("ENV", "staging");
 		
 		/*
 		 * curl -X POST -H "Content-Type: application/json" --data '{"branchName": "master"}' localhost:8881/jobs/1/runs
@@ -100,6 +123,12 @@ public class GitJobUserJourneyIT {
 		assertEquals(
 				objectMapper.convertValue(triggeredRun.get("job"), Map.class).get("type"), 
 				"GIT");
+		assertEquals(objectMapper.convertValue(triggeredRun.get("inputs"), List.class).size(), 1);
+		assertEquals(
+				objectMapper.convertValue(
+						objectMapper.convertValue(triggeredRun.get("inputs"), List.class).get(0),
+						Map.class).get("name"), 
+				"ENV");
 		
 		Integer runId = (Integer)triggeredRun.get("id");
 		Map<?, ?> queriedRun = objectMapper.readValue(

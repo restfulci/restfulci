@@ -7,6 +7,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -25,7 +26,6 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.fasterxml.jackson.databind.SerializationFeature;
-
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
 @AutoConfigureMockMvc
@@ -72,6 +72,7 @@ public class FreestyleJobUserJourneyIT {
 		assertEquals(createdJob.get("type"), "FREESTYLE");
 		
 		Integer jobId = (Integer)createdJob.get("id");
+		
 		Map<?, ?> queriedJob = objectMapper.readValue(
 				mockMvc.perform(get("/jobs/"+jobId))
 						.andExpect(status().isOk())
@@ -80,13 +81,37 @@ public class FreestyleJobUserJourneyIT {
 		assertEquals(queriedJob.get("name"), jobName);
 		assertEquals(queriedJob.get("type"), "FREESTYLE");
 		
+		Map<String, Object> parameterData = new HashMap<String, Object>();
+		parameterData.put("name", "ENV");
+		parameterData.put("defaultValue", "staging");
+		parameterData.put("choices", new String[] {"staging", "production"});
+		
+		Map<?, ?> parameterAddedJob = objectMapper.readValue(
+				mockMvc.perform(post("/jobs/"+jobId+"/parameters")
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(objectWriter.writeValueAsString(parameterData)))
+						.andExpect(status().isOk())
+						.andReturn().getResponse().getContentAsString(),
+				Map.class);
+		assertEquals(parameterAddedJob.get("name"), jobName);
+		assertEquals(parameterAddedJob.get("type"), "FREESTYLE");
+		assertEquals(objectMapper.convertValue(parameterAddedJob.get("parameters"), List.class).size(), 1);
+		assertEquals(
+				objectMapper.convertValue(
+						objectMapper.convertValue(parameterAddedJob.get("parameters"), List.class).get(0),
+						Map.class).get("name"), 
+				"ENV");
+		
 		/*
 		 * curl -X POST -H "Content-Type: application/json" --data '{}' localhost:8881/jobs/1/runs
 		 */
+		Map<String, Object> runData = new HashMap<String, Object>();
+		runData.put("ENV", "staging");
+		
 		Map<?, ?> triggeredRun = objectMapper.readValue(
 				mockMvc.perform(post("/jobs/"+jobId+"/runs")
 						.contentType(MediaType.APPLICATION_JSON)
-						.content("{}"))
+						.content(objectWriter.writeValueAsString(runData)))
 						.andExpect(status().isOk())
 						.andReturn().getResponse().getContentAsString(),
 				Map.class);
@@ -95,6 +120,12 @@ public class FreestyleJobUserJourneyIT {
 		assertEquals(
 				objectMapper.convertValue(triggeredRun.get("job"), Map.class).get("type"),
 				"FREESTYLE");
+		assertEquals(objectMapper.convertValue(triggeredRun.get("inputs"), List.class).size(), 1);
+		assertEquals(
+				objectMapper.convertValue(
+						objectMapper.convertValue(triggeredRun.get("inputs"), List.class).get(0),
+						Map.class).get("name"), 
+				"ENV");
 		
 		/*
 		 * curl -X GET -H "Content-Type: application/json" localhost:8881/jobs/1/runs/1

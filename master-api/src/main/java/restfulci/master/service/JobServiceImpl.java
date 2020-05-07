@@ -21,7 +21,12 @@ public class JobServiceImpl implements JobService {
 		
 		Optional<JobBean> jobs = jobRepository.findById(jobId);
 		if (jobs.isPresent()) {
-			return jobs.get();
+			JobBean job = jobs.get();
+			/*
+			 * Load parameters since `FetchType.LAZY`.
+			 */
+			job.getParameters().size();
+			return job;
 		}
 		else {
 			throw new IOException();
