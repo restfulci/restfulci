@@ -16,5 +16,6 @@ public interface DockerExec {
 			RunBean run, 
 			String imageTag, 
 			List<String> command, 
+			Map<String, String> inputs,
 			Map<RunConfigBean.RunConfigResultBean, File> mounts) throws InterruptedException;
 }

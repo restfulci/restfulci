@@ -50,12 +50,12 @@ public class DockerExecTest {
 		
 		RunBean run = new FreestyleRunBean();
 		
-		String[] command = new String[] {"sh", "-c", "echo \"Hello world\""};
 		exec.pullImage("busybox:1.31");
 		exec.runCommandAndUpdateRunBean(
 				run, 
 				"busybox:1.31", 
-				Arrays.asList(command), 
+				Arrays.asList(new String[]{"sh", "-c", "echo \"Hello world\""}), 
+				new HashMap<String, String>(),
 				new HashMap<RunConfigBean.RunConfigResultBean, File>());
 		
 		assertEquals(run.getExitCode(), 0);
@@ -68,6 +68,34 @@ public class DockerExecTest {
 		ArgumentCaptor<InputStream> inputStreamCaptor = ArgumentCaptor.forClass(InputStream.class);
 		verify(minioRepository, times(1)).putRunOutputAndUpdateRunBean(eq(run), inputStreamCaptor.capture());
 		assertEquals(IOUtils.toString(inputStreamCaptor.getValue(), StandardCharsets.UTF_8.name()), "Hello world\n");
+	}
+	
+	@Test
+	public void testRunCommandWithInput() throws Exception {
+		
+		RunBean run = new FreestyleRunBean();
+		
+		Map<String, String> inputs = new HashMap<String, String>();
+		inputs.put("WORD", "customized input");
+		
+		exec.pullImage("busybox:1.31");
+		exec.runCommandAndUpdateRunBean(
+				run, 
+				"busybox:1.31", 
+				Arrays.asList(new String[]{"sh", "-c", "echo \"Hello $WORD\""}), 
+				inputs,
+				new HashMap<RunConfigBean.RunConfigResultBean, File>());
+		
+		assertEquals(run.getExitCode(), 0);
+		/*
+		 * Cannot assert this, as the set logic is in `minioRepository`
+		 * which is mocked here.
+		 */
+//		assertNotNull(run.getRunOutputObjectReferral());
+		
+		ArgumentCaptor<InputStream> inputStreamCaptor = ArgumentCaptor.forClass(InputStream.class);
+		verify(minioRepository, times(1)).putRunOutputAndUpdateRunBean(eq(run), inputStreamCaptor.capture());
+		assertEquals(IOUtils.toString(inputStreamCaptor.getValue(), StandardCharsets.UTF_8.name()), "Hello customized input\n");
 	}
 	
 	/*
@@ -103,14 +131,18 @@ public class DockerExecTest {
 		
 		RunBean run = new FreestyleRunBean();
 		
-		/*
-		 * No need to `mkdir /result`, as docker will create `/result`
-		 * when there's a volume mount `/some/host/path:/result`.
-		 * Alternatively we can `mkdir -p /result` to make it clear.
-		 */
-		String[] command = new String[] {"sh", "-c", "touch /result/this.txt && ls /result"};
 		exec.pullImage("busybox:1.31");
-		exec.runCommandAndUpdateRunBean(run, "busybox:1.31", Arrays.asList(command), mounts);
+		exec.runCommandAndUpdateRunBean(
+				run, 
+				"busybox:1.31", 
+				/*
+				 * No need to `mkdir /result`, as docker will create `/result`
+				 * when there's a volume mount `/some/host/path:/result`.
+				 * Alternatively we can `mkdir -p /result` to make it clear.
+				 */
+				Arrays.asList(new String[]{"sh", "-c", "touch /result/this.txt && ls /result"}), 
+				new HashMap<String, String>(),
+				mounts);
 		
 		assertEquals(run.getExitCode(), 0);
 //		assertNotNull(run.getRunOutputObjectReferral());

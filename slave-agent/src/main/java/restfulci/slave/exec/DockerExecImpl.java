@@ -88,9 +88,18 @@ public class DockerExecImpl implements DockerExec {
 			RunBean run, 
 			String imageTag, 
 			List<String> command, 
+			Map<String, String> inputs,
 			Map<RunConfigBean.RunConfigResultBean, File> mounts) throws InterruptedException {
 		
 		log.info("Execute command "+command+" in docker image: "+imageTag);
+		
+		/*
+		 * https://github.com/docker-java/docker-java/issues/933#issuecomment-336422012
+		 */
+		List<String> inputList = new ArrayList<String>();
+		for (Map.Entry<String, String> entry : inputs.entrySet()) {
+			inputList.add(entry.getKey()+"="+entry.getValue());
+		}
 		
 		/*
 		 * https://github.com/docker-java/docker-java/blob/3.1.5/src/test/java/com/github/dockerjava/cmd/StartContainerCmdIT.java#L50
@@ -123,6 +132,7 @@ public class DockerExecImpl implements DockerExec {
 		 */
 		CreateContainerResponse container = dockerClient.createContainerCmd(imageTag)
 				.withCmd(command)
+				.withEnv(inputList)
 				.withBinds(binds)
 				.exec();
 		

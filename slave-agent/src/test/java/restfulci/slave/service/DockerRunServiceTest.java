@@ -42,6 +42,8 @@ import restfulci.shared.domain.FreestyleRunBean;
 import restfulci.shared.domain.GitBranchRunBean;
 import restfulci.shared.domain.GitJobBean;
 import restfulci.shared.domain.GitRunBean;
+import restfulci.shared.domain.InputBean;
+import restfulci.shared.domain.ParameterBean;
 import restfulci.shared.domain.RunBean;
 import restfulci.shared.domain.RunMessageBean;
 import restfulci.shared.domain.RunPhase;
@@ -92,6 +94,50 @@ public class DockerRunServiceTest {
 		ArgumentCaptor<InputStream> inputStreamCaptor = ArgumentCaptor.forClass(InputStream.class);
 		verify(minioRepository, times(1)).putRunOutputAndUpdateRunBean(eq(run), inputStreamCaptor.capture());
 		assertEquals(IOUtils.toString(inputStreamCaptor.getValue(), StandardCharsets.UTF_8.name()), "Hello world\n");
+	}
+	
+	@Test
+	public void testRunFreestyleJobWithInput() throws Exception{
+		
+		RunMessageBean runMessage = new RunMessageBean();
+		runMessage.setJobId(123);
+		runMessage.setRunId(456);
+		
+		FreestyleJobBean job = new FreestyleJobBean();
+		job.setId(123);
+		job.setName("job");
+		job.setDockerImage("busybox:1.31");
+		job.setCommand(new String[] {"sh", "-c", "echo \"Hello $WORD\""});
+		
+		ParameterBean parameter = new ParameterBean();
+		parameter.setName("WORD");
+		job.addParameter(parameter);
+		
+		FreestyleRunBean run = new FreestyleRunBean();
+		run.setId(456);
+		run.setJob(job);
+		run.setPhase(RunPhase.IN_PROGRESS);
+		run.setTriggerAt(new Date(0L));
+		run.setCompleteAt(new Date(1000L));
+		
+		InputBean input = new InputBean();
+		input.setName("WORD");
+		input.setValue("customized input");
+		run.addInput(input);
+		
+		Optional<RunBean> maybeRun = Optional.of(run);
+		given(runRepository.findById(456)).willReturn(maybeRun);
+		
+		service.runByMessage(runMessage);
+		
+		ArgumentCaptor<RunBean> runCaptor = ArgumentCaptor.forClass(RunBean.class);
+		verify(runRepository, times(1)).saveAndFlush(runCaptor.capture());
+		assertTrue(runCaptor.getValue() instanceof FreestyleRunBean);
+		assertEquals(runCaptor.getValue().getPhase(), RunPhase.COMPLETE);
+		
+		ArgumentCaptor<InputStream> inputStreamCaptor = ArgumentCaptor.forClass(InputStream.class);
+		verify(minioRepository, times(1)).putRunOutputAndUpdateRunBean(eq(run), inputStreamCaptor.capture());
+		assertEquals(IOUtils.toString(inputStreamCaptor.getValue(), StandardCharsets.UTF_8.name()), "Hello customized input\n");
 	}
 	
 	@Test

@@ -9,6 +9,7 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -22,6 +23,7 @@ import restfulci.shared.dao.RunRepository;
 import restfulci.shared.domain.FreestyleJobBean;
 import restfulci.shared.domain.FreestyleRunBean;
 import restfulci.shared.domain.GitRunBean;
+import restfulci.shared.domain.InputBean;
 import restfulci.shared.domain.RunBean;
 import restfulci.shared.domain.RunConfigBean;
 import restfulci.shared.domain.RunMessageBean;
@@ -39,10 +41,26 @@ public class DockerRunServiceImpl implements DockerRunService {
 	@Autowired private RemoteGitRepository remoteGitRepository;
 	@Autowired private MinioRepository minioRepository;
 
+	private RunBean getRun(Integer runId) throws IOException {
+		
+		Optional<RunBean> runs = runRepository.findById(runId);
+		if (runs.isPresent()) {
+			RunBean run = runs.get();
+			/*
+			 * Load inputs since `FetchType.LAZY`.
+			 */
+			run.getInputs().size();
+			return run;
+		}
+		else {
+			throw new IOException();
+		}
+	}
+	
 	@Override
 	public void runByMessage(RunMessageBean runMessage) throws InterruptedException, IOException {
 		
-		RunBean run = runRepository.findById(runMessage.getRunId()).get();
+		RunBean run = getRun(runMessage.getRunId());
 		
 		if (run instanceof FreestyleRunBean) {
 			FreestyleRunBean freestyleRun = (FreestyleRunBean)run;
@@ -61,12 +79,25 @@ public class DockerRunServiceImpl implements DockerRunService {
 		runRepository.saveAndFlush(run);
 	}
 	
+	private Map<String, String> getInputMap(RunBean run) {
+		
+		Map<String, String> inputMap = new HashMap<String, String>();
+		for (InputBean input : run.getInputs()) {
+			inputMap.put(input.getName(), input.getValue());
+		}
+		return inputMap;
+	}
+	
 	private void runFreestyleJob(FreestyleRunBean run) throws InterruptedException {
+		
 		FreestyleJobBean job = run.getJob();
+		
 		dockerExec.pullImage(job.getDockerImage());
 		dockerExec.runCommandAndUpdateRunBean(
-				run, job.getDockerImage(), 
-				Arrays.asList(job.getCommand()), 
+				run, 
+				job.getDockerImage(), 
+				Arrays.asList(job.getCommand()),
+				getInputMap(run),
 				new HashMap<RunConfigBean.RunConfigResultBean, File>());
 		
 		/*
@@ -151,11 +182,21 @@ public class DockerRunServiceImpl implements DockerRunService {
 		
 		if (runConfig.getEnvironment().getImage() != null) {
 			dockerExec.pullImage(runConfig.getEnvironment().getImage());
-			dockerExec.runCommandAndUpdateRunBean(run, runConfig.getEnvironment().getImage(), runConfig.getCommand(), mounts);
+			dockerExec.runCommandAndUpdateRunBean(
+					run, 
+					runConfig.getEnvironment().getImage(), 
+					runConfig.getCommand(), 
+					getInputMap(run),
+					mounts);
 		}
 		else {
 			String imageId = dockerExec.buildImageAndGetId(localRepoPath, runConfig);
-			dockerExec.runCommandAndUpdateRunBean(run, imageId, runConfig.getCommand(), mounts);
+			dockerExec.runCommandAndUpdateRunBean(
+					run, 
+					imageId, 
+					runConfig.getCommand(), 
+					getInputMap(run),
+					mounts);
 		}
 		
 		for (Map.Entry<RunConfigBean.RunConfigResultBean, File> entry : mounts.entrySet()) {
