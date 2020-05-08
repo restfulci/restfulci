@@ -1,10 +1,10 @@
 package restfulci.shared.domain;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
@@ -43,9 +43,23 @@ public abstract class RunBean extends BaseEntity {
 	@JoinColumn(name="job_id")
 	private JobBean job;
 	
+	/*
+	 * Use `Set` so there can be multiple `FetchType.EAGER`. If use `List`, we'll 
+	 * face error:
+	 * > Factory method 'entityManagerFactory' threw exception; nested exception 
+	 * > is javax.persistence.PersistenceException: [PersistenceUnit: default] 
+	 * > Unable to build Hibernate SessionFactory; nested exception is 
+	 * > org.hibernate.loader.MultipleBagFetchException: cannot simultaneously 
+	 * > fetch multiple bags: [restfulci.shared.domain.JobBean.parameters, 
+	 * > restfulci.shared.domain.RunBean.runResults, restfulci.shared.domain.RunBean.inputs]
+	 * 
+	 * One problem is using sets you won't eliminate the underlying Cartesian Product.
+	 * It is fine for us, as we typically don't have a lot of parameters/inputs/results/...
+	 * https://stackoverflow.com/a/4335514/2467072
+	 */
 	@JsonInclude(Include.NON_EMPTY)
-	@OneToMany(targetEntity=InputBean.class, fetch=FetchType.LAZY, cascade=CascadeType.ALL, mappedBy="run")
-	private List<InputBean> inputs = new ArrayList<InputBean>();
+	@OneToMany(targetEntity=InputBean.class, fetch=FetchType.EAGER, cascade=CascadeType.ALL, mappedBy="run")
+	private Set<InputBean> inputs = new HashSet<InputBean>();
 
 	public void addInput(InputBean input) {
 		inputs.add(input);
@@ -87,19 +101,8 @@ public abstract class RunBean extends BaseEntity {
 	@Column(name="run_output_object_referral", updatable=true)
 	private String runOutputObjectReferral;
 	
-	/*
-	 * TODO:
-	 * Looks like we can have only one @OneToMany FetchType.EAGER throughout
-	 * the code base (not a single domain class). Otherwise we'll face error:
-	 * > Factory method 'entityManagerFactory' threw exception; nested exception 
-	 * > is javax.persistence.PersistenceException: [PersistenceUnit: default] 
-	 * > Unable to build Hibernate SessionFactory; nested exception is 
-	 * > org.hibernate.loader.MultipleBagFetchException: cannot simultaneously 
-	 * > fetch multiple bags: [restfulci.shared.domain.JobBean.parameters, 
-	 * > restfulci.shared.domain.RunBean.runResults, restfulci.shared.domain.RunBean.inputs]
-	 */
 	@OneToMany(targetEntity=RunResultBean.class, fetch=FetchType.EAGER, cascade=CascadeType.ALL, mappedBy="run")
-	private List<RunResultBean> runResults = new ArrayList<RunResultBean>();
+	private Set<RunResultBean> runResults = new HashSet<RunResultBean>();
 	
 	/*
 	 * TODO:

@@ -6,6 +6,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 import java.io.IOException;
+import java.util.ArrayList;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -64,8 +65,8 @@ public class RunServiceTest {
 		verify(runRepository, times(1)).saveAndFlush(runCaptor.capture());
 		assertTrue(runCaptor.getValue() instanceof FreestyleRunBean);
 		assertEquals(runCaptor.getValue().getInputs().size(), 1);
-		assertEquals(runCaptor.getValue().getInputs().get(0).getName(), "ENV");
-		assertEquals(runCaptor.getValue().getInputs().get(0).getValue(), "staging");
+		assertEquals(new ArrayList<>(runCaptor.getValue().getInputs()).get(0).getName(), "ENV");
+		assertEquals(new ArrayList<>(runCaptor.getValue().getInputs()).get(0).getValue(), "staging");
 	}
 	
 	@Test
@@ -86,8 +87,8 @@ public class RunServiceTest {
 		verify(runRepository, times(1)).saveAndFlush(runCaptor.capture());
 		assertTrue(runCaptor.getValue() instanceof GitBranchRunBean);
 		assertEquals(runCaptor.getValue().getInputs().size(), 1);
-		assertEquals(runCaptor.getValue().getInputs().get(0).getName(), "ENV");
-		assertEquals(runCaptor.getValue().getInputs().get(0).getValue(), "staging");
+		assertEquals(new ArrayList<>(runCaptor.getValue().getInputs()).get(0).getName(), "ENV");
+		assertEquals(new ArrayList<>(runCaptor.getValue().getInputs()).get(0).getValue(), "staging");
 	}
 	
 	@Test
@@ -108,8 +109,8 @@ public class RunServiceTest {
 		verify(runRepository, times(1)).saveAndFlush(runCaptor.capture());
 		assertTrue(runCaptor.getValue() instanceof GitCommitRunBean);
 		assertEquals(runCaptor.getValue().getInputs().size(), 1);
-		assertEquals(runCaptor.getValue().getInputs().get(0).getName(), "ENV");
-		assertEquals(runCaptor.getValue().getInputs().get(0).getValue(), "staging");
+		assertEquals(new ArrayList<>(runCaptor.getValue().getInputs()).get(0).getName(), "ENV");
+		assertEquals(new ArrayList<>(runCaptor.getValue().getInputs()).get(0).getValue(), "staging");
 	}
 	
 	@Test
@@ -129,8 +130,8 @@ public class RunServiceTest {
 		verify(runRepository, times(1)).saveAndFlush(runCaptor.capture());
 		assertTrue(runCaptor.getValue() instanceof FreestyleRunBean);
 		assertEquals(runCaptor.getValue().getInputs().size(), 1);
-		assertEquals(runCaptor.getValue().getInputs().get(0).getName(), "ENV");
-		assertEquals(runCaptor.getValue().getInputs().get(0).getValue(), "staging");
+		assertEquals(new ArrayList<>(runCaptor.getValue().getInputs()).get(0).getName(), "ENV");
+		assertEquals(new ArrayList<>(runCaptor.getValue().getInputs()).get(0).getValue(), "staging");
 	}
 	
 	@Test

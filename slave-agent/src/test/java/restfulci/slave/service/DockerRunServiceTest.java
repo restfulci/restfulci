@@ -14,6 +14,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.Optional;
 
@@ -306,7 +307,7 @@ public class DockerRunServiceTest {
 		assertTrue(runCaptor.getValue() instanceof GitRunBean);
 		assertEquals(runCaptor.getValue().getPhase(), RunPhase.COMPLETE);
 		assertEquals(runCaptor.getValue().getRunResults().size(), 1);
-		RunResultBean runResult = runCaptor.getValue().getRunResults().get(0);
+		RunResultBean runResult = new ArrayList<>(runCaptor.getValue().getRunResults()).get(0);
 		assertEquals(runResult.getType(), "plain-text");
 		assertEquals(runResult.getContainerPath(), "/result");
 	

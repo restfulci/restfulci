@@ -45,12 +45,7 @@ public class DockerRunServiceImpl implements DockerRunService {
 		
 		Optional<RunBean> runs = runRepository.findById(runId);
 		if (runs.isPresent()) {
-			RunBean run = runs.get();
-			/*
-			 * Load inputs since `FetchType.LAZY`.
-			 */
-			run.getInputs().size();
-			return run;
+			return runs.get();
 		}
 		else {
 			throw new IOException();

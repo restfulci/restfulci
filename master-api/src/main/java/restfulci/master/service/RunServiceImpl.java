@@ -6,11 +6,13 @@ import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 
 import org.apache.commons.io.IOUtils;
+import org.hibernate.Hibernate;
 import org.springframework.amqp.core.AmqpAdmin;
 import org.springframework.amqp.core.AmqpTemplate;
 import org.springframework.amqp.core.Queue;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
@@ -40,12 +42,7 @@ public class RunServiceImpl implements RunService {
 			
 		Optional<RunBean> runs = runRepository.findById(runId);
 		if (runs.isPresent()) {
-			RunBean run = runs.get();
-			/*
-			 * Load inputs since `FetchType.LAZY`.
-			 */
-			run.getInputs().size();
-			return run;
+			return runs.get();
 		}
 		else {
 			throw new IOException();
