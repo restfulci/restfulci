@@ -188,19 +188,7 @@ public class DockerRunServiceTest {
 		Optional<RunBean> maybeRun = Optional.of(run);
 		given(runRepository.findById(456)).willReturn(maybeRun);
 		
-		doAnswer(new Answer<Void>() {
-			public Void answer(InvocationOnMock invocation) {
-				Path localRepoPath = (Path) invocation.getArguments()[1];
-				try {
-					FileUtils.copyDirectory(
-							new File(getClass().getClassLoader().getResource("docker-run-service-test/"+resourceName).getFile()),
-							localRepoPath.toFile());
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
-				return null;
-			}
-		 }).when(remoteGitRepository).copyToLocal(any(GitRunBean.class), any(Path.class));
+		mockGit(resourceName);
 		
 		service.runByMessage(runMessage);
 		
@@ -208,11 +196,6 @@ public class DockerRunServiceTest {
 		verify(runRepository, times(1)).saveAndFlush(runCaptor.capture());
 		assertTrue(runCaptor.getValue() instanceof GitRunBean);
 		assertEquals(runCaptor.getValue().getPhase(), RunPhase.COMPLETE);
-		/*
-		 * Cannot assert this, as the set logic is in `minioRepository`
-		 * which is mocked here.
-		 */
-//		assertNotNull(runCaptor.getValue().getRunOutputObjectReferral());
 		
 		ArgumentCaptor<InputStream> inputStreamCaptor = ArgumentCaptor.forClass(InputStream.class);
 		verify(minioRepository, times(1)).putRunConfigurationAndUpdateRunBean(eq(run), inputStreamCaptor.capture());
@@ -225,6 +208,61 @@ public class DockerRunServiceTest {
 		assertEquals(IOUtils.toString(inputStreamCaptor.getValue(), StandardCharsets.UTF_8.name()), "Hello world\n");
 	}
 	
+	@Test
+	public void testRunGitJobWithParameters() throws Exception {
+		
+		final String resourceName = "git-with-parameters";
+		
+		RunMessageBean runMessage = new RunMessageBean();
+		runMessage.setJobId(123);
+		runMessage.setRunId(456);
+		
+		GitJobBean job = new GitJobBean();
+		job.setId(123);
+		job.setName("job");
+		job.setRemoteOrigin("git@github.com:dummy/dummy.git");
+		job.setConfigFilepath("restfulci.yml");
+		
+		ParameterBean parameter = new ParameterBean();
+		parameter.setName("WORD");
+		job.addParameter(parameter);
+		
+		GitBranchRunBean run = new GitBranchRunBean();
+		run.setId(456);
+		run.setJob(job);
+		run.setBranchName("master");
+		run.setPhase(RunPhase.IN_PROGRESS);
+		run.setTriggerAt(new Date(0L));
+		run.setCompleteAt(new Date(1000L));
+		
+		InputBean input = new InputBean();
+		input.setName("WORD");
+		input.setValue("customized input");
+		run.addInput(input);
+		
+		Optional<RunBean> maybeRun = Optional.of(run);
+		given(runRepository.findById(456)).willReturn(maybeRun);
+		
+		mockGit(resourceName);
+		
+		service.runByMessage(runMessage);
+		
+		ArgumentCaptor<RunBean> runCaptor = ArgumentCaptor.forClass(RunBean.class);
+		verify(runRepository, times(1)).saveAndFlush(runCaptor.capture());
+		assertTrue(runCaptor.getValue() instanceof GitRunBean);
+		assertEquals(runCaptor.getValue().getPhase(), RunPhase.COMPLETE);
+		
+		ArgumentCaptor<InputStream> inputStreamCaptor = ArgumentCaptor.forClass(InputStream.class);
+		verify(minioRepository, times(1)).putRunConfigurationAndUpdateRunBean(eq(run), inputStreamCaptor.capture());
+		assertEquals(
+				IOUtils.toString(inputStreamCaptor.getValue(), StandardCharsets.UTF_8.name()),
+				FileUtils.readFileToString(
+						new File(getClass().getClassLoader().getResource("docker-run-service-test/"+resourceName+"/restfulci.yml").getFile()), 
+						StandardCharsets.UTF_8));
+		verify(minioRepository, times(1)).putRunOutputAndUpdateRunBean(eq(run), inputStreamCaptor.capture());
+		assertEquals(IOUtils.toString(inputStreamCaptor.getValue(), StandardCharsets.UTF_8.name()), "Hello customized input\n");
+	}
+	
 	/*
 	 * This test can pass locally but will fail CircleCI with error:
 	 * > org.zeroturnaround.zip.ZipException: Given directory 
@@ -235,6 +273,8 @@ public class DockerRunServiceTest {
 	@Test
 	@DisabledIfEnvironmentVariable(named="CI", matches="CircleCI")
 	public void testRunGitJobWithResults(@TempDir File tempFolder) throws Exception {
+		
+		final String resourceName = "git-with-results";
 		
 		RunMessageBean runMessage = new RunMessageBean();
 		runMessage.setJobId(123);
@@ -257,19 +297,7 @@ public class DockerRunServiceTest {
 		Optional<RunBean> maybeRun = Optional.of(run);
 		given(runRepository.findById(456)).willReturn(maybeRun);
 		
-		doAnswer(new Answer<Void>() {
-			public Void answer(InvocationOnMock invocation) {
-				Path localRepoPath = (Path) invocation.getArguments()[1];
-				try {
-					FileUtils.copyDirectory(
-							new File(getClass().getClassLoader().getResource("docker-run-service-test/git-with-results").getFile()),
-							localRepoPath.toFile());
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
-				return null;
-			}
-		 }).when(remoteGitRepository).copyToLocal(any(GitRunBean.class), any(Path.class));
+		mockGit(resourceName);
 		
 		service.runByMessage(runMessage);
 		
@@ -288,7 +316,7 @@ public class DockerRunServiceTest {
 		assertEquals(
 				IOUtils.toString(inputStreamCaptor.getValue(), StandardCharsets.UTF_8.name()),
 				FileUtils.readFileToString(
-						new File(getClass().getClassLoader().getResource("docker-run-service-test/git-with-results/restfulci.yml").getFile()), 
+						new File(getClass().getClassLoader().getResource("docker-run-service-test/"+resourceName+"/restfulci.yml").getFile()), 
 						StandardCharsets.UTF_8));
 		
 		verify(minioRepository, times(1)).putRunOutputAndUpdateRunBean(eq(run), inputStreamCaptor.capture());
@@ -303,5 +331,21 @@ public class DockerRunServiceTest {
 		ZipUtil.unpack(zipFile, resultFolder);
 		assertEquals(resultFolder.list().length, 1);
 		assertEquals(resultFolder.list()[0], "this.txt");
+	}
+	
+	private void mockGit(String resourceName) throws IOException, InterruptedException {
+		doAnswer(new Answer<Void>() {
+			public Void answer(InvocationOnMock invocation) {
+				Path localRepoPath = (Path) invocation.getArguments()[1];
+				try {
+					FileUtils.copyDirectory(
+							new File(getClass().getClassLoader().getResource("docker-run-service-test/"+resourceName).getFile()),
+							localRepoPath.toFile());
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+				return null;
+			}
+		 }).when(remoteGitRepository).copyToLocal(any(GitRunBean.class), any(Path.class));
 	}
 }

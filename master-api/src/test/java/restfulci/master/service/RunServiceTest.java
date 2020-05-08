@@ -113,12 +113,65 @@ public class RunServiceTest {
 	}
 	
 	@Test
-	public void testTriggerRunErrorsOutForInvalidInput() throws Exception {
+	public void testTriggerRunFillWithDefaultValue() throws Exception {
+		
+		JobBean job = new FreestyleJobBean();
+		ParameterBean parameter = new ParameterBean();
+		parameter.setName("ENV");
+		parameter.setDefaultValue("staging");
+		job.addParameter(parameter);
+		
+		RunDTO runDTO = new RunDTO();
+		
+		runService.triggerRun(job, runDTO);
+		
+		ArgumentCaptor<RunBean> runCaptor = ArgumentCaptor.forClass(RunBean.class);
+		verify(runRepository, times(1)).saveAndFlush(runCaptor.capture());
+		assertTrue(runCaptor.getValue() instanceof FreestyleRunBean);
+		assertEquals(runCaptor.getValue().getInputs().size(), 1);
+		assertEquals(runCaptor.getValue().getInputs().get(0).getName(), "ENV");
+		assertEquals(runCaptor.getValue().getInputs().get(0).getValue(), "staging");
+	}
+	
+	@Test
+	public void testTriggerRunErrorsOutIfMissingInputDoesnotHaveDefaultValue() throws Exception {
+		
+		JobBean job = new FreestyleJobBean();
+		ParameterBean parameter = new ParameterBean();
+		parameter.setName("ENV");
+		job.addParameter(parameter);
+		
+		RunDTO runDTO = new RunDTO();
+		
+		Assertions.assertThrows(IOException.class, () -> {
+			runService.triggerRun(job, runDTO);
+		});
+	}
+	
+	@Test
+	public void testTriggerRunErrorsOutIfInputIsNotInParameter() throws Exception {
 		
 		JobBean job = new FreestyleJobBean();
 		
 		RunDTO runDTO = new RunDTO();
 		runDTO.put("EXCLUDE", "staging");
+		
+		Assertions.assertThrows(IOException.class, () -> {
+			runService.triggerRun(job, runDTO);
+		});
+	}
+	
+	@Test
+	public void testTriggerRunErrorsOutIfInputIsNotUnderChoices() throws Exception {
+		
+		JobBean job = new FreestyleJobBean();
+		ParameterBean parameter = new ParameterBean();
+		parameter.setName("ENV");
+		parameter.setChoices(new String[] {"testing", "staging", "production"});
+		job.addParameter(parameter);
+		
+		RunDTO runDTO = new RunDTO();
+		runDTO.put("ENV", "development");
 		
 		Assertions.assertThrows(IOException.class, () -> {
 			runService.triggerRun(job, runDTO);

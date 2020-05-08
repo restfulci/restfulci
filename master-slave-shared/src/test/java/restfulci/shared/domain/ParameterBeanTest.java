@@ -1,6 +1,11 @@
 package restfulci.shared.domain;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import javax.validation.Validation;
+import javax.validation.Validator;
+import javax.validation.ValidatorFactory;
 
 import org.junit.jupiter.api.Test;
 
@@ -9,7 +14,22 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 public class ParameterBeanTest {
 
 	@Test
-	public void testParametersNotShowIfEmpty() throws Exception {
+	public void testValidation() {
+
+		ValidatorFactory validatorFactory = Validation.buildDefaultValidatorFactory();
+		Validator validator = validatorFactory.getValidator();
+		
+		ParameterBean validatedParameter = new ParameterBean();
+		validatedParameter.setName("ENV_09");
+		assertTrue(validator.validate(validatedParameter).isEmpty());
+		
+		ParameterBean invalidParameter = new ParameterBean();
+		invalidParameter.setName("env");
+		assertEquals(validator.validate(invalidParameter).size(), 1);
+	}
+
+	@Test
+	public void testJsonParametersNotShowIfEmpty() throws Exception {
 		
 		GitJobBean job = new GitJobBean();
 		job.setId(123);
@@ -28,7 +48,7 @@ public class ParameterBeanTest {
 	}
 	
 	@Test
-	public void testShowParameters() throws Exception {
+	public void testJsonShowParameters() throws Exception {
 		
 		GitJobBean job = new GitJobBean();
 		job.setId(123);

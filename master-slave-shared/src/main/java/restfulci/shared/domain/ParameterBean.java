@@ -7,6 +7,8 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Pattern;
+import javax.validation.constraints.Size;
 
 import org.hibernate.annotations.Type;
 
@@ -31,12 +33,18 @@ public class ParameterBean extends BaseEntity {
 	private JobBean job;
 
 	@NotNull
+	@Size(min=2, max=32)
+	@Pattern(regexp="^[A-Z_][A-Z0-9_]*$")
 	@Column(name="name", updatable=false)
 	private String name;
 	
 	/*
 	 * Parameter always have type `string`, because that's the only
 	 * supporting type for environment variables.
+	 * 
+	 * TODO:
+	 * Is it possible to validate that if `choices` and `defaultValue` are both setup,
+	 * `defaultValue` need to be within `choices`?
 	 */
 	@JsonInclude(Include.NON_NULL)
 	@Column(name="default_value")

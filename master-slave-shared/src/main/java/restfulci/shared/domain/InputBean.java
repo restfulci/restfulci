@@ -7,6 +7,8 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Pattern;
+import javax.validation.constraints.Size;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
@@ -33,6 +35,8 @@ public class InputBean extends BaseEntity {
 	 * parameters.
 	 */
 	@NotNull
+	@Size(min=2, max=32)
+	@Pattern(regexp="^[A-Z_][A-Z0-9_]*$")
 	@Column(name="name", updatable=false)
 	private String name;
 	

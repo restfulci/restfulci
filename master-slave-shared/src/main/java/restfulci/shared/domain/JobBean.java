@@ -60,7 +60,7 @@ public abstract class JobBean extends BaseEntity {
 		parameters.add(parameter);
 	}
 	
-	public ParameterBean getParameter(String name) {
+	ParameterBean getParameter(String name) {
 		/*
 		 * TODO:
 		 * A lazy evaluated lookup table.

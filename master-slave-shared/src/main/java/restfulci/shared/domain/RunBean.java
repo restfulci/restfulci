@@ -51,6 +51,19 @@ public abstract class RunBean extends BaseEntity {
 		inputs.add(input);
 	}
 	
+	private InputBean getInput(String name) {
+		/*
+		 * TODO:
+		 * A lazy evaluated lookup table.
+		 */
+		for (InputBean input : inputs) {
+			if (input.getName().equals(name)) {
+				return input;
+			}
+		}
+		return null;
+	}
+	
 	@NotNull
 	@Column(name="phase_shortname")
 	@Convert(converter = RunPhaseConventer.class)
@@ -108,6 +121,23 @@ public abstract class RunBean extends BaseEntity {
 			else {
 				if (!Arrays.asList(parameter.getChoices()).contains(input.getValue())) {
 					throw new IOException("Input "+input.getName()+" has invalid value "+input.getValue());
+				}
+			}
+		}
+	}
+	
+	public void fillInDefaultInput() throws IOException {
+		
+		for (ParameterBean parameter : job.getParameters()) {
+			if (getInput(parameter.getName()) == null) {
+				if (parameter.getDefaultValue() != null) {
+					InputBean input = new InputBean();
+					input.setName(parameter.getName());
+					input.setValue(parameter.getDefaultValue());
+					addInput(input);
+				}
+				else {
+					throw new IOException("Missing input for "+parameter.getName());
 				}
 			}
 		}
