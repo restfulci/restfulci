@@ -30,6 +30,12 @@ public class RunsController {
 	@Autowired private JobService jobService;
 	@Autowired private RunService runService;
 	
+	/*
+	 * TODO:
+	 * Consider to use `JsonNode` as @RequestBody, as we need to accept
+	 * wildcard JSON attributes to generate `InputBean`s.
+	 * https://medium.com/@saibaburvr/spring-rest-jacksons-jsonnode-for-payload-unaware-request-handling-25a09e2b1ef5
+	 */
 	@PostMapping
 	public RunBean triggerRun(
 			@PathVariable @Min(1) Integer jobId,

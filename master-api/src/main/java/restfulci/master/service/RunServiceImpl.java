@@ -6,11 +6,13 @@ import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 
 import org.apache.commons.io.IOUtils;
+import org.hibernate.Hibernate;
 import org.springframework.amqp.core.AmqpAdmin;
 import org.springframework.amqp.core.AmqpTemplate;
 import org.springframework.amqp.core.Queue;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
@@ -77,8 +79,17 @@ public class RunServiceImpl implements RunService {
 	@Override
 	public RunBean triggerRun(JobBean job, RunDTO runDTO) throws IOException, InterruptedException {
 		
-		RunBean run = runDTO.toBean();
+		RunBean run = runDTO.toRunBean();
 		run.setJob(job);
+		
+		/*
+		 * Right now `fillInDefaultInput()` goes before `validateInput()`, 
+		 * because we don't validate `defaultValue` is within `choices`.
+		 * It can be validated in `fillInDefaultInput()` through.
+		 */
+		run.fillInDefaultInput();
+		run.validateInput();
+		
 		/*
 		 * No need to do it, as we are saving by `runRepository` rather
 		 * than `jobRepository`.

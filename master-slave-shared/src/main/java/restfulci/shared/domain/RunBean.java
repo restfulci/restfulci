@@ -1,8 +1,10 @@
 package restfulci.shared.domain;
 
-import java.util.ArrayList;
+import java.io.IOException;
+import java.util.Arrays;
 import java.util.Date;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
@@ -21,6 +23,8 @@ import javax.validation.constraints.NotNull;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -38,6 +42,41 @@ public abstract class RunBean extends BaseEntity {
 	@ManyToOne(fetch=FetchType.EAGER)
 	@JoinColumn(name="job_id")
 	private JobBean job;
+	
+	/*
+	 * Use `Set` so there can be multiple `FetchType.EAGER`. If use `List`, we'll 
+	 * face error:
+	 * > Factory method 'entityManagerFactory' threw exception; nested exception 
+	 * > is javax.persistence.PersistenceException: [PersistenceUnit: default] 
+	 * > Unable to build Hibernate SessionFactory; nested exception is 
+	 * > org.hibernate.loader.MultipleBagFetchException: cannot simultaneously 
+	 * > fetch multiple bags: [restfulci.shared.domain.JobBean.parameters, 
+	 * > restfulci.shared.domain.RunBean.runResults, restfulci.shared.domain.RunBean.inputs]
+	 * 
+	 * One problem is using sets you won't eliminate the underlying Cartesian Product.
+	 * It is fine for us, as we typically don't have a lot of parameters/inputs/results/...
+	 * https://stackoverflow.com/a/4335514/2467072
+	 */
+	@JsonInclude(Include.NON_EMPTY)
+	@OneToMany(targetEntity=InputBean.class, fetch=FetchType.EAGER, cascade=CascadeType.ALL, mappedBy="run")
+	private Set<InputBean> inputs = new HashSet<InputBean>();
+
+	public void addInput(InputBean input) {
+		inputs.add(input);
+	}
+	
+	private InputBean getInput(String name) {
+		/*
+		 * TODO:
+		 * A lazy evaluated lookup table.
+		 */
+		for (InputBean input : inputs) {
+			if (input.getName().equals(name)) {
+				return input;
+			}
+		}
+		return null;
+	}
 	
 	@NotNull
 	@Column(name="phase_shortname")
@@ -63,12 +102,49 @@ public abstract class RunBean extends BaseEntity {
 	private String runOutputObjectReferral;
 	
 	@OneToMany(targetEntity=RunResultBean.class, fetch=FetchType.EAGER, cascade=CascadeType.ALL, mappedBy="run")
-	private List<RunResultBean> runResults = new ArrayList<RunResultBean>();
+	private Set<RunResultBean> runResults = new HashSet<RunResultBean>();
 	
 	/*
 	 * TODO:
 	 * `getDuration()`
 	 */
+	
+	public void validateInput() throws IOException {
+		
+		for (InputBean input : inputs) {
+			ParameterBean parameter = job.getParameter(input.getName());
+			
+			if (parameter == null) {
+				throw new IOException("Input "+input.getName()+" is not in the associated job's parameter list");
+			}
+			
+			if (parameter.getChoices() == null) {
+				continue;
+			}
+			else {
+				if (!Arrays.asList(parameter.getChoices()).contains(input.getValue())) {
+					throw new IOException("Input "+input.getName()+" has invalid value "+input.getValue());
+				}
+			}
+		}
+	}
+	
+	public void fillInDefaultInput() throws IOException {
+		
+		for (ParameterBean parameter : job.getParameters()) {
+			if (getInput(parameter.getName()) == null) {
+				if (parameter.getDefaultValue() != null) {
+					InputBean input = new InputBean();
+					input.setName(parameter.getName());
+					input.setValue(parameter.getDefaultValue());
+					addInput(input);
+				}
+				else {
+					throw new IOException("Missing input for "+parameter.getName());
+				}
+			}
+		}
+	}
 	
 	public RunMessageBean toRunMessage() {
 		

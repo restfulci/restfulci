@@ -8,10 +8,10 @@ from urllib.parse import urljoin
 from zipfile import ZipFile
 
 
-class TestFreestyleJob(TestCase):
+class TestGitJob(TestCase):
 
-    # master_api_url = "http://localhost:8881"
-    master_api_url = "http://34.74.24.55"
+    master_api_url = "http://localhost:8881"
+    # master_api_url = "http://34.74.24.55"
 
     def test_hello_world(self):
 
@@ -20,6 +20,16 @@ class TestFreestyleJob(TestCase):
 
         self._test_skeleton(
             "hello-world",
+            validate_console_log=validate_console_log)
+
+    def test_input_parameters(self):
+
+        def validate_console_log(response):
+            self.assertEqual(response.text, "2\n")
+
+        self._test_skeleton(
+            "subtraction-operation",
+            inputs={"MINUEND": 5, "SUBTRAHEND": 3},
             validate_console_log=validate_console_log)
 
     def test_shellscript(self):
@@ -68,7 +78,7 @@ class TestFreestyleJob(TestCase):
             validate_console_log=validate_console_log,
             validate_results=validate_results)
 
-    def _test_skeleton(self, project_name, validate_console_log=None, validate_results=None):
+    def _test_skeleton(self, project_name, inputs={}, validate_console_log=None, validate_results=None):
 
         response = requests.post(
             urljoin(self.master_api_url, "/jobs"),
@@ -93,14 +103,25 @@ class TestFreestyleJob(TestCase):
         self.assertEqual(response_body["name"], "git_job_name")
         self.assertEqual(response_body["type"], "GIT")
 
+        for parameter_name, input_value in inputs.items():
+            response = requests.post(
+                urljoin(self.master_api_url, "/jobs/{}/parameters".format(job_id)),
+                headers={
+                    "Content-Type": "application/json"
+                },
+                json={
+                    "name": parameter_name
+                })
+            self.assertEqual(response.status_code, 200)
+            response_body = json.loads(response.text)
+            self.assertTrue(response_body["parameters"][0]["name"] in inputs.keys())
+
         response = requests.post(
             urljoin(self.master_api_url, "/jobs/{}/runs".format(job_id)),
             headers={
                 "Content-Type": "application/json"
             },
-            json={
-                "branchName": "master"
-            })
+            json=dict({"branchName": "master"}, **inputs))
         self.assertEqual(response.status_code, 200)
         response_body = json.loads(response.text)
         run_id = response_body["id"]

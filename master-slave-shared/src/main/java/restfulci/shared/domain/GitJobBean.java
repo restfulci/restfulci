@@ -30,6 +30,7 @@ public class GitJobBean extends JobBean {
 	@Column(name="config_filepath")
 	private String configFilepath;
 	
+	@Override
 	public JobType getType() {
 		return JobType.GIT;
 	}

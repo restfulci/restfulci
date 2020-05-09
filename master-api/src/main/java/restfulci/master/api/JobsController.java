@@ -18,6 +18,7 @@ import lombok.extern.slf4j.Slf4j;
 import restfulci.master.dto.JobDTO;
 import restfulci.master.service.JobService;
 import restfulci.shared.domain.JobBean;
+import restfulci.shared.domain.ParameterBean;
 
 @RestController
 @RequestMapping(value="/jobs")
@@ -50,5 +51,17 @@ public class JobsController {
 		
 		JobBean job = jobService.getJob(jobId);
 		jobService.deleteJob(job);
+	}
+	
+	@PostMapping("/{jobId}/parameters")
+	public JobBean addParameter(
+			@PathVariable @Min(1) Integer jobId,
+			@RequestBody @Valid ParameterBean parameter) throws IOException {
+		
+		JobBean job = jobService.getJob(jobId);
+		log.debug("Add parameter "+parameter+"to job "+job);
+		
+		JobBean updatedJob = jobService.addParameter(job, parameter);
+		return updatedJob;
 	}
 }

@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import restfulci.master.dto.JobDTO;
 import restfulci.shared.dao.JobRepository;
 import restfulci.shared.domain.JobBean;
+import restfulci.shared.domain.ParameterBean;
 
 @Service
 public class JobServiceImpl implements JobService {
@@ -39,6 +40,15 @@ public class JobServiceImpl implements JobService {
 	public void deleteJob(JobBean job) {
 		
 		jobRepository.delete(job);
+	}
+
+	@Override
+	public JobBean addParameter(JobBean job, ParameterBean parameter) {
+		
+		job.addParameter(parameter);
+		parameter.setJob(job);
+		jobRepository.saveAndFlush(job);
+		return job;
 	}
 
 }
