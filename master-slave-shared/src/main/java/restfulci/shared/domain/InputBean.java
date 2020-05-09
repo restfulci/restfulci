@@ -23,10 +23,11 @@ import lombok.ToString;
 @Table(name="input")
 public class InputBean extends BaseEntity {
 	
+	@ToString.Exclude
+	@JsonIgnore
 	@NotNull
 	@ManyToOne(fetch=FetchType.EAGER)
 	@JoinColumn(name="run_id")
-	@JsonIgnore
 	private RunBean run;
 
 	/*

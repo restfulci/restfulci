@@ -1,11 +1,13 @@
 package restfulci.master.api;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -102,11 +104,24 @@ public class FreestyleJobUserJourneyIT {
 						Map.class).get("name"), 
 				"ENV");
 		
+		Map<String, Object> anotherParameterData = new HashMap<String, Object>();
+		anotherParameterData.put("name", "ANOTHER");
+		
+		Map<?, ?> anotherParameterAddedJob = objectMapper.readValue(
+				mockMvc.perform(post("/jobs/"+jobId+"/parameters")
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(objectWriter.writeValueAsString(anotherParameterData)))
+						.andExpect(status().isOk())
+						.andReturn().getResponse().getContentAsString(),
+				Map.class);
+		assertEquals(objectMapper.convertValue(anotherParameterAddedJob.get("parameters"), List.class).size(), 2);
+		
 		/*
 		 * curl -X POST -H "Content-Type: application/json" --data '{}' localhost:8881/jobs/1/runs
 		 */
 		Map<String, Object> runData = new HashMap<String, Object>();
 		runData.put("ENV", "staging");
+		runData.put("ANOTHER", "foo");
 		
 		Map<?, ?> triggeredRun = objectMapper.readValue(
 				mockMvc.perform(post("/jobs/"+jobId+"/runs")
@@ -120,12 +135,12 @@ public class FreestyleJobUserJourneyIT {
 		assertEquals(
 				objectMapper.convertValue(triggeredRun.get("job"), Map.class).get("type"),
 				"FREESTYLE");
-		assertEquals(objectMapper.convertValue(triggeredRun.get("inputs"), List.class).size(), 1);
-		assertEquals(
-				objectMapper.convertValue(
-						objectMapper.convertValue(triggeredRun.get("inputs"), List.class).get(0),
-						Map.class).get("name"), 
-				"ENV");
+		assertEquals(objectMapper.convertValue(triggeredRun.get("inputs"), List.class).size(), 2);
+		assertThat(
+				Arrays.asList(new String[] {"ENV", "ANOTHER"}).contains(
+					objectMapper.convertValue(
+							objectMapper.convertValue(triggeredRun.get("inputs"), List.class).get(0),
+							Map.class).get("name")));
 		
 		/*
 		 * curl -X GET -H "Content-Type: application/json" localhost:8881/jobs/1/runs/1
