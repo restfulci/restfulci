@@ -40,12 +40,12 @@ executors:
     working_directory: ~/python
 
 orbs:
-  inline-postgres:
+  inline-postgres-job:
     commands:
       initialize:
         steps:
           - run: sudo apt-get update || sudo apt-get update && sudo apt install postgresql-client
-          - run: psql -U postgres -h localhost -d restfulci -p 5432 -w -f database/setup.sql
+          - run: psql -U postgres -h localhost -d restfulci -p 5432 -w -f job/database/setup.sql
 
   inline-minio:
     commands:
@@ -65,45 +65,69 @@ orbs:
                 MINIO_SECRET_KEY: secretpassword
 
 jobs:
-  java-unittest:
+  java-job-unittest:
     executor: java-with-sidecar-executor
     steps:
       - checkout
-      - inline-postgres/initialize
+      - inline-postgres-job/initialize
       - inline-minio/installation
 
       # This is to support running docker-java related unit tests.
       - setup_remote_docker:
           docker_layer_caching: false
 
-      - run: mvn test
+      - run: cd job && mvn test
 
       - run:
           name: Save test results
           command: |
-            mkdir -p ~/unittest-results/
-            find . -type f -regex ".*/target/surefire-reports/.*xml" -exec cp {} ~/unittest-results/ \;
+            mkdir -p ~/job/unittest-results/
+            find . -type f -regex "job/.*/target/surefire-reports/.*xml" -exec cp {} ~/job/unittest-results/ \;
           when: always
       - store_test_results:
-          path: ~/unittest-results
+          path: ~/job/unittest-results
 
-  java-integration-test:
+  java-job-integration-test:
     executor: java-with-sidecar-executor
     steps:
       - checkout
-      - inline-postgres/initialize
+      - inline-postgres-job/initialize
       - inline-minio/installation
 
-      - run: mvn verify -Dskip.unittest=true
+      - run: cd job && mvn verify -Dskip.unittest=true
 
       - run:
           name: Save test results
           command: |
-            mkdir -p ~/integration-test-results/
-            find . -type f -regex ".*/target/failsafe-reports/.*xml" -exec cp {} ~/integration-test-results/ \;
+            mkdir -p ~/job/integration-test-results/
+            find . -type f -regex "job/.*/target/failsafe-reports/.*xml" -exec cp {} ~/job/integration-test-results/ \;
           when: always
       - store_test_results:
-          path: ~/integration-test-results
+          path: ~/job/integration-test-results
+
+  java-job-build-docker-push:
+    executor: java-executor
+    steps:
+      - checkout
+
+      - setup_remote_docker:
+          docker_layer_caching: false
+
+      - run: cd job && mvn package -Dskip.unittest=true -Dskip.it=true
+
+      - run:
+          name: Build and push job-master-api-serverss docker image
+          command: |
+            cd job/master-api && docker build -t restfulci/job-master-api-server:$CIRCLE_SHA1 .
+            echo $DOCKER_PWD | docker login -u $DOCKER_ID --password-stdin
+            docker push restfulci/job-master-api-server:$CIRCLE_SHA1
+
+      - run:
+          name: Build and push job-slave-executor docker image
+          command: |
+            cd job/slave-agent && docker build -t restfulci/job-slave-executor:$CIRCLE_SHA1 .
+            echo $DOCKER_PWD | docker login -u $DOCKER_ID --password-stdin
+            docker push restfulci/job-slave-executor:$CIRCLE_SHA1
 
   python-linter:
     executor: python-executor
@@ -114,43 +138,18 @@ jobs:
       - run: cd e2e-api && pipenv install flake8
       - run: cd e2e-api && pipenv run flake8 --statistics
 
-  java-build-docker-push:
-    executor: java-executor
-    steps:
-      - checkout
-
-      - setup_remote_docker:
-          docker_layer_caching: false
-
-      - run: mvn package -Dskip.unittest=true -Dskip.it=true
-
-      - run:
-          name: Build and push master docker image
-          command: |
-            cd master-api && docker build -t restfulci/master-api-server:$CIRCLE_SHA1 .
-            echo $DOCKER_PWD | docker login -u $DOCKER_ID --password-stdin
-            docker push restfulci/master-api-server:$CIRCLE_SHA1
-
-      - run:
-          name: Build and push slave docker image
-          command: |
-            cd slave-agent && docker build -t restfulci/slave-executor:$CIRCLE_SHA1 .
-            echo $DOCKER_PWD | docker login -u $DOCKER_ID --password-stdin
-            docker push restfulci/slave-executor:$CIRCLE_SHA1
-
 workflows:
   version: 2
   build-test-and-deploy:
     jobs:
-      - java-unittest
-      - java-integration-test
-      - python-linter
-
-      - java-build-docker-push:
+      - java-job-unittest
+      - java-job-integration-test
+      - java-job-build-docker-push:
           requires:
-            - java-unittest
-            - java-integration-test
-            - python-linter
-          filters:
-            branches:
-              only: master
+            - java-job-unittest
+            - java-job-integration-test
+          # filters:
+          #   branches:
+          #     only: master
+
+      - python-linter
