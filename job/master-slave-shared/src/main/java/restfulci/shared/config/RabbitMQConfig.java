@@ -34,7 +34,7 @@ public class RabbitMQConfig {
 	@Bean
 	public CachingConnectionFactory kubernetesConnectionFactory() {
 		CachingConnectionFactory connectionFactory = new CachingConnectionFactory();
-		connectionFactory.setHost("restfulci-rabbitmq");
+		connectionFactory.setHost("restfulci-job-rabbitmq");
 		connectionFactory.setPort(5672);
 		connectionFactory.setUsername("guest");
 		connectionFactory.setPassword("guest");

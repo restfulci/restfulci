@@ -148,8 +148,8 @@ workflows:
           requires:
             - java-job-unittest
             - java-job-integration-test
-          # filters:
-          #   branches:
-          #     only: master
+          filters:
+            branches:
+              only: master
 
       - python-linter

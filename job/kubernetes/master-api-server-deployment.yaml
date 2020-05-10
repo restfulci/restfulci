@@ -2,7 +2,8 @@ apiVersion: apps/v1
 
 kind: Deployment
 metadata:
-  name: restfulci-master-api-server
+  name: restfulci-job-master-api-server
+  namespace: job
 spec:
   replicas: 1
   revisionHistoryLimit: 3
@@ -16,7 +17,7 @@ spec:
     spec:
       containers:
       - name: master-api-server
-        image: restfulci/job-master-api-server:124d6d8d01c39f161d8fb444ca9a1eb96b40d104
+        image: restfulci/job-master-api-server:c72dcd06192aeaf7ec45546cbd3da4caf5cc61eb
         ports:
         - containerPort: 8080
         env:

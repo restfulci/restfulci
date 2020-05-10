@@ -1,7 +1,8 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: restfulci-postgres
+  name: restfulci-job-postgres
+  namespace: job
   labels:
     app: postgres
 spec:

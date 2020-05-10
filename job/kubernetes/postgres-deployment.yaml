@@ -1,7 +1,8 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: restfulci-postgres
+  name: restfulci-job-postgres
+  namespace: job
 spec:
   replicas: 1
   selector:
