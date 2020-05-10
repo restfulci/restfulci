@@ -7,20 +7,11 @@ build:
     gitCommit:
       variant: CommitSha
   artifacts:
-  - image: restfulci/master-api-server
-    context: master-api
-  - image: restfulci/slave-executor
-    context: slave-agent
+  - image: restfulci/job-master-api-server
+    context: job/master-api
+  - image: restfulci/job-slave-executor
+    context: job/slave-agent
 deploy:
   kubectl:
     manifests:
-    - kubernetes/master-api-server-deployment.yaml
-    - kubernetes/master-api-server-service.yaml
-    - kubernetes/minio-standalone-deployment.yaml
-    - kubernetes/minio-standalone-pvc.yaml
-    - kubernetes/minio-standalone-service.yaml
-    - kubernetes/postgres-deployment.yaml
-    - kubernetes/postgres-service.yaml
-    - kubernetes/rabbitmq-deployment.yaml
-    - kubernetes/rabbitmq-service.yaml
-    - kubernetes/slave-executor-deployment.yaml
+    - job/kubernetes/*.yaml

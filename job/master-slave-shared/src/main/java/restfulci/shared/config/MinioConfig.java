@@ -32,7 +32,7 @@ public class MinioConfig {
 	@Bean
 	public MinioClient kubernetesMinioClient() throws MinioException {
 		return new MinioClient(
-				"http://restfulci-minio:9000",
+				"http://restfulci-job-minio:9000",
 				"restfulci", 
 				"secretpassword");
 	}

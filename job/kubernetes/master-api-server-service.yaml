@@ -2,7 +2,8 @@ apiVersion: v1
 
 kind: Service
 metadata:
-  name: restfulci-master-api-server
+  name: restfulci-job-master-api-server
+  namespace: job
   labels:
     app: master-api-server
 spec:

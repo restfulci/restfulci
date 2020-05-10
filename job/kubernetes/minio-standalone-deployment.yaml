@@ -5,7 +5,8 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   # This name uniquely identifies the Deployment
-  name: restfulci-minio
+  name: restfulci-job-minio
+  namespace: job
 spec:
   selector:
     matchLabels:
@@ -26,7 +27,7 @@ spec:
         # This volume is based on PVC
         persistentVolumeClaim:
           # Name of the PVC created earlier
-          claimName: restfulci-minio-pv-claim
+          claimName: restfulci-job-minio-pv-claim
       containers:
       - name: minio
         # Volume mounts for this container

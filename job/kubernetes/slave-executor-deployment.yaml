@@ -2,7 +2,8 @@ apiVersion: apps/v1
 
 kind: Deployment
 metadata:
-  name: restfulci-slave-executor
+  name: restfulci-job-slave-executor
+  namespace: job
 spec:
   replicas: 1
   revisionHistoryLimit: 3
@@ -16,7 +17,7 @@ spec:
     spec:
       containers:
       - name: slave-executor
-        image: restfulci/slave-executor:124d6d8d01c39f161d8fb444ca9a1eb96b40d104
+        image: restfulci/job-slave-executor:c72dcd06192aeaf7ec45546cbd3da4caf5cc61eb
         resources:
           requests:
             cpu: 400m

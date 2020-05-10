@@ -48,7 +48,7 @@ public class ParameterBeanTest {
 	}
 	
 	@Test
-	public void testJsonShowParameters() throws Exception {
+	public void testJsonShowParametersWithoutOptionalAttributes() throws Exception {
 		
 		GitJobBean job = new GitJobBean();
 		job.setId(123);
@@ -60,6 +60,28 @@ public class ParameterBeanTest {
 		simpleParameter.setId(4);
 		simpleParameter.setName("SIMPLE");
 		job.addParameter(simpleParameter);
+		
+		ObjectMapper mapper = new ObjectMapper();
+		assertEquals(
+				mapper.writeValueAsString(job),
+				"{\"id\":123,"
+				+ "\"name\":\"job\","
+				+ "\"parameters\":["
+				+ "{\"id\":4,\"name\":\"SIMPLE\"}"
+				+ "],"
+				+ "\"remoteOrigin\":\"git@github.com:dummy/dummy.git\","
+				+ "\"configFilepath\":\".restfulci.yml\","
+				+ "\"type\":\"GIT\"}");
+	}
+	
+	@Test
+	public void testJsonShowParametersWithOptionalAttributes() throws Exception {
+		
+		GitJobBean job = new GitJobBean();
+		job.setId(123);
+		job.setName("job");
+		job.setRemoteOrigin("git@github.com:dummy/dummy.git");
+		job.setConfigFilepath(".restfulci.yml");
 		
 		ParameterBean complexParameter = new ParameterBean();
 		complexParameter.setId(5);
@@ -74,7 +96,6 @@ public class ParameterBeanTest {
 				"{\"id\":123,"
 				+ "\"name\":\"job\","
 				+ "\"parameters\":["
-				+ "{\"id\":4,\"name\":\"SIMPLE\"},"
 				+ "{\"id\":5,\"name\":\"COMPLEX\",\"defaultValue\":\"foo\",\"choices\":[\"foo\",\"bar\"]}"
 				+ "],"
 				+ "\"remoteOrigin\":\"git@github.com:dummy/dummy.git\","
