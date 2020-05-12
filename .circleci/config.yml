@@ -47,6 +47,13 @@ orbs:
           - run: sudo apt-get update || sudo apt-get update && sudo apt install postgresql-client
           - run: psql -U postgres -h localhost -d restfulci -p 5432 -w -f job/database/setup.sql
 
+  inline-postgres-pipeline:
+    commands:
+      initialize:
+        steps:
+          - run: sudo apt-get update || sudo apt-get update && sudo apt install postgresql-client
+          - run: psql -U postgres -h localhost -d restfulci -p 5432 -w -f pipeline/database/setup.sql
+
   inline-minio:
     commands:
       installation:
@@ -129,6 +136,40 @@ jobs:
             echo $DOCKER_PWD | docker login -u $DOCKER_ID --password-stdin
             docker push restfulci/job-slave-executor:$CIRCLE_SHA1
 
+  java-pipeline-unittest:
+    executor: java-with-sidecar-executor
+    steps:
+      - checkout
+      - inline-postgres-pipeline/initialize
+
+      - run: cd pipeline/api-cron && mvn test
+
+      - run:
+          name: Save test results
+          command: |
+            mkdir -p ~/pipeline/unittest-results/
+            find . -type f -regex "job/.*/pipeline/surefire-reports/.*xml" -exec cp {} ~/pipeline/unittest-results/ \;
+          when: always
+      - store_test_results:
+          path: ~/pipeline/unittest-results
+
+  java-pipeline-integration-test:
+    executor: java-with-sidecar-executor
+    steps:
+      - checkout
+      - inline-postgres-pipeline/initialize
+
+      - run: cd pipeline/api-cron && mvn verify -Dskip.unittest=true
+
+      - run:
+          name: Save test results
+          command: |
+            mkdir -p ~/pipeline/integration-test-results/
+            find . -type f -regex "pipeline/.*/target/failsafe-reports/.*xml" -exec cp {} ~/pipeline/integration-test-results/ \;
+          when: always
+      - store_test_results:
+          path: ~/pipeline/integration-test-results
+
   python-linter:
     executor: python-executor
     steps:
@@ -151,5 +192,8 @@ workflows:
           filters:
             branches:
               only: master
+
+      - java-pipeline-unittest
+      - java-pipeline-integration-test
 
       - python-linter

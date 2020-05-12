@@ -35,6 +35,9 @@ public class RunsController {
 	 * Consider to use `JsonNode` as @RequestBody, as we need to accept
 	 * wildcard JSON attributes to generate `InputBean`s.
 	 * https://medium.com/@saibaburvr/spring-rest-jacksons-jsonnode-for-payload-unaware-request-handling-25a09e2b1ef5
+	 * 
+	 * TODO:
+	 * Should it be @Transactional?
 	 */
 	@PostMapping
 	public RunBean triggerRun(

@@ -30,7 +30,7 @@ public class JobsController {
 	@PostMapping
 	public JobBean createJob(@RequestBody @Valid JobDTO jobDTO) throws IOException {
 		
-		log.debug("Create job:"+jobDTO);
+		log.info("Create job: "+jobDTO);
 		
 		/*
 		 * TODO:
@@ -46,13 +46,22 @@ public class JobsController {
 		return jobService.getJob(jobId);
 	}
 	
+	/*
+	 * TODO:
+	 * Should this be @Transactional?
+	 */
 	@DeleteMapping("/{jobId}")
 	public void deleteJob(@PathVariable @Min(1) Integer jobId) throws IOException {
 		
 		JobBean job = jobService.getJob(jobId);
+		log.info("Delete job: "+job);
 		jobService.deleteJob(job);
 	}
 	
+	/*
+	 * TODO:
+	 * Should this be @Transactional?
+	 */
 	@PostMapping("/{jobId}/parameters")
 	public JobBean addParameter(
 			@PathVariable @Min(1) Integer jobId,

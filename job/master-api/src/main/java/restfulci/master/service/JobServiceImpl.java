@@ -32,8 +32,7 @@ public class JobServiceImpl implements JobService {
 	public JobBean createJob(JobDTO jobDTO) throws IOException {
 		
 		JobBean job = jobDTO.toBean();
-		jobRepository.saveAndFlush(job);
-		return job;
+		return jobRepository.saveAndFlush(job);
 	}
 
 	@Override
@@ -47,8 +46,7 @@ public class JobServiceImpl implements JobService {
 		
 		job.addParameter(parameter);
 		parameter.setJob(job);
-		jobRepository.saveAndFlush(job);
-		return job;
+		return jobRepository.saveAndFlush(job);
 	}
 
 }
