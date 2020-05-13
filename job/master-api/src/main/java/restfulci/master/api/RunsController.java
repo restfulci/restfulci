@@ -18,16 +18,13 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import restfulci.master.dto.RunDTO;
-import restfulci.master.service.JobService;
 import restfulci.master.service.RunService;
-import restfulci.shared.domain.JobBean;
 import restfulci.shared.domain.RunBean;
 
 @RestController
 @RequestMapping(value="/jobs/{jobId}/runs")
 public class RunsController {
 
-	@Autowired private JobService jobService;
 	@Autowired private RunService runService;
 	
 	/*
@@ -35,17 +32,13 @@ public class RunsController {
 	 * Consider to use `JsonNode` as @RequestBody, as we need to accept
 	 * wildcard JSON attributes to generate `InputBean`s.
 	 * https://medium.com/@saibaburvr/spring-rest-jacksons-jsonnode-for-payload-unaware-request-handling-25a09e2b1ef5
-	 * 
-	 * TODO:
-	 * Should it be @Transactional?
 	 */
 	@PostMapping
 	public RunBean triggerRun(
 			@PathVariable @Min(1) Integer jobId,
 			@RequestBody @Valid RunDTO runDTO) throws Exception {
 		
-		JobBean job = jobService.getJob(jobId);
-		return runService.triggerRun(job, runDTO);
+		return runService.triggerRun(jobId, runDTO);
 	}
 	
 	@GetMapping("/{runId}")

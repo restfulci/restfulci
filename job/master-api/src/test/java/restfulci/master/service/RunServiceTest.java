@@ -2,6 +2,7 @@ package restfulci.master.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
@@ -37,6 +38,7 @@ public class RunServiceTest {
 
 	@Autowired private RunService runService;
 	
+	@MockBean private JobService jobService;
 	@MockBean private RunRepository runRepository;
 	@MockBean private RunResultRepository runResultRepository;
 	@MockBean private MinioRepository minioRepository;
@@ -55,11 +57,12 @@ public class RunServiceTest {
 		ParameterBean parameter = new ParameterBean();
 		parameter.setName("ENV");
 		job.addParameter(parameter);
+		given(jobService.getJob(456)).willReturn(job);
 		
 		RunDTO runDTO = new RunDTO();
 		runDTO.put("ENV", "staging");
 		
-		runService.triggerRun(job, runDTO);
+		runService.triggerRun(456, runDTO);
 		
 		ArgumentCaptor<RunBean> runCaptor = ArgumentCaptor.forClass(RunBean.class);
 		verify(runRepository, times(1)).saveAndFlush(runCaptor.capture());
@@ -76,12 +79,13 @@ public class RunServiceTest {
 		ParameterBean parameter = new ParameterBean();
 		parameter.setName("ENV");
 		job.addParameter(parameter);
+		given(jobService.getJob(456)).willReturn(job);
 		
 		RunDTO runDTO = new RunDTO();
 		runDTO.put("branchName", "master");
 		runDTO.put("ENV", "staging");
 		
-		runService.triggerRun(job, runDTO);
+		runService.triggerRun(456, runDTO);
 		
 		ArgumentCaptor<RunBean> runCaptor = ArgumentCaptor.forClass(RunBean.class);
 		verify(runRepository, times(1)).saveAndFlush(runCaptor.capture());
@@ -98,12 +102,13 @@ public class RunServiceTest {
 		ParameterBean parameter = new ParameterBean();
 		parameter.setName("ENV");
 		job.addParameter(parameter);
+		given(jobService.getJob(456)).willReturn(job);
 		
 		RunDTO runDTO = new RunDTO();
 		runDTO.put("commitSha", "0000000000000000000000000000000000000000");
 		runDTO.put("ENV", "staging");
 		
-		runService.triggerRun(job, runDTO);
+		runService.triggerRun(456, runDTO);
 		
 		ArgumentCaptor<RunBean> runCaptor = ArgumentCaptor.forClass(RunBean.class);
 		verify(runRepository, times(1)).saveAndFlush(runCaptor.capture());
@@ -121,10 +126,11 @@ public class RunServiceTest {
 		parameter.setName("ENV");
 		parameter.setDefaultValue("staging");
 		job.addParameter(parameter);
+		given(jobService.getJob(456)).willReturn(job);
 		
 		RunDTO runDTO = new RunDTO();
 		
-		runService.triggerRun(job, runDTO);
+		runService.triggerRun(456, runDTO);
 		
 		ArgumentCaptor<RunBean> runCaptor = ArgumentCaptor.forClass(RunBean.class);
 		verify(runRepository, times(1)).saveAndFlush(runCaptor.capture());
@@ -141,11 +147,12 @@ public class RunServiceTest {
 		ParameterBean parameter = new ParameterBean();
 		parameter.setName("ENV");
 		job.addParameter(parameter);
+		given(jobService.getJob(456)).willReturn(job);
 		
 		RunDTO runDTO = new RunDTO();
 		
 		Assertions.assertThrows(IOException.class, () -> {
-			runService.triggerRun(job, runDTO);
+			runService.triggerRun(456, runDTO);
 		});
 	}
 	
@@ -153,12 +160,13 @@ public class RunServiceTest {
 	public void testTriggerRunErrorsOutIfInputIsNotInParameter() throws Exception {
 		
 		JobBean job = new FreestyleJobBean();
+		given(jobService.getJob(456)).willReturn(job);
 		
 		RunDTO runDTO = new RunDTO();
 		runDTO.put("EXCLUDE", "staging");
 		
 		Assertions.assertThrows(IOException.class, () -> {
-			runService.triggerRun(job, runDTO);
+			runService.triggerRun(456, runDTO);
 		});
 	}
 	
@@ -170,12 +178,13 @@ public class RunServiceTest {
 		parameter.setName("ENV");
 		parameter.setChoices(new String[] {"testing", "staging", "production"});
 		job.addParameter(parameter);
+		given(jobService.getJob(456)).willReturn(job);
 		
 		RunDTO runDTO = new RunDTO();
 		runDTO.put("ENV", "development");
 		
 		Assertions.assertThrows(IOException.class, () -> {
-			runService.triggerRun(job, runDTO);
+			runService.triggerRun(456, runDTO);
 		});
 	}
 }

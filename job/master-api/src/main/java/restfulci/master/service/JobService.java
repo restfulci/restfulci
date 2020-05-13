@@ -10,7 +10,7 @@ public interface JobService {
 
 	public JobBean getJob(Integer jobId) throws IOException;
 	public JobBean createJob(JobDTO jobDTO) throws IOException;
-	public void deleteJob(JobBean job);
+	public void deleteJob(Integer jobId) throws IOException;
 	
-	public JobBean addParameter(JobBean job, ParameterBean parameter);
+	public JobBean addParameter(Integer jobId, ParameterBean parameter) throws IOException;
 }

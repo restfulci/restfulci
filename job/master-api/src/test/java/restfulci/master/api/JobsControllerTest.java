@@ -28,7 +28,6 @@ import com.fasterxml.jackson.databind.ObjectWriter;
 import restfulci.master.dto.JobDTO;
 import restfulci.master.service.JobService;
 import restfulci.shared.domain.FreestyleJobBean;
-import restfulci.shared.domain.JobBean;
 import restfulci.shared.domain.ParameterBean;
 
 @WebMvcTest(JobsController.class)
@@ -78,7 +77,7 @@ public class JobsControllerTest {
 				.andExpect(status().isOk());
 		
 		ArgumentCaptor<ParameterBean> parameterCaptor = ArgumentCaptor.forClass(ParameterBean.class);
-		verify(jobService, times(1)).addParameter(any(JobBean.class), parameterCaptor.capture());
+		verify(jobService, times(1)).addParameter(any(Integer.class), parameterCaptor.capture());
 		assertEquals(parameterCaptor.getValue().getName(), "ENV");
 		assertEquals(parameterCaptor.getValue().getDefaultValue(), null);
 		assertArrayEquals(parameterCaptor.getValue().getChoices(), null);
@@ -99,7 +98,7 @@ public class JobsControllerTest {
 				.andExpect(status().isOk());
 		
 		ArgumentCaptor<ParameterBean> parameterCaptor = ArgumentCaptor.forClass(ParameterBean.class);
-		verify(jobService, times(1)).addParameter(any(JobBean.class), parameterCaptor.capture());
+		verify(jobService, times(1)).addParameter(any(Integer.class), parameterCaptor.capture());
 		assertEquals(parameterCaptor.getValue().getName(), "ENV");
 		assertEquals(parameterCaptor.getValue().getDefaultValue(), "dev");
 		assertArrayEquals(parameterCaptor.getValue().getChoices(), new String[]{"dev", "staging", "production"});

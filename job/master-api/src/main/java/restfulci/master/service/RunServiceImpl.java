@@ -6,7 +6,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 
 import org.apache.commons.io.IOUtils;
-import org.hibernate.Hibernate;
 import org.springframework.amqp.core.AmqpAdmin;
 import org.springframework.amqp.core.AmqpTemplate;
 import org.springframework.amqp.core.Queue;
@@ -28,11 +27,14 @@ import restfulci.shared.domain.RunBean;
 import restfulci.shared.domain.RunResultBean;
 
 @Service
+@Transactional
 public class RunServiceImpl implements RunService {
 	
 	@Autowired private RunRepository runRepository;
 	@Autowired private RunResultRepository runResultRepository;
 	@Autowired private MinioRepository minioRepository;
+	
+	@Autowired private JobService jobService;
 	
 	@Autowired private AmqpAdmin admin;
 	@Autowired private AmqpTemplate template;
@@ -77,8 +79,9 @@ public class RunServiceImpl implements RunService {
 	}
 	
 	@Override
-	public RunBean triggerRun(JobBean job, RunDTO runDTO) throws IOException, InterruptedException {
+	public RunBean triggerRun(Integer jobId, RunDTO runDTO) throws IOException, InterruptedException {
 		
+		JobBean job = jobService.getJob(jobId);
 		RunBean run = runDTO.toRunBean();
 		run.setJob(job);
 		

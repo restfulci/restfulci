@@ -8,5 +8,5 @@ public interface PipelineService {
 
 	public PipelineBean getPipeline(Integer pipelineId) throws IOException;
 	public PipelineBean createPipeline(PipelineBean pipeline);
-	public void deletePipeline(PipelineBean pipeline);
+	public void deletePipeline(Integer pipelineId) throws IOException;
 }

@@ -70,6 +70,10 @@ public class JpaConfig {
 		return entityManagerFactory.getObject();
 	}
 
+	/*
+	 * https://www.marcobehler.com/guides/spring-transaction-management-transactional-in-depth#_for_what_do_you_need_a_transaction_manager_like_platformtransactionmanager
+	 * kind of discussed what's happening under it.
+	 */
 	@Bean
 	public PlatformTransactionManager transactionManager() {
 

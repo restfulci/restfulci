@@ -1,6 +1,5 @@
 package restfulci.master.api;
 
-import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.times;
@@ -8,7 +7,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.util.HashMap;
@@ -32,8 +30,6 @@ import restfulci.master.dto.RunDTO;
 import restfulci.master.service.JobService;
 import restfulci.master.service.RunService;
 import restfulci.shared.domain.FreestyleJobBean;
-import restfulci.shared.domain.JobBean;
-import restfulci.shared.domain.ParameterBean;
 
 @WebMvcTest(RunsController.class)
 public class RunsControllerTest {
@@ -66,7 +62,7 @@ public class RunsControllerTest {
 				.andExpect(status().isOk());
 		
 		ArgumentCaptor<RunDTO> runCaptor = ArgumentCaptor.forClass(RunDTO.class);
-		verify(runService, times(1)).triggerRun(any(JobBean.class), runCaptor.capture());
+		verify(runService, times(1)).triggerRun(any(Integer.class), runCaptor.capture());
 		assertEquals(runCaptor.getValue().get("branchName"), "master");
 		assertEquals(runCaptor.getValue().get("ENV"), "staging");
 	}

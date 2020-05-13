@@ -5,13 +5,17 @@ import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import lombok.extern.slf4j.Slf4j;
 import restfulci.master.dto.JobDTO;
 import restfulci.shared.dao.JobRepository;
 import restfulci.shared.domain.JobBean;
 import restfulci.shared.domain.ParameterBean;
 
 @Service
+@Transactional
+@Slf4j
 public class JobServiceImpl implements JobService {
 	
 	@Autowired private JobRepository jobRepository;
@@ -31,18 +35,26 @@ public class JobServiceImpl implements JobService {
 	@Override
 	public JobBean createJob(JobDTO jobDTO) throws IOException {
 		
+		log.info("Create job: "+jobDTO);
+		
 		JobBean job = jobDTO.toBean();
 		return jobRepository.saveAndFlush(job);
 	}
 
 	@Override
-	public void deleteJob(JobBean job) {
+	public void deleteJob(Integer jobId) throws IOException {
+		
+		JobBean job = getJob(jobId);
+		log.info("Delete job: "+job);
 		
 		jobRepository.delete(job);
 	}
 
 	@Override
-	public JobBean addParameter(JobBean job, ParameterBean parameter) {
+	public JobBean addParameter(Integer jobId, ParameterBean parameter) throws IOException {
+		
+		JobBean job = getJob(jobId);
+		log.debug("Add parameter "+parameter+"to job "+job);
 		
 		job.addParameter(parameter);
 		parameter.setJob(job);
