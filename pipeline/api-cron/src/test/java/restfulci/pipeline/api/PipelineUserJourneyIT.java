@@ -1,12 +1,16 @@
 package restfulci.pipeline.api;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -76,6 +80,66 @@ public class PipelineUserJourneyIT {
 						.andReturn().getResponse().getContentAsString(),
 				Map.class);
 		assertEquals(queriedPipeline.get("name"), pipelineName);
+		
+		Map<String, Object> referredJobData = new HashMap<String, Object>();
+		referredJobData.put("originalJobId", 123);
+		
+		Map<?, ?> referredJobAddedPipeline = objectMapper.readValue(
+				mockMvc.perform(post("/pipelines/"+pipelineId+"/referred-jobs")
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(objectWriter.writeValueAsString(referredJobData)))
+						.andExpect(status().isOk())
+						.andReturn().getResponse().getContentAsString(),
+				Map.class);
+		assertEquals(objectMapper.convertValue(referredJobAddedPipeline.get("referredJobs"), List.class).size(), 1);
+		Map<?, ?> referredJob = objectMapper.convertValue(
+				objectMapper.convertValue(referredJobAddedPipeline.get("referredJobs"), List.class).get(0),
+				Map.class);
+		assertEquals(referredJob.get("originalJobId"), 123);
+		Integer referredJobId = (Integer)referredJob.get("id");
+		
+		Map<String, Object> anotherReferredJobData = new HashMap<String, Object>();
+		anotherReferredJobData.put("originalJobId", 456);
+		
+		Map<?, ?> anotherReferredJobAddedPipeline = objectMapper.readValue(
+				mockMvc.perform(post("/pipelines/"+pipelineId+"/referred-jobs")
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(objectWriter.writeValueAsString(anotherReferredJobData)))
+//						.andDo(print())
+						.andExpect(status().isOk())
+						.andReturn().getResponse().getContentAsString(),
+				Map.class);
+		assertEquals(objectMapper.convertValue(anotherReferredJobAddedPipeline.get("referredJobs"), List.class).size(), 2);
+		Map<?, ?> anotherReferredJob = new HashMap<String, Object>();
+		for (Object obj : objectMapper.convertValue(anotherReferredJobAddedPipeline.get("referredJobs"), List.class)) {
+			Map<?, ?> iteratedReferredJob = objectMapper.convertValue(obj, Map.class);
+			if (((Integer)iteratedReferredJob.get("originalJobId")).equals(456)) {
+				anotherReferredJob = iteratedReferredJob;
+			}
+		}
+		assertEquals(anotherReferredJob.get("originalJobId"), 456);
+		Integer anotherReferredJobId = (Integer)anotherReferredJob.get("id");
+		
+		Map<?, ?> linkedUpstreamPipeline = objectMapper.readValue(
+				mockMvc.perform(put("/pipelines/"+pipelineId+"/referred-jobs/"+referredJobId+"/referred-upstream-jobs/"+anotherReferredJobId)
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(objectWriter.writeValueAsString(anotherReferredJobData)))
+						.andDo(print())
+						.andExpect(status().isOk())
+						.andReturn().getResponse().getContentAsString(),
+				Map.class);
+		for (Object obj : objectMapper.convertValue(linkedUpstreamPipeline.get("referredJobs"), List.class)) {
+			Map<?, ?> iteratedReferredJob = objectMapper.convertValue(obj, Map.class);
+			if (((Integer)iteratedReferredJob.get("originalJobId")).equals(123)) {
+				assertEquals(objectMapper.convertValue(iteratedReferredJob.get("referredUpstreamJobs"), List.class).size(), 1);
+				assertEquals((Integer)objectMapper.convertValue(
+						objectMapper.convertValue(iteratedReferredJob.get("referredUpstreamJobs"), List.class).get(0),
+						Map.class).get("originalJobId"), 456);
+			}
+			if (((Integer)iteratedReferredJob.get("originalJobId")).equals(456)) {
+				assertFalse(iteratedReferredJob.containsKey("referredUpstreamJobs"));
+			}
+		}
 		
 		/*
 		 * curl -X DELETE localhost:8881/pipelines/1

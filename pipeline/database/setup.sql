@@ -11,7 +11,8 @@ CREATE TABLE referred_job (
 
 CREATE TABLE referred_job_dependency (
   upstream_referred_job_id serial REFERENCES referred_job(id) ON DELETE CASCADE,
-  downstream_referred_job_id serial REFERENCES referred_job(id) ON DELETE CASCADE
+  downstream_referred_job_id serial REFERENCES referred_job(id) ON DELETE CASCADE,
+  PRIMARY KEY (upstream_referred_job_id, downstream_referred_job_id)
 );
 
 CREATE TABLE cycle (

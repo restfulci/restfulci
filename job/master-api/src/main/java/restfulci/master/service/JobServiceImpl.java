@@ -54,7 +54,7 @@ public class JobServiceImpl implements JobService {
 	public JobBean addParameter(Integer jobId, ParameterBean parameter) throws IOException {
 		
 		JobBean job = getJob(jobId);
-		log.debug("Add parameter "+parameter+"to job "+job);
+		log.info("Add parameter "+parameter+" to job "+job);
 		
 		job.addParameter(parameter);
 		parameter.setJob(job);

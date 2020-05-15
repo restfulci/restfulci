@@ -13,4 +13,8 @@ public interface JobService {
 	public void deleteJob(Integer jobId) throws IOException;
 	
 	public JobBean addParameter(Integer jobId, ParameterBean parameter) throws IOException;
+	/*
+	 * TODO:
+	 * removeParameter
+	 */
 }

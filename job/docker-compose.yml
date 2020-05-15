@@ -41,6 +41,7 @@ services:
     depends_on:
       - postgres
       - rabbitmq
+      - minio
     tty: true
     restart: always
 
@@ -92,5 +93,6 @@ services:
     depends_on:
       - postgres
       - rabbitmq
+      - minio
     tty: true
     restart: always

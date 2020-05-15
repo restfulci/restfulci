@@ -33,5 +33,19 @@ public class PipelineBean extends BaseEntity {
 	
 	@JsonInclude(Include.NON_EMPTY)
 	@OneToMany(targetEntity=ReferredJobBean.class, fetch=FetchType.EAGER, cascade=CascadeType.ALL, mappedBy="pipeline")
-	private Set<ReferredJobBean> pipelines = new HashSet<ReferredJobBean>();
+	private Set<ReferredJobBean> referredJobs = new HashSet<ReferredJobBean>();
+	
+	public ReferredJobBean getReferredJob(Integer referredJobId) {
+		
+		for (ReferredJobBean referredJob : referredJobs) {
+			if (referredJob.getId().equals(referredJobId)) {
+				return referredJob;
+			}
+		}
+		return null;
+	}
+	
+	public void addReferredJob(ReferredJobBean referredJob) {
+		referredJobs.add(referredJob);
+	}
 }
