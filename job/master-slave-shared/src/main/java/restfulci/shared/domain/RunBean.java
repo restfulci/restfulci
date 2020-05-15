@@ -80,16 +80,16 @@ public abstract class RunBean extends BaseEntity {
 	
 	@NotNull
 	@Column(name="phase_shortname")
-	@Convert(converter = RunPhaseConventer.class)
+	@Convert(converter=RunPhaseConventer.class)
 	private RunPhase phase;
 	
-	@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd hh:mm:ss")
+	@JsonFormat(shape=JsonFormat.Shape.STRING, pattern="yyyy-MM-dd hh:mm:ss")
 	@NotNull
 	@Column(name="trigger_at", updatable=false)
 	@Temporal(TemporalType.TIMESTAMP)
 	private Date triggerAt;
 	
-	@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd hh:mm:ss")
+	@JsonFormat(shape=JsonFormat.Shape.STRING, pattern="yyyy-MM-dd hh:mm:ss")
 	@Column(name="complete_at", updatable=true)
 	@Temporal(TemporalType.TIMESTAMP)
 	private Date completeAt;

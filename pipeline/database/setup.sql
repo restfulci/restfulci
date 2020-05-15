@@ -26,7 +26,7 @@ CREATE TABLE referred_run (
   id serial PRIMARY KEY,
   cycle_id serial REFERENCES cycle(id) ON DELETE CASCADE,
   original_job_id integer NOT NULL,
-  original_run_id integer NOT NULL,
+  original_run_id integer,
   phase_shortname char(1) NOT NULL CHECK (
     phase_shortname='N' OR
     phase_shortname='I' OR

@@ -86,5 +86,4 @@ public class PipelineServiceImpl implements PipelineService {
 		
 		return pipelineRepository.saveAndFlush(pipeline);
 	}
-
 }
