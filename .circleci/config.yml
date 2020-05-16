@@ -45,14 +45,14 @@ orbs:
       initialize:
         steps:
           - run: sudo apt-get update || sudo apt-get update && sudo apt install postgresql-client
-          - run: psql -U postgres -h localhost -d restfulci -p 5432 -w -f job/database/setup.sql
+          - run: psql -U postgres -h localhost -d restfulci -p 5432 -w -f job-microservice/database/setup.sql
 
   inline-postgres-pipeline:
     commands:
       initialize:
         steps:
           - run: sudo apt-get update || sudo apt-get update && sudo apt install postgresql-client
-          - run: psql -U postgres -h localhost -d restfulci -p 5432 -w -f pipeline/database/setup.sql
+          - run: psql -U postgres -h localhost -d restfulci -p 5432 -w -f pipeline-microservice/database/setup.sql
 
   inline-minio:
     commands:
@@ -83,13 +83,13 @@ jobs:
       - setup_remote_docker:
           docker_layer_caching: false
 
-      - run: cd job && mvn test
+      - run: cd job-microservice && mvn test
 
       - run:
           name: Save test results
           command: |
             mkdir -p ~/test-results/
-            find . -type f -regex "./job/.*/target/surefire-reports/.*xml" -exec cp {} ~/test-results/ \;
+            find . -type f -regex "./job-microservice/.*/target/surefire-reports/.*xml" -exec cp {} ~/test-results/ \;
           when: always
       - store_test_results:
           path: ~/test-results/
@@ -101,13 +101,13 @@ jobs:
       - inline-postgres-job/initialize
       - inline-minio/installation
 
-      - run: cd job && mvn verify -Dskip.unittest=true
+      - run: cd job-microservice && mvn verify -Dskip.unittest=true
 
       - run:
           name: Save test results
           command: |
             mkdir -p ~/test-results/
-            find . -type f -regex "./job/.*/target/failsafe-reports/.*xml" -exec cp {} ~/test-results/ \;
+            find . -type f -regex "./job-microservice/.*/target/failsafe-reports/.*xml" -exec cp {} ~/test-results/ \;
           when: always
       - store_test_results:
           path: ~/test-results/
@@ -120,19 +120,19 @@ jobs:
       - setup_remote_docker:
           docker_layer_caching: false
 
-      - run: cd job && mvn package -Dskip.unittest=true -Dskip.it=true
+      - run: cd job-microservice && mvn package -Dskip.unittest=true -Dskip.it=true
 
       - run:
           name: Build and push job-master-api-serverss docker image
           command: |
-            cd job/master-api && docker build -t restfulci/job-master-api-server:$CIRCLE_SHA1 .
+            cd job-microservice/master-api && docker build -t restfulci/job-master-api-server:$CIRCLE_SHA1 .
             echo $DOCKER_PWD | docker login -u $DOCKER_ID --password-stdin
             docker push restfulci/job-master-api-server:$CIRCLE_SHA1
 
       - run:
           name: Build and push job-slave-executor docker image
           command: |
-            cd job/slave-agent && docker build -t restfulci/job-slave-executor:$CIRCLE_SHA1 .
+            cd job-microservice/slave-agent && docker build -t restfulci/job-slave-executor:$CIRCLE_SHA1 .
             echo $DOCKER_PWD | docker login -u $DOCKER_ID --password-stdin
             docker push restfulci/job-slave-executor:$CIRCLE_SHA1
 
@@ -142,16 +142,10 @@ jobs:
       - checkout
       - inline-postgres-pipeline/initialize
 
-      - run: cd pipeline/api-cron && mvn test
+      - run: cd pipeline-microservice/api-cron && mvn test
 
-      - run:
-          name: Save test results
-          command: |
-            mkdir -p ~/test-results/
-            find . -type f -regex "./pipeline/.*/pipeline/surefire-reports/.*xml" -exec cp {} ~/pipeline/unittest-results/ \;
-          when: always
       - store_test_results:
-          path: ~/test-results/
+          path: pipeline-microservice/api-cron/target/surefire-reports/
 
   java-pipeline-integration-test:
     executor: java-with-sidecar-executor
@@ -159,16 +153,10 @@ jobs:
       - checkout
       - inline-postgres-pipeline/initialize
 
-      - run: cd pipeline/api-cron && mvn verify -Dskip.unittest=true
+      - run: cd pipeline-microservice/api-cron && mvn verify -Dskip.unittest=true
 
-      - run:
-          name: Save test results
-          command: |
-            mkdir -p ~/test-results/
-            find . -type f -regex "./pipeline/.*/target/failsafe-reports/.*xml" -exec cp {} ~/test-results/ \;
-          when: always
       - store_test_results:
-          path: ~/test-results/
+          path: pipeline-microservice/api-cron/target/failsafe-reports/
 
   python-linter:
     executor: python-executor

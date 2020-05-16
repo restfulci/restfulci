@@ -8,10 +8,10 @@ build:
       variant: CommitSha
   artifacts:
   - image: restfulci/job-master-api-server
-    context: job/master-api
+    context: job-microservice/master-api
   - image: restfulci/job-slave-executor
-    context: job/slave-agent
+    context: job-microservice/slave-agent
 deploy:
   kubectl:
     manifests:
-    - job/kubernetes/*.yaml
+    - job-microservice/kubernetes/*.yaml
