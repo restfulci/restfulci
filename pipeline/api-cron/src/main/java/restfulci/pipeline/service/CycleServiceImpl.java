@@ -56,10 +56,12 @@ public class CycleServiceImpl implements CycleService {
 			cycle.addReferredRun(referredRun);
 		}
 		
-		/*
-		 * TODO:
-		 * Setup upstream relationship.
-		 */
+		for (ReferredJobBean referredJob : pipeline.getReferredJobs()) {
+			for (ReferredJobBean referredUpstreamJob : referredJob.getReferredUpstreamJobs()) {
+				cycle.getReferredRunByOriginalJobId(referredJob.getOriginalJobId()).addReferredUpstreamRun(
+						cycle.getReferredRunByOriginalJobId(referredUpstreamJob.getOriginalJobId()));
+			}
+		}
 		
 		return cycleRepository.saveAndFlush(cycle);
 	}

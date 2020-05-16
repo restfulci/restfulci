@@ -60,6 +60,16 @@ public class CycleBean extends BaseEntity {
 		return null;
 	}
 	
+	public ReferredRunBean getReferredRunByOriginalJobId(Integer originalJobId) {
+		
+		for (ReferredRunBean referredRun : referredRuns) {
+			if (referredRun.getOriginalJobId().equals(originalJobId)) {
+				return referredRun;
+			}
+		}
+		return null;
+	}
+	
 	public void addReferredRun(ReferredRunBean referredRun) {
 		referredRuns.add(referredRun);
 	}

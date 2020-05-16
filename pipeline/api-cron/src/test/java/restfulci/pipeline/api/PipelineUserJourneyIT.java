@@ -6,7 +6,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.util.HashMap;
@@ -123,7 +122,6 @@ public class PipelineUserJourneyIT {
 				mockMvc.perform(put("/pipelines/"+pipelineId+"/referred-jobs/"+referredJobId+"/referred-upstream-jobs/"+anotherReferredJobId)
 						.contentType(MediaType.APPLICATION_JSON)
 						.content(objectWriter.writeValueAsString(anotherReferredJobData)))
-//						.andDo(print())
 						.andExpect(status().isOk())
 						.andReturn().getResponse().getContentAsString(),
 				Map.class);
@@ -140,15 +138,38 @@ public class PipelineUserJourneyIT {
 			}
 		}
 		
-		Map<?, ?> cycle = objectMapper.readValue(
+		Map<?, ?> triggeredCycle = objectMapper.readValue(
 				mockMvc.perform(post("/pipelines/"+pipelineId+"/cycles")
 						.contentType(MediaType.APPLICATION_JSON))
-						.andDo(print())
 						.andExpect(status().isOk())
 						.andReturn().getResponse().getContentAsString(),
 				Map.class);
-		assertEquals((Integer)objectMapper.convertValue(cycle.get("pipeline"), Map.class).get("id"), pipelineId);
-		assertEquals(objectMapper.convertValue(cycle.get("referredRuns"), List.class).size(), 2);
+		assertEquals((Integer)objectMapper.convertValue(triggeredCycle.get("pipeline"), Map.class).get("id"), pipelineId);
+		assertEquals(objectMapper.convertValue(triggeredCycle.get("referredRuns"), List.class).size(), 2);
+		for (Object obj : objectMapper.convertValue(triggeredCycle.get("referredRuns"), List.class)) {
+			Map<?, ?> referredRun = objectMapper.convertValue(obj, Map.class);
+			if (((Integer)referredRun.get("originalJobId")).equals(123)) {
+				assertEquals(objectMapper.convertValue(referredRun.get("referredUpstreamRuns"), List.class).size(), 1);
+				assertEquals((Integer)objectMapper.convertValue(
+						objectMapper.convertValue(referredRun.get("referredUpstreamRuns"), List.class).get(0),
+						Map.class).get("originalJobId"), 456);
+			}
+			if (((Integer)referredRun.get("originalJobId")).equals(456)) {
+				assertFalse(referredRun.containsKey("referredUpstreamRuns"));
+			}
+		}
+		
+		Integer cycleId = (Integer)triggeredCycle.get("id");
+		
+		Map<?, ?> queriedCycle = objectMapper.readValue(
+				mockMvc.perform(get("/pipelines/"+pipelineId+"/cycles/"+cycleId))
+						.andExpect(status().isOk())
+						.andReturn().getResponse().getContentAsString(),
+				Map.class);
+		assertEquals((Integer)objectMapper.convertValue(queriedCycle.get("pipeline"), Map.class).get("id"), pipelineId);
+		
+		mockMvc.perform(delete("/pipelines/"+pipelineId+"/cycles/"+cycleId))
+				.andExpect(status().isOk());
 		
 		/*
 		 * curl -X DELETE localhost:8881/pipelines/1
