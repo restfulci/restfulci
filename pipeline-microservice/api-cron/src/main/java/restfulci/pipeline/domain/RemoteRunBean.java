@@ -10,9 +10,15 @@ import lombok.ToString;
 @Setter
 @ToString
 @JsonIgnoreProperties(ignoreUnknown=true)
-public class RunBean {
+public class RemoteRunBean {
 
 	private Integer id;
-	private String phase;
+	
+	/*
+	 * TODO:
+	 * Map to enum?
+	 */
+	private String status;
+	
 	private Integer exitCode;
 }

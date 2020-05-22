@@ -18,6 +18,11 @@ CREATE TABLE referred_job_dependency (
 CREATE TABLE cycle (
   id serial PRIMARY KEY,
   pipeline_id serial REFERENCES pipeline(id) ON DELETE CASCADE,
+  status_shortname char(1) NOT NULL CHECK (
+    status_shortname='I' OR
+    status_shortname='S' OR
+    status_shortname='F' OR
+    status_shortname='A') DEFAULT 'I',
   trigger_at timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   complete_at timestamp
 );
@@ -27,11 +32,13 @@ CREATE TABLE referred_run (
   cycle_id serial REFERENCES cycle(id) ON DELETE CASCADE,
   original_job_id integer NOT NULL,
   original_run_id integer,
-  phase_shortname char(1) NOT NULL CHECK (
-    phase_shortname='N' OR
-    phase_shortname='I' OR
-    phase_shortname='C' OR
-    phase_shortname='A') DEFAULT 'N',
+  status_shortname char(1) NOT NULL CHECK (
+    status_shortname='N' OR
+    status_shortname='I' OR
+    status_shortname='S' OR
+    status_shortname='F' OR
+    status_shortname='K' OR
+    status_shortname='A') DEFAULT 'N',
   exit_code integer
 );
 

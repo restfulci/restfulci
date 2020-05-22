@@ -6,6 +6,7 @@ import java.util.Set;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
+import javax.persistence.Convert;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
@@ -35,6 +36,11 @@ public class CycleBean extends BaseEntity {
 	@ManyToOne(fetch=FetchType.EAGER)
 	@JoinColumn(name="pipeline_id")
 	private PipelineBean pipeline;
+	
+	@NotNull
+	@Column(name="status_shortname")
+	@Convert(converter=CycleStatusConventer.class)
+	private CycleStatus status;
 	
 	@JsonFormat(shape=JsonFormat.Shape.STRING, pattern="yyyy-MM-dd hh:mm:ss")
 	@Column(name="trigger_at", updatable=false)

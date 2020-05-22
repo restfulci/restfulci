@@ -14,4 +14,10 @@ public class RestTemplateConfig {
 	RestTemplate devRestTemplate(RestTemplateBuilder builder) {
 		return builder.rootUri("http://localhost:5000").build();
 	}
+	
+	@Profile("circleci")
+	@Bean 
+	RestTemplate circleciRestTemplate(RestTemplateBuilder builder) {
+		return builder.rootUri("http://localhost:5000").build();
+	}
 }

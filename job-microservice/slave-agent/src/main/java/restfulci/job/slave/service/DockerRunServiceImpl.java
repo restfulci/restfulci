@@ -27,7 +27,7 @@ import restfulci.job.shared.domain.InputBean;
 import restfulci.job.shared.domain.RunBean;
 import restfulci.job.shared.domain.RunConfigBean;
 import restfulci.job.shared.domain.RunMessageBean;
-import restfulci.job.shared.domain.RunPhase;
+import restfulci.job.shared.domain.RunStatus;
 import restfulci.job.shared.domain.RunResultBean;
 import restfulci.job.slave.exec.DockerExec;
 
@@ -69,7 +69,13 @@ public class DockerRunServiceImpl implements DockerRunService {
 			throw new IOException("Input run with wrong type");
 		}
 		
-		run.setPhase(RunPhase.COMPLETE);
+		if (run.getExitCode().equals(0)) {
+			run.setStatus(RunStatus.SUCCESS);
+		}
+		else {
+			run.setStatus(RunStatus.FAIL);
+		}
+		
 		run.setCompleteAt(new Date());
 		runRepository.saveAndFlush(run);
 	}

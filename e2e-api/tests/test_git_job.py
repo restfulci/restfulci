@@ -10,8 +10,8 @@ from zipfile import ZipFile
 
 class TestGitJob(TestCase):
 
-    # master_api_url = "http://localhost:8881"
-    master_api_url = "http://34.73.0.219"
+    master_api_url = "http://localhost:8881"
+    # master_api_url = "http://34.73.0.219"
 
     def test_hello_world(self):
 
@@ -125,12 +125,12 @@ class TestGitJob(TestCase):
         self.assertEqual(response.status_code, 200)
         response_body = json.loads(response.text)
         run_id = response_body["id"]
-        self.assertEqual(response_body["phase"], "IN_PROGRESS")
+        self.assertEqual(response_body["status"], "IN_PROGRESS")
         self.assertEqual(response_body["branchName"], "master")
         self.assertEqual(response_body["type"], "GIT")
         self.assertEqual(response_body["job"]["type"], "GIT")
 
-        while response_body["phase"] == "IN_PROGRESS":
+        while response_body["status"] == "IN_PROGRESS":
             response = requests.get(
                 urljoin(self.master_api_url, "/jobs/{}/runs/{}".format(job_id, run_id)),
                 headers={
@@ -139,7 +139,7 @@ class TestGitJob(TestCase):
             self.assertEqual(response.status_code, 200)
             response_body = json.loads(response.text)
             sleep(1)
-        self.assertEqual(response_body["phase"], "COMPLETE")
+        self.assertEqual(response_body["status"], "SUCCESS")
         self.assertEqual(response_body["exitCode"], 0)
         if validate_results:
             run_results = response_body["runResults"]

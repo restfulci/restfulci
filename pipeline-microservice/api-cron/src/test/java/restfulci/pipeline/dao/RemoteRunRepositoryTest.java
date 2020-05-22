@@ -10,30 +10,30 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
-import restfulci.pipeline.domain.RunBean;
+import restfulci.pipeline.domain.RemoteRunBean;
 
 @ExtendWith(SpringExtension.class)
 @SpringBootTest
 @DisabledIfEnvironmentVariable(named="CI", matches="CircleCI")
-public class RunRepositoryTest {
+public class RemoteRunRepositoryTest {
 	
-	@Autowired private RunRepository runRepository;
+	@Autowired private RemoteRunRepository runRepository;
 
 	@Test
 	public void testTriggerRun() throws Exception {
 		
-		RunBean run = runRepository.triggerRun(1);
+		RemoteRunBean run = runRepository.triggerRun(1);
 		assertEquals(run.getId(), 1);
-		assertEquals(run.getPhase(), "IN_PROGRESS");
+		assertEquals(run.getStatus(), "IN_PROGRESS");
 		assertNull(run.getExitCode());
 	}
 	
 	@Test
 	public void testGetRun() throws Exception {
 		
-		RunBean run = runRepository.getRun(1, 1);
+		RemoteRunBean run = runRepository.getRun(1, 1);
 		assertEquals(run.getId(), 1);
-		assertEquals(run.getPhase(), "IN_PROGRESS");
+		assertEquals(run.getStatus(), "IN_PROGRESS");
 		assertNull(run.getExitCode());
 	}
 }

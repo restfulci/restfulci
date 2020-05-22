@@ -7,8 +7,8 @@ from urllib.parse import urljoin
 
 class TestFreestyleJob(TestCase):
 
-    # master_api_url = "http://localhost:8881"
-    master_api_url = "http://34.73.0.219"
+    master_api_url = "http://localhost:8881"
+    # master_api_url = "http://34.73.0.219"
 
     def test(self):
         response = requests.post(
@@ -47,11 +47,11 @@ class TestFreestyleJob(TestCase):
         self.assertEqual(response.status_code, 200)
         response_body = json.loads(response.text)
         run_id = response_body["id"]
-        self.assertEqual(response_body["phase"], "IN_PROGRESS")
+        self.assertEqual(response_body["status"], "IN_PROGRESS")
         self.assertEqual(response_body["type"], "FREESTYLE")
         self.assertEqual(response_body["job"]["type"], "FREESTYLE")
 
-        while response_body["phase"] == "IN_PROGRESS":
+        while response_body["status"] == "IN_PROGRESS":
             response = requests.get(
                 urljoin(self.master_api_url, "/jobs/{}/runs/{}".format(job_id, run_id)),
                 headers={
@@ -60,7 +60,7 @@ class TestFreestyleJob(TestCase):
             self.assertEqual(response.status_code, 200)
             response_body = json.loads(response.text)
             sleep(1)
-        self.assertEqual(response_body["phase"], "COMPLETE")
+        self.assertEqual(response_body["status"], "SUCCESS")
         self.assertEqual(response_body["exitCode"], 0)
 
         response = requests.get(

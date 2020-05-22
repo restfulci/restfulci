@@ -10,7 +10,7 @@ run = {
         "command": ["sh","-c","echo \"Hello world\""],
         "type": "FREESTYLE"
     },
-    "phase": "IN_PROGRESS",
+    "status": "IN_PROGRESS",
     "triggerAt": "2020-05-19 03:47:01",
     "completeAt": None,
     "exitCode": None,
