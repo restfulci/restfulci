@@ -202,9 +202,12 @@ public class DockerRunServiceImpl implements DockerRunService {
 		
 		for (Map.Entry<RunConfigBean.RunConfigResultBean, File> entry : mounts.entrySet()) {
 			
-			log.info("Zip run result: "+entry.getKey().getPath()+"\n"
-					+"Content: "+Arrays.toString(entry.getValue().list())
-					+" temperarily saved at "+entry.getValue());
+			log.info(
+					"Zip run result: {}\n"
+					+ "Content: {} temperarily saved at {}", 
+					entry.getKey().getPath(), 
+					Arrays.toString(entry.getValue().list()), 
+					entry.getValue());
 			File zipFile = Files.createTempFile("result", ".zip").toFile();
 			ZipUtil.pack(entry.getValue(), zipFile);
 			
@@ -220,7 +223,7 @@ public class DockerRunServiceImpl implements DockerRunService {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-			log.info("Save run result: "+entry.getKey().getPath());
+			log.info("Save run result: {}", entry.getKey().getPath());
 			runResult.setRun(run);
 			/*
 			 * No need to do it, as we are saving by `runResultRepository` rather

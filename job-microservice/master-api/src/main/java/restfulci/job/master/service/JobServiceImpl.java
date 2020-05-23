@@ -35,7 +35,7 @@ public class JobServiceImpl implements JobService {
 	@Override
 	public JobBean createJob(JobDTO jobDTO) throws IOException {
 		
-		log.info("Create job: "+jobDTO);
+		log.info("Create job: {}", jobDTO);
 		
 		JobBean job = jobDTO.toBean();
 		return jobRepository.saveAndFlush(job);
@@ -45,7 +45,7 @@ public class JobServiceImpl implements JobService {
 	public void deleteJob(Integer jobId) throws IOException {
 		
 		JobBean job = getJob(jobId);
-		log.info("Delete job: "+job);
+		log.info("Delete job: {}", job);
 		
 		jobRepository.delete(job);
 	}
@@ -54,7 +54,7 @@ public class JobServiceImpl implements JobService {
 	public JobBean addParameter(Integer jobId, ParameterBean parameter) throws IOException {
 		
 		JobBean job = getJob(jobId);
-		log.info("Add parameter "+parameter+" to job "+job);
+		log.info("Add parameter {} to job {}", parameter, job);
 		
 		job.addParameter(parameter);
 		parameter.setJob(job);

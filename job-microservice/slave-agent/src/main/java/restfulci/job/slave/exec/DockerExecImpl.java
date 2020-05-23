@@ -50,14 +50,14 @@ public class DockerExecImpl implements DockerExec {
 			if (image.getRepoTags() != null) {
 				for (int i = 0; i < image.getRepoTags().length; ++i) {
 					if (image.getRepoTags()[i].equals(imageTag)) {
-						log.info("Docker image already exists in local: "+imageTag);
+						log.info("Docker image already exists in local: {}", imageTag);
 						return;
 					}
 				}
 			}
 		}
 		
-		log.info("Pulling new docker image from remote server: "+imageTag);
+		log.info("Pulling new docker image from remote server: {}", imageTag);
 		dockerClient.pullImageCmd(imageTag)
 				.exec(new PullImageResultCallback())
 				.awaitCompletion(30, TimeUnit.SECONDS);
@@ -70,8 +70,9 @@ public class DockerExecImpl implements DockerExec {
 		 * https://github.com/docker-java/docker-java/blob/3.1.5/src/test/java/com/github/dockerjava/cmd/BuildImageCmdIT.java
 		 */
 		log.info(
-				"Build image from context path "+runConfig.getEnvironment().getBuild().getContext()
-				+ " and Dockerfile path "+runConfig.getEnvironment().getBuild().getDockerfile());
+				"Build image from context path {} and Dockerfile path {}",
+				runConfig.getEnvironment().getBuild().getContext(),
+				runConfig.getEnvironment().getBuild().getDockerfile());
 		String imageId = dockerClient
 				.buildImageCmd()
 				.withBaseDirectory(runConfig.getBaseDir(localRepoPath))
@@ -91,7 +92,7 @@ public class DockerExecImpl implements DockerExec {
 			Map<String, String> inputs,
 			Map<RunConfigBean.RunConfigResultBean, File> mounts) throws InterruptedException {
 		
-		log.info("Execute command "+command+" in docker image: "+imageTag);
+		log.info("Execute command {} in docker image: {}", command, imageTag);
 		
 		/*
 		 * https://github.com/docker-java/docker-java/issues/933#issuecomment-336422012
@@ -143,7 +144,7 @@ public class DockerExecImpl implements DockerExec {
 				.exec(new WaitContainerResultCallback())
 				.awaitStatusCode();
 		run.setExitCode(exitCode);
-		log.info("Execute command exit code: "+exitCode);
+		log.info("Execute command exit code: {}", exitCode);
 		
 		LogContainerCallbackWrapper loggingCallback = new LogContainerCallbackWrapper();
 		dockerClient.logContainerCmd(container.getId())
@@ -160,7 +161,7 @@ public class DockerExecImpl implements DockerExec {
 			InputStream contentStream = new ByteArrayInputStream(
 					loggingCallback.toString().getBytes(StandardCharsets.UTF_8));
 			minioRepository.putRunOutputAndUpdateRunBean(run, contentStream);
-			log.info("Execute command output: \n"+loggingCallback.toString());
+			log.info("Execute command output: \n{}", loggingCallback.toString());
 		} catch (MinioException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

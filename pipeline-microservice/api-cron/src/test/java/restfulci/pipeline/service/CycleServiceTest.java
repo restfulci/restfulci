@@ -5,8 +5,6 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
-import java.util.Optional;
-
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -44,15 +42,12 @@ public class CycleServiceTest {
 		cycle.setStatus(CycleStatus.IN_PROGRESS);
 		cycle.addReferredRun(referredRun);
 		
-		Optional<CycleBean> maybeCycle = Optional.of(cycle);
-		given(cycleRepository.findById(456)).willReturn(maybeCycle);
-		
 		RemoteRunBean remoteRun = new RemoteRunBean();
 		remoteRun.setId(789);
 		remoteRun.setStatus("IN_PROGRESS");
 		given(remoteRunRepository.triggerRun(123)).willReturn(remoteRun);
 		
-		service.updateCycle(456);
+		service.updateCycle(cycle);
 		
 		assertEquals(referredRun.getStatus(), ReferredRunStatus.IN_PROGRESS);
 		assertEquals(cycle.getStatus(), CycleStatus.IN_PROGRESS);
@@ -72,15 +67,12 @@ public class CycleServiceTest {
 		cycle.setStatus(CycleStatus.IN_PROGRESS);
 		cycle.addReferredRun(referredRun);
 		
-		Optional<CycleBean> maybeCycle = Optional.of(cycle);
-		given(cycleRepository.findById(456)).willReturn(maybeCycle);
-		
 		RemoteRunBean remoteRun = new RemoteRunBean();
 		remoteRun.setId(789);
 		remoteRun.setStatus("SUCCEED");
 		given(remoteRunRepository.getRun(123, 789)).willReturn(remoteRun);
 		
-		service.updateCycle(456);
+		service.updateCycle(cycle);
 		
 		assertEquals(referredRun.getStatus(), ReferredRunStatus.SUCCEED);
 		assertEquals(cycle.getStatus(), CycleStatus.SUCCEED);
@@ -99,15 +91,12 @@ public class CycleServiceTest {
 		cycle.setStatus(CycleStatus.IN_PROGRESS);
 		cycle.addReferredRun(referredRun);
 		
-		Optional<CycleBean> maybeCycle = Optional.of(cycle);
-		given(cycleRepository.findById(456)).willReturn(maybeCycle);
-		
 		RemoteRunBean remoteRun = new RemoteRunBean();
 		remoteRun.setId(789);
 		remoteRun.setStatus("FAIL");
 		given(remoteRunRepository.getRun(123, 789)).willReturn(remoteRun);
 		
-		service.updateCycle(456);
+		service.updateCycle(cycle);
 		
 		assertEquals(referredRun.getStatus(), ReferredRunStatus.FAIL);
 		assertEquals(cycle.getStatus(), CycleStatus.FAIL);
@@ -132,15 +121,12 @@ public class CycleServiceTest {
 		cycle.addReferredRun(upstreamRun);
 		cycle.addReferredRun(downstreamRun);
 		
-		Optional<CycleBean> maybeCycle = Optional.of(cycle);
-		given(cycleRepository.findById(456)).willReturn(maybeCycle);
-		
 		RemoteRunBean remoteUpstreamRun = new RemoteRunBean();
 		remoteUpstreamRun.setId(789);
 		remoteUpstreamRun.setStatus("IN_PROGRESS");
 		given(remoteRunRepository.getRun(123, 789)).willReturn(remoteUpstreamRun);
 		
-		service.updateCycle(456);
+		service.updateCycle(cycle);
 		
 		assertEquals(upstreamRun.getStatus(), ReferredRunStatus.IN_PROGRESS);
 		assertEquals(downstreamRun.getStatus(), ReferredRunStatus.NOT_STARTED_YET);
@@ -167,9 +153,6 @@ public class CycleServiceTest {
 		cycle.addReferredRun(upstreamRun);
 		cycle.addReferredRun(downstreamRun);
 		
-		Optional<CycleBean> maybeCycle = Optional.of(cycle);
-		given(cycleRepository.findById(456)).willReturn(maybeCycle);
-		
 		RemoteRunBean remoteUpstreamRun = new RemoteRunBean();
 		remoteUpstreamRun.setId(789);
 		remoteUpstreamRun.setStatus("SUCCEED");
@@ -188,8 +171,8 @@ public class CycleServiceTest {
 		 * comes first, 2 loops is needed, and `remoteRunRepository.getRun(123, 890)`
 		 * will not be called.
 		 */
-		service.updateCycle(456);
-		service.updateCycle(456);
+		service.updateCycle(cycle);
+		service.updateCycle(cycle);
 		
 		assertEquals(upstreamRun.getStatus(), ReferredRunStatus.SUCCEED);
 		assertEquals(downstreamRun.getStatus(), ReferredRunStatus.IN_PROGRESS);
@@ -228,17 +211,14 @@ public class CycleServiceTest {
 		cycle.setStatus(CycleStatus.IN_PROGRESS);
 		cycle.addReferredRun(upstreamRun);
 		cycle.addReferredRun(downstreamRun);
-		
-		Optional<CycleBean> maybeCycle = Optional.of(cycle);
-		given(cycleRepository.findById(456)).willReturn(maybeCycle);
-		
+
 		RemoteRunBean remoteUpstreamRun = new RemoteRunBean();
 		remoteUpstreamRun.setId(789);
 		remoteUpstreamRun.setStatus(upstreamRemoteStatus);
 		given(remoteRunRepository.getRun(123, 789)).willReturn(remoteUpstreamRun);
 		
-		service.updateCycle(456);
-		service.updateCycle(456);
+		service.updateCycle(cycle);
+		service.updateCycle(cycle);
 		
 		assertEquals(downstreamRun.getStatus(), ReferredRunStatus.SKIP);
 		verify(remoteRunRepository, never()).triggerRun(234);
@@ -291,9 +271,6 @@ public class CycleServiceTest {
 		cycle.addReferredRun(upstreamRun2);
 		cycle.addReferredRun(downstreamRun);
 		
-		Optional<CycleBean> maybeCycle = Optional.of(cycle);
-		given(cycleRepository.findById(456)).willReturn(maybeCycle);
-		
 		RemoteRunBean remoteUpstreamRun1 = new RemoteRunBean();
 		remoteUpstreamRun1.setId(789);
 		remoteUpstreamRun1.setStatus(remoteStatus1);
@@ -310,8 +287,8 @@ public class CycleServiceTest {
 		given(remoteRunRepository.triggerRun(234)).willReturn(remoteDownstreamRun);
 		given(remoteRunRepository.getRun(234, 890)).willReturn(remoteDownstreamRun);
 		
-		service.updateCycle(456);
-		service.updateCycle(456);
+		service.updateCycle(cycle);
+		service.updateCycle(cycle);
 		
 		return downstreamRun.getStatus();
 	}

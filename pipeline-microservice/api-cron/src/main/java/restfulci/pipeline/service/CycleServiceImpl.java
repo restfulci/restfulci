@@ -47,7 +47,7 @@ public class CycleServiceImpl implements CycleService {
 	public CycleBean triggerCycle(Integer pipelineId) throws IOException {
 
 		PipelineBean pipeline = pipelineService.getPipeline(pipelineId);
-		log.info("Create cycle under pipeline " + pipeline);
+		log.info("Create cycle under pipeline {}", pipeline);
 
 		CycleBean cycle = new CycleBean();
 		cycle.setPipeline(pipeline);
@@ -90,9 +90,7 @@ public class CycleServiceImpl implements CycleService {
 	 * We should probably decide which is a better approach.
 	 */
 	@Override
-	public void updateCycle(Integer cycleId) throws IOException {
-
-		CycleBean cycle = getCycle(cycleId);
+	public void updateCycle(CycleBean cycle) throws IOException {
 
 		boolean allDone = true;
 		for (ReferredRunBean referredRun : cycle.getReferredRuns()) {
@@ -170,7 +168,7 @@ public class CycleServiceImpl implements CycleService {
 	public void deleteCycle(Integer cycleId) throws IOException {
 
 		CycleBean cycle = getCycle(cycleId);
-		log.info("Delete cycle: " + cycle);
+		log.info("Delete cycle: {}", cycle);
 
 		cycleRepository.delete(cycle);
 	}
