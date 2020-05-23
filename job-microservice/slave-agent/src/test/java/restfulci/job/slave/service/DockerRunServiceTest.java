@@ -90,7 +90,7 @@ public class DockerRunServiceTest {
 		ArgumentCaptor<RunBean> runCaptor = ArgumentCaptor.forClass(RunBean.class);
 		verify(runRepository, times(1)).saveAndFlush(runCaptor.capture());
 		assertTrue(runCaptor.getValue() instanceof FreestyleRunBean);
-		assertEquals(runCaptor.getValue().getStatus(), RunStatus.SUCCESS);
+		assertEquals(runCaptor.getValue().getStatus(), RunStatus.SUCCEED);
 //		assertNotNull(runCaptor.getValue().getRunOutputObjectReferral());
 		
 		ArgumentCaptor<InputStream> inputStreamCaptor = ArgumentCaptor.forClass(InputStream.class);
@@ -170,7 +170,7 @@ public class DockerRunServiceTest {
 		ArgumentCaptor<RunBean> runCaptor = ArgumentCaptor.forClass(RunBean.class);
 		verify(runRepository, times(1)).saveAndFlush(runCaptor.capture());
 		assertTrue(runCaptor.getValue() instanceof FreestyleRunBean);
-		assertEquals(runCaptor.getValue().getStatus(), RunStatus.SUCCESS);
+		assertEquals(runCaptor.getValue().getStatus(), RunStatus.SUCCEED);
 		
 		ArgumentCaptor<InputStream> inputStreamCaptor = ArgumentCaptor.forClass(InputStream.class);
 		verify(minioRepository, times(1)).putRunOutputAndUpdateRunBean(eq(run), inputStreamCaptor.capture());
@@ -232,7 +232,7 @@ public class DockerRunServiceTest {
 		ArgumentCaptor<RunBean> runCaptor = ArgumentCaptor.forClass(RunBean.class);
 		verify(runRepository, times(1)).saveAndFlush(runCaptor.capture());
 		assertTrue(runCaptor.getValue() instanceof GitRunBean);
-		assertEquals(runCaptor.getValue().getStatus(), RunStatus.SUCCESS);
+		assertEquals(runCaptor.getValue().getStatus(), RunStatus.SUCCEED);
 		
 		ArgumentCaptor<InputStream> inputStreamCaptor = ArgumentCaptor.forClass(InputStream.class);
 		verify(minioRepository, times(1)).putRunConfigurationAndUpdateRunBean(eq(run), inputStreamCaptor.capture());
@@ -287,7 +287,7 @@ public class DockerRunServiceTest {
 		ArgumentCaptor<RunBean> runCaptor = ArgumentCaptor.forClass(RunBean.class);
 		verify(runRepository, times(1)).saveAndFlush(runCaptor.capture());
 		assertTrue(runCaptor.getValue() instanceof GitRunBean);
-		assertEquals(runCaptor.getValue().getStatus(), RunStatus.SUCCESS);
+		assertEquals(runCaptor.getValue().getStatus(), RunStatus.SUCCEED);
 		
 		ArgumentCaptor<InputStream> inputStreamCaptor = ArgumentCaptor.forClass(InputStream.class);
 		verify(minioRepository, times(1)).putRunConfigurationAndUpdateRunBean(eq(run), inputStreamCaptor.capture());
@@ -341,7 +341,7 @@ public class DockerRunServiceTest {
 		ArgumentCaptor<RunBean> runCaptor = ArgumentCaptor.forClass(RunBean.class);
 		verify(runRepository, times(1)).saveAndFlush(runCaptor.capture());
 		assertTrue(runCaptor.getValue() instanceof GitRunBean);
-		assertEquals(runCaptor.getValue().getStatus(), RunStatus.SUCCESS);
+		assertEquals(runCaptor.getValue().getStatus(), RunStatus.SUCCEED);
 		assertEquals(runCaptor.getValue().getRunResults().size(), 1);
 		RunResultBean runResult = new ArrayList<>(runCaptor.getValue().getRunResults()).get(0);
 		assertEquals(runResult.getType(), "plain-text");

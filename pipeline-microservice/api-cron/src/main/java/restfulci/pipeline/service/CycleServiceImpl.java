@@ -97,6 +97,20 @@ public class CycleServiceImpl implements CycleService {
 		boolean allDone = true;
 		for (ReferredRunBean referredRun : cycle.getReferredRuns()) {
 
+			/*
+			 * Goes before the `NOT_STARTED_YET` case, so it will not happen that
+			 * the just started one enter this if again.
+			 */
+			if (referredRun.getStatus().equals(ReferredRunStatus.IN_PROGRESS)) {
+				RemoteRunBean remoteRun = remoteRunRepository.getRun(referredRun.getOriginalJobId(),
+						referredRun.getOriginalRunId());
+				referredRun.updateFromRemoteRun(remoteRun);
+
+				if (referredRun.getStatus().equals(ReferredRunStatus.IN_PROGRESS)) {
+					allDone = false;
+				}
+			}
+			
 			if (referredRun.getStatus().equals(ReferredRunStatus.NOT_STARTED_YET)) {
 				allDone = false;
 
@@ -130,16 +144,6 @@ public class CycleServiceImpl implements CycleService {
 				}
 			}
 
-			if (referredRun.getStatus().equals(ReferredRunStatus.IN_PROGRESS)) {
-				RemoteRunBean remoteRun = remoteRunRepository.getRun(referredRun.getOriginalJobId(),
-						referredRun.getOriginalRunId());
-				referredRun.updateFromRemoteRun(remoteRun);
-
-				if (referredRun.getStatus().equals(ReferredRunStatus.IN_PROGRESS)) {
-					allDone = false;
-				}
-			}
-
 			if (referredRun.getStatus().equals(ReferredRunStatus.FAIL)) {
 				cycle.setStatus(CycleStatus.FAIL);
 			}
@@ -155,7 +159,7 @@ public class CycleServiceImpl implements CycleService {
 
 		if (allDone == true) {
 			if (cycle.getStatus().equals(CycleStatus.IN_PROGRESS)) {
-				cycle.setStatus(CycleStatus.SUCCESS);
+				cycle.setStatus(CycleStatus.SUCCEED);
 			}
 
 			cycle.setCompleteAt(new Date());

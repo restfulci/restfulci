@@ -70,7 +70,7 @@ public class DockerRunServiceImpl implements DockerRunService {
 		}
 		
 		if (run.getExitCode().equals(0)) {
-			run.setStatus(RunStatus.SUCCESS);
+			run.setStatus(RunStatus.SUCCEED);
 		}
 		else {
 			run.setStatus(RunStatus.FAIL);

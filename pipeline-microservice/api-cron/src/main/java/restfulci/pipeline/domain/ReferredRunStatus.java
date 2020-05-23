@@ -7,7 +7,7 @@ public enum ReferredRunStatus {
 
 	NOT_STARTED_YET('N', "Not started yet"),
 	IN_PROGRESS('I', "In progress"),
-	SUCCESS('S', "Success"),
+	SUCCEED('S', "Succeed"),
 	FAIL('F', "Fail"),
 	SKIP('K', "Skip"),
 	ABORT('A', "Abort");
@@ -27,7 +27,7 @@ public enum ReferredRunStatus {
 		case 'I':
 			return IN_PROGRESS;
 		case 'S':
-			return SUCCESS;
+			return SUCCEED;
 		case 'F':
 			return FAIL;
 		case 'K':

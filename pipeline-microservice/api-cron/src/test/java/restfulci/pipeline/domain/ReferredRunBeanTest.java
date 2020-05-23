@@ -14,12 +14,12 @@ public class ReferredRunBeanTest {
 		
 		RemoteRunBean remoteRun = new RemoteRunBean();
 		remoteRun.setId(123);
-		remoteRun.setStatus("SUCCESS");
+		remoteRun.setStatus("SUCCEED");
 		remoteRun.setExitCode(0);
 		
 		referredRun.updateFromRemoteRun(remoteRun);
 		assertEquals(referredRun.getOriginalRunId(), 123);
-		assertEquals(referredRun.getStatus(), ReferredRunStatus.SUCCESS);
+		assertEquals(referredRun.getStatus(), ReferredRunStatus.SUCCEED);
 		assertEquals(referredRun.getExitCode(), 0);
 	}
 }

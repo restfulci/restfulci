@@ -6,7 +6,7 @@ import lombok.Getter;
 public enum CycleStatus {
 
 	IN_PROGRESS('I', "In progress"),
-	SUCCESS('S', "Success"),
+	SUCCEED('S', "Succeed"),
 	FAIL('F', "Fail"),
 	ABORT('A', "Abort");
 	
@@ -23,7 +23,7 @@ public enum CycleStatus {
 		case 'I':
 			return IN_PROGRESS;
 		case 'S':
-			return SUCCESS;
+			return SUCCEED;
 		case 'F':
 			return FAIL;
 		case 'A':
