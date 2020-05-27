@@ -1,0 +1,35 @@
+version: "3"
+services:
+
+  postgres:
+    image: postgres:12.1
+    volumes:
+      - ./database/setup.sql:/docker-entrypoint-initdb.d/setup.sql
+    environment:
+      # TODO: Change name from `restfulci` to `restfulci-pipeline`
+      - POSTGRES_DB=restfulci
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    restart: always
+
+  job-microservice-mock:
+    build:
+      context: ./job-microservice-mock
+      dockerfile: ./Dockerfile
+    tty: true
+    restart: always
+
+  api-cron-server:
+    # image: restfulci/master-api-server:23163d0d60250397bed88a7ddd378c16faedf5c1
+    build:
+      context: ./api-cron
+      dockerfile: ./Dockerfile
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+    ports:
+      - "8882:8080"
+    depends_on:
+      - postgres
+      - job-microservice-mock
+    tty: true
+    restart: always

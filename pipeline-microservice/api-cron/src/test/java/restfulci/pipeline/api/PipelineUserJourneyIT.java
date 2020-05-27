@@ -60,7 +60,7 @@ public class PipelineUserJourneyIT {
 		pipelineData.put("name", pipelineName);
 		
 		/*
-		 * curl -X POST -H "Content-Type: application/json" --data '{"name": "manual_pipeline_name"}' localhost:8881/pipelines
+		 * curl -X POST -H "Content-Type: application/json" --data '{"name": "manual_pipeline_name"}' localhost:8882/pipelines
 		 */
 		Map<?, ?> createdPipeline = objectMapper.readValue(
 				mockMvc.perform(post("/pipelines")

@@ -15,6 +15,12 @@ public class RestTemplateConfig {
 		return builder.rootUri("http://localhost:5000").build();
 	}
 	
+	@Profile("docker")
+	@Bean 
+	RestTemplate dockerRestTemplate(RestTemplateBuilder builder) {
+		return builder.rootUri("http://job-microservice-mock:5000").build();
+	}
+	
 	@Profile("circleci")
 	@Bean 
 	RestTemplate circleciRestTemplate(RestTemplateBuilder builder) {

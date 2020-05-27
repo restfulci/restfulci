@@ -164,8 +164,12 @@ jobs:
       - checkout
 
       - run: sudo pip3 install pipenv
+      
       - run: cd e2e-api && pipenv install flake8
       - run: cd e2e-api && pipenv run flake8 --statistics
+
+      - run: cd pipeline-microservice/e2e && pipenv install flake8
+      - run: cd pipeline-microservice/e2e && pipenv run flake8 --statistics
 
 workflows:
   version: 2
