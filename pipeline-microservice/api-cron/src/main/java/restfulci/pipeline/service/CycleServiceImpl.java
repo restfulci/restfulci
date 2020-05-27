@@ -24,13 +24,10 @@ import restfulci.pipeline.domain.RemoteRunBean;
 @Slf4j
 public class CycleServiceImpl implements CycleService {
 
-	@Autowired
-	private CycleRepository cycleRepository;
-	@Autowired
-	private RemoteRunRepository remoteRunRepository;
+	@Autowired private CycleRepository cycleRepository;
+	@Autowired private RemoteRunRepository remoteRunRepository;
 
-	@Autowired
-	private PipelineService pipelineService;
+	@Autowired private PipelineService pipelineService;
 
 	@Override
 	public CycleBean getCycle(Integer cycleId) throws IOException {
