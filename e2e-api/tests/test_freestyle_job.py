@@ -7,8 +7,8 @@ from urllib.parse import urljoin
 
 class TestFreestyleJob(TestCase):
 
-    master_api_url = "http://localhost:8881"
-    # master_api_url = "http://34.73.0.219"
+    # master_api_url = "http://localhost:8881"
+    master_api_url = "http://35.237.106.222"
 
     def test(self):
         response = requests.post(

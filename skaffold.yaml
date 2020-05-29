@@ -11,7 +11,10 @@ build:
     context: job-microservice/master-api
   - image: restfulci/job-slave-executor
     context: job-microservice/slave-agent
+  - image: restfulci/pipeline-api-cron-server
+    context: pipeline-microservice/api-cron
 deploy:
   kubectl:
     manifests:
     - job-microservice/kubernetes/*.yaml
+    - pipeline-microservice/kubernetes/*.yaml

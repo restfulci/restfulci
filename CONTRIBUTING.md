@@ -28,7 +28,7 @@ Then you can access master API by `localhost:8881`.
 ### GKE/Skaffold
 
 ```
-gcloud container clusters create restfulci --num-nodes=3
+gcloud container clusters create restfulci --num-nodes=4
 gcloud container clusters get-credentials restfulci
 
 gcloud container clusters delete restfulci

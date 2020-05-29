@@ -102,7 +102,8 @@ class TestPipeline(TestCase):
         self.assertTrue(
             original_job_id in
             [referred_job["originalJobId"] for referred_job in referred_jobs])
-	    # TODO:
+
+        # TODO:
         # A pipeline should not have 2 referred jobs with the same `originalJobId`.
         # Otherwise we cannot get the referred job id with a return pipeline JSON.
         for referred_job in referred_jobs:

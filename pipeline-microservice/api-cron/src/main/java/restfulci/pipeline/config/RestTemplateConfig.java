@@ -21,6 +21,12 @@ public class RestTemplateConfig {
 		return builder.rootUri("http://job-microservice-mock:5000").build();
 	}
 	
+	@Profile("kubernetes")
+	@Bean 
+	RestTemplate kubernetesRestTemplate(RestTemplateBuilder builder) {
+		return builder.rootUri("job.restfulci-job-master-api-server:80").build();
+	}
+	
 	@Profile("circleci")
 	@Bean 
 	RestTemplate circleciRestTemplate(RestTemplateBuilder builder) {

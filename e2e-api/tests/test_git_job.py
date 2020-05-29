@@ -139,7 +139,7 @@ class TestGitJob(TestCase):
             self.assertEqual(response.status_code, 200)
             response_body = json.loads(response.text)
             sleep(1)
-        self.assertEqual(response_body["status"], "SUCCESS")
+        self.assertEqual(response_body["status"], "SUCCEED")
         self.assertEqual(response_body["exitCode"], 0)
         if validate_results:
             run_results = response_body["runResults"]
