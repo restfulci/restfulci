@@ -45,6 +45,11 @@ public class PipelineBean extends BaseEntity {
 		return null;
 	}
 	
+	/*
+	 * TODO:
+	 * A pipeline should not have 2 referred jobs with the same `originalJobId`.
+	 * Otherwise we cannot get the referred job id with a return pipeline JSON.
+	 */
 	public void addReferredJob(ReferredJobBean referredJob) {
 		referredJobs.add(referredJob);
 	}

@@ -20,20 +20,16 @@ public class RemoteRunRepositoryTest {
 	@Autowired private RemoteRunRepository runRepository;
 
 	@Test
-	public void testTriggerRun() throws Exception {
+	public void testTriggerAndGetRun() throws Exception {
 		
-		RemoteRunBean run = runRepository.triggerRun(1);
-		assertEquals(run.getId(), 1);
-		assertEquals(run.getStatus(), "IN_PROGRESS");
-		assertNull(run.getExitCode());
-	}
-	
-	@Test
-	public void testGetRun() throws Exception {
+		RemoteRunBean triggeredRun = runRepository.triggerRun(1);
+		Integer runId = triggeredRun.getId();
+		assertEquals(triggeredRun.getStatus(), "IN_PROGRESS");
+		assertNull(triggeredRun.getExitCode());
 		
-		RemoteRunBean run = runRepository.getRun(1, 1);
-		assertEquals(run.getId(), 1);
-		assertEquals(run.getStatus(), "IN_PROGRESS");
-		assertNull(run.getExitCode());
+		RemoteRunBean queriedRun = runRepository.getRun(1, runId);
+		assertEquals(queriedRun.getId(), runId);
+		assertEquals(queriedRun.getStatus(), "IN_PROGRESS");
+		assertNull(queriedRun.getExitCode());
 	}
 }

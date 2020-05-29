@@ -109,6 +109,11 @@ public class PipelineUserJourneyIT {
 				Map.class);
 		assertEquals(objectMapper.convertValue(anotherReferredJobAddedPipeline.get("referredJobs"), List.class).size(), 2);
 		Map<?, ?> anotherReferredJob = new HashMap<String, Object>();
+		/*
+		 * TODO:
+		 * A pipeline should not have 2 referred jobs with the same `originalJobId`.
+		 * Otherwise we cannot get the referred job id with a return pipeline JSON.
+		 */
 		for (Object obj : objectMapper.convertValue(anotherReferredJobAddedPipeline.get("referredJobs"), List.class)) {
 			Map<?, ?> iteratedReferredJob = objectMapper.convertValue(obj, Map.class);
 			if (((Integer)iteratedReferredJob.get("originalJobId")).equals(456)) {
