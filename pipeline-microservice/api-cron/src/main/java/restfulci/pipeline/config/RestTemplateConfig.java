@@ -24,7 +24,7 @@ public class RestTemplateConfig {
 	@Profile("kubernetes")
 	@Bean 
 	RestTemplate kubernetesRestTemplate(RestTemplateBuilder builder) {
-		return builder.rootUri("job.restfulci-job-master-api-server:80").build();
+		return builder.rootUri("http://restfulci-job-master-api-server.job:80").build();
 	}
 	
 	@Profile("circleci")

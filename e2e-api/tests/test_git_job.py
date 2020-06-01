@@ -10,8 +10,8 @@ from zipfile import ZipFile
 
 class TestGitJob(TestCase):
 
-    master_api_url = "http://localhost:8881"
-    # master_api_url = "http://34.73.0.219"
+    job_api_url = "http://localhost:8881"
+    # job_api_url = "http://34.73.0.219"
 
     def test_hello_world(self):
 
@@ -81,7 +81,7 @@ class TestGitJob(TestCase):
     def _test_skeleton(self, project_name, inputs={}, validate_console_log=None, validate_results=None):
 
         response = requests.post(
-            urljoin(self.master_api_url, "/jobs"),
+            urljoin(self.job_api_url, "/jobs"),
             headers={
                 "Content-Type": "application/json"
             },
@@ -97,7 +97,7 @@ class TestGitJob(TestCase):
         self.assertEqual(response_body["type"], "GIT")
 
         response = requests.get(
-            urljoin(self.master_api_url, "/jobs/{}".format(job_id)))
+            urljoin(self.job_api_url, "/jobs/{}".format(job_id)))
         self.assertEqual(response.status_code, 200)
         response_body = json.loads(response.text)
         self.assertEqual(response_body["name"], "git_job_name")
@@ -105,7 +105,7 @@ class TestGitJob(TestCase):
 
         for parameter_name, input_value in inputs.items():
             response = requests.post(
-                urljoin(self.master_api_url, "/jobs/{}/parameters".format(job_id)),
+                urljoin(self.job_api_url, "/jobs/{}/parameters".format(job_id)),
                 headers={
                     "Content-Type": "application/json"
                 },
@@ -117,7 +117,7 @@ class TestGitJob(TestCase):
             self.assertTrue(response_body["parameters"][0]["name"] in inputs.keys())
 
         response = requests.post(
-            urljoin(self.master_api_url, "/jobs/{}/runs".format(job_id)),
+            urljoin(self.job_api_url, "/jobs/{}/runs".format(job_id)),
             headers={
                 "Content-Type": "application/json"
             },
@@ -132,7 +132,7 @@ class TestGitJob(TestCase):
 
         while response_body["status"] == "IN_PROGRESS":
             response = requests.get(
-                urljoin(self.master_api_url, "/jobs/{}/runs/{}".format(job_id, run_id)),
+                urljoin(self.job_api_url, "/jobs/{}/runs/{}".format(job_id, run_id)),
                 headers={
                     "Content-Type": "application/json"
                 })
@@ -145,7 +145,7 @@ class TestGitJob(TestCase):
             run_results = response_body["runResults"]
 
         response = requests.get(
-            urljoin(self.master_api_url, "/jobs/{}/runs/{}/configuration".format(job_id, run_id)),
+            urljoin(self.job_api_url, "/jobs/{}/runs/{}/configuration".format(job_id, run_id)),
             headers={
                 "Content-Type": "text/plain"
             })
@@ -154,7 +154,7 @@ class TestGitJob(TestCase):
 
         if validate_console_log:
             response = requests.get(
-                urljoin(self.master_api_url, "/jobs/{}/runs/{}/console".format(job_id, run_id)),
+                urljoin(self.job_api_url, "/jobs/{}/runs/{}/console".format(job_id, run_id)),
                 headers={
                     "Content-Type": "text/plain"
                 })
@@ -167,7 +167,7 @@ class TestGitJob(TestCase):
             for run_result in run_results:
                 response = requests.get(
                     urljoin(
-                        self.master_api_url,
+                        self.job_api_url,
                         "/jobs/{}/runs/{}/results/{}".format(job_id, run_id, run_result["id"])),
                     headers={
                         "Content-Type": "application/zip"
@@ -190,6 +190,6 @@ class TestGitJob(TestCase):
                 os.remove(response_zip)
 
         requests.delete(
-            urljoin(self.master_api_url, "/jobs/{}".format(job_id)),
+            urljoin(self.job_api_url, "/jobs/{}".format(job_id)),
         )
         self.assertEqual(response.status_code, 200)

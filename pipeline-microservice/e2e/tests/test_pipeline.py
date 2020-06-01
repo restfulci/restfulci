@@ -7,11 +7,11 @@ from urllib.parse import urljoin
 
 class TestPipeline(TestCase):
 
-    api_url = "http://localhost:8882"
+    pipeline_api_url = "http://localhost:8882"
 
     def test(self):
         response = requests.post(
-            urljoin(self.api_url, "/pipelines"),
+            urljoin(self.pipeline_api_url, "/pipelines"),
             headers={
                 "Content-Type": "application/json"
             },
@@ -34,7 +34,7 @@ class TestPipeline(TestCase):
         self._link_referred_jobs(pipeline_id, referred_job3_id, referred_job4_id)
 
         response = requests.get(
-            urljoin(self.api_url, "/pipelines/{}".format(pipeline_id)))
+            urljoin(self.pipeline_api_url, "/pipelines/{}".format(pipeline_id)))
         self.assertEqual(response.status_code, 200)
         response_body = json.loads(response.text)
         self.assertEqual(response_body["name"], "pipeline_name")
@@ -56,7 +56,7 @@ class TestPipeline(TestCase):
                     [referred_job2_id, referred_job3_id])
 
         response = requests.post(
-            urljoin(self.api_url, "/pipelines/{}/cycles".format(pipeline_id)))
+            urljoin(self.pipeline_api_url, "/pipelines/{}/cycles".format(pipeline_id)))
         self.assertEqual(response.status_code, 200)
         response_body = json.loads(response.text)
         cycle_id = response_body["id"]
@@ -71,7 +71,7 @@ class TestPipeline(TestCase):
 
         while response_body["status"] == "IN_PROGRESS":
             response = requests.get(
-                urljoin(self.api_url, "/pipelines/{}/cycles/{}".format(pipeline_id, cycle_id)))
+                urljoin(self.pipeline_api_url, "/pipelines/{}/cycles/{}".format(pipeline_id, cycle_id)))
             self.assertEqual(response.status_code, 200)
             response_body = json.loads(response.text)
             sleep(1)
@@ -83,13 +83,13 @@ class TestPipeline(TestCase):
             self.assertEqual(referred_runs[i]["status"], "SUCCEED")
 
         requests.delete(
-            urljoin(self.api_url, "/pipelines/{}".format(pipeline_id)),
+            urljoin(self.pipeline_api_url, "/pipelines/{}".format(pipeline_id)),
         )
         self.assertEqual(response.status_code, 200)
 
     def _add_referred_job(self, pipeline_id, original_job_id):
         response = requests.post(
-            urljoin(self.api_url, "/pipelines/{}/referred-jobs".format(pipeline_id)),
+            urljoin(self.pipeline_api_url, "/pipelines/{}/referred-jobs".format(pipeline_id)),
             headers={
                 "Content-Type": "application/json"
             },
@@ -112,6 +112,6 @@ class TestPipeline(TestCase):
 
     def _link_referred_jobs(self, pipeline_id, upstream_referred_job_id, downstream_referred_job_id):
         response = requests.put(
-            urljoin(self.api_url, "/pipelines/{}/referred-jobs/{}/referred-upstream-jobs/{}".format(
+            urljoin(self.pipeline_api_url, "/pipelines/{}/referred-jobs/{}/referred-upstream-jobs/{}".format(
                 pipeline_id, downstream_referred_job_id, upstream_referred_job_id)))
         self.assertEqual(response.status_code, 200)
