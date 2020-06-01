@@ -137,11 +137,27 @@ jobs:
             docker push restfulci/job-slave-executor:$CIRCLE_SHA1
 
       - run:
+          name: Build and push job-postgres docker image
+          command: |
+            cd job-microservice/database && docker build -t restfulci/job-postgres:$CIRCLE_SHA1 .
+            echo $DOCKER_PWD | docker login -u $DOCKER_ID --password-stdin
+            docker push restfulci/job-postgres:$CIRCLE_SHA1
+
+      - run: cd pipeline-microservice/api-cron && mvn package -Dskip.unittest=true -Dskip.it=true
+
+      - run:
           name: Build and push pipeline-api-cron-server docker image
           command: |
             cd pipeline-microservice/api-cron && docker build -t restfulci/pipeline-api-cron-server:$CIRCLE_SHA1 .
             echo $DOCKER_PWD | docker login -u $DOCKER_ID --password-stdin
             docker push restfulci/pipeline-api-cron-server:$CIRCLE_SHA1
+
+      - run:
+          name: Build and push pipeline-postgres docker image
+          command: |
+            cd pipeline-microservice/database && docker build -t restfulci/pipeline-postgres:$CIRCLE_SHA1 .
+            echo $DOCKER_PWD | docker login -u $DOCKER_ID --password-stdin
+            docker push restfulci/pipeline-postgres:$CIRCLE_SHA1
 
   java-pipeline-unittest:
     executor: java-with-sidecar-executor

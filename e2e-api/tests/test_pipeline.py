@@ -7,7 +7,7 @@ from urllib.parse import urljoin
 class TestPipeline(TestCase):
 
     # api_url = "http://localhost:8882"
-    api_url = "http://34.73.68.176"
+    api_url = "http://34.74.148.55"
 
     def test(self):
         response = requests.post(

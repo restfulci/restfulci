@@ -24,7 +24,7 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
  * TODO:
  * To understand why it is the case. Since "capsid" is a Spring Boot
  * application (for which this configuration is not needed, only
- * "DatabaseConfig" and "GitSourceConfig" is needed), I don't under why.
+ * "DatabaseConfig" and "GitSourceConfig" is needed), I don't understand why.
  */
 @Configuration
 @EnableJpaRepositories(basePackages="restfulci.job.shared.dao")

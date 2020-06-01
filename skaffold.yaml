@@ -11,8 +11,12 @@ build:
     context: job-microservice/master-api
   - image: restfulci/job-slave-executor
     context: job-microservice/slave-agent
+  - image: restfulci/job-postgres
+    context: job-microservice/database
   - image: restfulci/pipeline-api-cron-server
     context: pipeline-microservice/api-cron
+  - image: restfulci/pipeline-postgres
+    context: pipeline-microservice/database
 deploy:
   kubectl:
     manifests:

@@ -2,9 +2,9 @@ version: "3"
 services:
 
   postgres:
-    image: postgres:12.1
-    volumes:
-      - ./database/setup.sql:/docker-entrypoint-initdb.d/setup.sql
+    build:
+      context: ./database
+      dockerfile: ./Dockerfile
     environment:
       # TODO: Change name from `restfulci` to `restfulci-pipeline`
       - POSTGRES_DB=restfulci
