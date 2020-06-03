@@ -143,22 +143,6 @@ jobs:
             echo $DOCKER_PWD | docker login -u $DOCKER_ID --password-stdin
             docker push restfulci/job-postgres:$CIRCLE_SHA1
 
-      - run: cd pipeline-microservice/api-cron && mvn package -Dskip.unittest=true -Dskip.it=true
-
-      - run:
-          name: Build and push pipeline-api-cron-server docker image
-          command: |
-            cd pipeline-microservice/api-cron && docker build -t restfulci/pipeline-api-cron-server:$CIRCLE_SHA1 .
-            echo $DOCKER_PWD | docker login -u $DOCKER_ID --password-stdin
-            docker push restfulci/pipeline-api-cron-server:$CIRCLE_SHA1
-
-      - run:
-          name: Build and push pipeline-postgres docker image
-          command: |
-            cd pipeline-microservice/database && docker build -t restfulci/pipeline-postgres:$CIRCLE_SHA1 .
-            echo $DOCKER_PWD | docker login -u $DOCKER_ID --password-stdin
-            docker push restfulci/pipeline-postgres:$CIRCLE_SHA1
-
   java-pipeline-unittest:
     executor: java-with-sidecar-executor
     steps:
@@ -180,6 +164,30 @@ jobs:
 
       - store_test_results:
           path: pipeline-microservice/api-cron/target/failsafe-reports/
+
+  java-pipeline-build-docker-push:
+    executor: java-executor
+    steps:
+      - checkout
+
+      - setup_remote_docker:
+          docker_layer_caching: false
+
+      - run: cd pipeline-microservice/api-cron && mvn package -Dskip.unittest=true -Dskip.it=true
+
+      - run:
+          name: Build and push pipeline-api-cron-server docker image
+          command: |
+            cd pipeline-microservice/api-cron && docker build -t restfulci/pipeline-api-cron-server:$CIRCLE_SHA1 .
+            echo $DOCKER_PWD | docker login -u $DOCKER_ID --password-stdin
+            docker push restfulci/pipeline-api-cron-server:$CIRCLE_SHA1
+
+      - run:
+          name: Build and push pipeline-postgres docker image
+          command: |
+            cd pipeline-microservice/database && docker build -t restfulci/pipeline-postgres:$CIRCLE_SHA1 .
+            echo $DOCKER_PWD | docker login -u $DOCKER_ID --password-stdin
+            docker push restfulci/pipeline-postgres:$CIRCLE_SHA1
 
   python-linter:
     executor: python-executor
@@ -210,5 +218,12 @@ workflows:
 
       - java-pipeline-unittest
       - java-pipeline-integration-test
+      - java-pipeline-build-docker-push:
+          requires:
+            - java-pipeline-unittest
+            - java-pipeline-integration-test
+          filters:
+            branches:
+              only: master
 
       - python-linter
