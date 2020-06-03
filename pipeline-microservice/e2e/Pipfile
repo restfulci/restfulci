@@ -1,9 +1,0 @@
-[dev-packages]
-flake8 = "==3.7.9"
-
-[packages]
-requests = "==2.23.0"
-pytest = "==5.4.1"
-
-[requires]
-python_version = "*"

@@ -144,8 +144,7 @@ public class PipelineUserJourneyIT {
 		}
 		
 		Map<?, ?> triggeredCycle = objectMapper.readValue(
-				mockMvc.perform(post("/pipelines/"+pipelineId+"/cycles")
-						.contentType(MediaType.APPLICATION_JSON))
+				mockMvc.perform(post("/pipelines/"+pipelineId+"/cycles"))
 						.andExpect(status().isOk())
 						.andReturn().getResponse().getContentAsString(),
 				Map.class);

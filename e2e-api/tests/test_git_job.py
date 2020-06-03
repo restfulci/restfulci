@@ -132,10 +132,7 @@ class TestGitJob(TestCase):
 
         while response_body["status"] == "IN_PROGRESS":
             response = requests.get(
-                urljoin(self.job_api_url, "/jobs/{}/runs/{}".format(job_id, run_id)),
-                headers={
-                    "Content-Type": "application/json"
-                })
+                urljoin(self.job_api_url, "/jobs/{}/runs/{}".format(job_id, run_id)))
             self.assertEqual(response.status_code, 200)
             response_body = json.loads(response.text)
             sleep(1)
@@ -145,19 +142,13 @@ class TestGitJob(TestCase):
             run_results = response_body["runResults"]
 
         response = requests.get(
-            urljoin(self.job_api_url, "/jobs/{}/runs/{}/configuration".format(job_id, run_id)),
-            headers={
-                "Content-Type": "text/plain"
-            })
+            urljoin(self.job_api_url, "/jobs/{}/runs/{}/configuration".format(job_id, run_id)))
         self.assertEqual(response.status_code, 200)
         self.assertTrue(response.text.startswith("version:"))
 
         if validate_console_log:
             response = requests.get(
-                urljoin(self.job_api_url, "/jobs/{}/runs/{}/console".format(job_id, run_id)),
-                headers={
-                    "Content-Type": "text/plain"
-                })
+                urljoin(self.job_api_url, "/jobs/{}/runs/{}/console".format(job_id, run_id)))
             self.assertEqual(response.status_code, 200)
             validate_console_log(response)
 
@@ -169,9 +160,6 @@ class TestGitJob(TestCase):
                     urljoin(
                         self.job_api_url,
                         "/jobs/{}/runs/{}/results/{}".format(job_id, run_id, run_result["id"])),
-                    headers={
-                        "Content-Type": "application/zip"
-                    },
                     stream=True)
                 self.assertEqual(response.status_code, 200)
 

@@ -6,18 +6,33 @@ from unittest import TestCase
 from urllib.parse import urljoin
 
 
-# TODO:
-# Consolidate this and `pipeline-microservice/e2e/tests/test_pipeline.py`.
 class TestPipeline(TestCase):
 
-    job_api_url = "http://35.237.33.233"
-    pipeline_api_url = "http://34.73.202.125"
+    job_api_url = None
+    pipeline_api_url = None
 
-    def test(self):
-        self.job_id_1 = self._create_job_and_return_id()
-        self.job_id_2 = self._create_job_and_return_id()
-        self.job_id_3 = self._create_job_and_return_id()
-        self.job_id_4 = self._create_job_and_return_id()
+    def test_docker_compose(self):
+        self.pipeline_api_url = "http://localhost:8882"
+
+        self._test(1, 2, 3, 4)
+
+    def test_kubernetes(self):
+        self.job_api_url = "http://35.237.33.233"
+        self.pipeline_api_url = "http://34.73.202.125"
+
+        job_id_1 = self._create_job_and_return_id()
+        job_id_2 = self._create_job_and_return_id()
+        job_id_3 = self._create_job_and_return_id()
+        job_id_4 = self._create_job_and_return_id()
+
+        self._test(job_id_1, job_id_2, job_id_3, job_id_4)
+
+        self._delete_job(job_id_1)
+        self._delete_job(job_id_2)
+        self._delete_job(job_id_3)
+        self._delete_job(job_id_4)
+
+    def _test(self, job_id_1, job_id_2, job_id_3, job_id_4):
 
         response = requests.post(
             urljoin(self.pipeline_api_url, "/pipelines"),
@@ -32,10 +47,10 @@ class TestPipeline(TestCase):
         pipeline_id = response_body["id"]
         self.assertEqual(response_body["name"], "pipeline_name")
 
-        referred_job1_id = self._add_referred_job(pipeline_id, self.job_id_1)
-        referred_job2_id = self._add_referred_job(pipeline_id, self.job_id_2)
-        referred_job3_id = self._add_referred_job(pipeline_id, self.job_id_3)
-        referred_job4_id = self._add_referred_job(pipeline_id, self.job_id_4)
+        referred_job1_id = self._add_referred_job(pipeline_id, job_id_1)
+        referred_job2_id = self._add_referred_job(pipeline_id, job_id_2)
+        referred_job3_id = self._add_referred_job(pipeline_id, job_id_3)
+        referred_job4_id = self._add_referred_job(pipeline_id, job_id_4)
 
         self._link_referred_jobs(pipeline_id, referred_job1_id, referred_job2_id)
         self._link_referred_jobs(pipeline_id, referred_job1_id, referred_job3_id)
@@ -75,7 +90,7 @@ class TestPipeline(TestCase):
         self.assertEqual(len(referred_runs), 4)
         self.assertCountEqual(
             [referred_run["originalJobId"] for referred_run in referred_runs],
-            [self.job_id_1, self.job_id_2, self.job_id_3, self.job_id_4])
+            [job_id_1, job_id_2, job_id_3, job_id_4])
         self.assertEqual(referred_runs[0]["status"], "NOT_STARTED_YET")
 
         while response_body["status"] == "IN_PROGRESS":
@@ -95,11 +110,6 @@ class TestPipeline(TestCase):
             urljoin(self.pipeline_api_url, "/pipelines/{}".format(pipeline_id)),
         )
         self.assertEqual(response.status_code, 200)
-
-        self._delete_job(self.job_id_1)
-        self._delete_job(self.job_id_2)
-        self._delete_job(self.job_id_3)
-        self._delete_job(self.job_id_4)
 
     def _create_job_and_return_id(self):
         response = requests.post(
