@@ -7,12 +7,12 @@ from urllib.parse import urljoin
 
 class TestFreestyleJob(TestCase):
 
-    # master_api_url = "http://localhost:8881"
-    master_api_url = "http://34.73.0.219"
+    # job_api_url = "http://localhost:8881"
+    job_api_url = "http://35.190.162.206"
 
     def test(self):
         response = requests.post(
-            urljoin(self.master_api_url, "/jobs"),
+            urljoin(self.job_api_url, "/jobs"),
             headers={
                 "Content-Type": "application/json"
             },
@@ -32,14 +32,14 @@ class TestFreestyleJob(TestCase):
         self.assertEqual(response_body["type"], "FREESTYLE")
 
         response = requests.get(
-            urljoin(self.master_api_url, "/jobs/{}".format(job_id)))
+            urljoin(self.job_api_url, "/jobs/{}".format(job_id)))
         self.assertEqual(response.status_code, 200)
         response_body = json.loads(response.text)
         self.assertEqual(response_body["name"], "freestyle_job_name")
         self.assertEqual(response_body["type"], "FREESTYLE")
 
         response = requests.post(
-            urljoin(self.master_api_url, "/jobs/{}/runs".format(job_id)),
+            urljoin(self.job_api_url, "/jobs/{}/runs".format(job_id)),
             headers={
                 "Content-Type": "application/json"
             },
@@ -47,31 +47,25 @@ class TestFreestyleJob(TestCase):
         self.assertEqual(response.status_code, 200)
         response_body = json.loads(response.text)
         run_id = response_body["id"]
-        self.assertEqual(response_body["phase"], "IN_PROGRESS")
+        self.assertEqual(response_body["status"], "IN_PROGRESS")
         self.assertEqual(response_body["type"], "FREESTYLE")
         self.assertEqual(response_body["job"]["type"], "FREESTYLE")
 
-        while response_body["phase"] == "IN_PROGRESS":
+        while response_body["status"] == "IN_PROGRESS":
             response = requests.get(
-                urljoin(self.master_api_url, "/jobs/{}/runs/{}".format(job_id, run_id)),
-                headers={
-                    "Content-Type": "application/json"
-                })
+                urljoin(self.job_api_url, "/jobs/{}/runs/{}".format(job_id, run_id)))
             self.assertEqual(response.status_code, 200)
             response_body = json.loads(response.text)
             sleep(1)
-        self.assertEqual(response_body["phase"], "COMPLETE")
+        self.assertEqual(response_body["status"], "SUCCEED")
         self.assertEqual(response_body["exitCode"], 0)
 
         response = requests.get(
-            urljoin(self.master_api_url, "/jobs/{}/runs/{}/console".format(job_id, run_id)),
-            headers={
-                "Content-Type": "text/plain"
-            })
+            urljoin(self.job_api_url, "/jobs/{}/runs/{}/console".format(job_id, run_id)))
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.text, "Hello world\n")
 
         requests.delete(
-            urljoin(self.master_api_url, "/jobs/{}".format(job_id)),
+            urljoin(self.job_api_url, "/jobs/{}".format(job_id)),
         )
         self.assertEqual(response.status_code, 200)

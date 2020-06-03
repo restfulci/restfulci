@@ -21,27 +21,27 @@ public class DatabaseConfig {
 		return dataSource;
 	}
 
-//	@Profile("docker")
-//	@Bean
-//	public DataSource dockerDataSource() {
-//		DriverManagerDataSource dataSource = new DriverManagerDataSource();
-//		dataSource.setDriverClassName("org.postgresql.Driver");
-//		dataSource.setUrl("jdbc:postgresql://postgres:5432/restfulci");
-//		dataSource.setUsername("postgres");
-//		dataSource.setPassword("postgres");
-//		return dataSource;
-//	}
-//	
-//	@Profile("kubernetes")
-//	@Bean
-//	public DataSource kubernetesDataSource() {
-//		DriverManagerDataSource dataSource = new DriverManagerDataSource();
-//		dataSource.setDriverClassName("org.postgresql.Driver");
-//		dataSource.setUrl("jdbc:postgresql://restfulci-job-postgres:5432/restfulci");
-//		dataSource.setUsername("postgres");
-//		dataSource.setPassword("postgres");
-//		return dataSource;
-//	}
+	@Profile("docker")
+	@Bean
+	public DataSource dockerDataSource() {
+		DriverManagerDataSource dataSource = new DriverManagerDataSource();
+		dataSource.setDriverClassName("org.postgresql.Driver");
+		dataSource.setUrl("jdbc:postgresql://postgres:5432/restfulci");
+		dataSource.setUsername("postgres");
+		dataSource.setPassword("postgres");
+		return dataSource;
+	}
+	
+	@Profile("kubernetes")
+	@Bean
+	public DataSource kubernetesDataSource() {
+		DriverManagerDataSource dataSource = new DriverManagerDataSource();
+		dataSource.setDriverClassName("org.postgresql.Driver");
+		dataSource.setUrl("jdbc:postgresql://restfulci-pipeline-postgres:5432/restfulci");
+		dataSource.setUsername("postgres");
+		dataSource.setPassword("postgres");
+		return dataSource;
+	}
 	
 	@Profile("circleci")
 	@Bean

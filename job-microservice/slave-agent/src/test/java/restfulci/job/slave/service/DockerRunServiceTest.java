@@ -47,7 +47,7 @@ import restfulci.job.shared.domain.InputBean;
 import restfulci.job.shared.domain.ParameterBean;
 import restfulci.job.shared.domain.RunBean;
 import restfulci.job.shared.domain.RunMessageBean;
-import restfulci.job.shared.domain.RunPhase;
+import restfulci.job.shared.domain.RunStatus;
 import restfulci.job.shared.domain.RunResultBean;
 import restfulci.job.slave.service.DockerRunService;
 
@@ -63,7 +63,7 @@ public class DockerRunServiceTest {
 	@SpyBean private RemoteGitRepository remoteGitRepository;
 	
 	@Test
-	public void testRunFreestyleJob() throws Exception{
+	public void testRunSuccessfulFreestyleJob() throws Exception{
 		
 		RunMessageBean runMessage = new RunMessageBean();
 		runMessage.setJobId(123);
@@ -78,7 +78,7 @@ public class DockerRunServiceTest {
 		FreestyleRunBean run = new FreestyleRunBean();
 		run.setId(456);
 		run.setJob(job);
-		run.setPhase(RunPhase.IN_PROGRESS);
+		run.setStatus(RunStatus.IN_PROGRESS);
 		run.setTriggerAt(new Date(0L));
 		run.setCompleteAt(new Date(1000L));
 		
@@ -90,12 +90,47 @@ public class DockerRunServiceTest {
 		ArgumentCaptor<RunBean> runCaptor = ArgumentCaptor.forClass(RunBean.class);
 		verify(runRepository, times(1)).saveAndFlush(runCaptor.capture());
 		assertTrue(runCaptor.getValue() instanceof FreestyleRunBean);
-		assertEquals(runCaptor.getValue().getPhase(), RunPhase.COMPLETE);
+		assertEquals(runCaptor.getValue().getStatus(), RunStatus.SUCCEED);
 //		assertNotNull(runCaptor.getValue().getRunOutputObjectReferral());
 		
 		ArgumentCaptor<InputStream> inputStreamCaptor = ArgumentCaptor.forClass(InputStream.class);
 		verify(minioRepository, times(1)).putRunOutputAndUpdateRunBean(eq(run), inputStreamCaptor.capture());
 		assertEquals(IOUtils.toString(inputStreamCaptor.getValue(), StandardCharsets.UTF_8.name()), "Hello world\n");
+	}
+	
+	@Test
+	public void testRunFailedFreestyleJob() throws Exception{
+		
+		RunMessageBean runMessage = new RunMessageBean();
+		runMessage.setJobId(123);
+		runMessage.setRunId(456);
+		
+		FreestyleJobBean job = new FreestyleJobBean();
+		job.setId(123);
+		job.setName("job");
+		job.setDockerImage("busybox:1.31");
+		job.setCommand(new String[] {"sh", "-c", "echx \"Hello world\""});
+		
+		FreestyleRunBean run = new FreestyleRunBean();
+		run.setId(456);
+		run.setJob(job);
+		run.setStatus(RunStatus.IN_PROGRESS);
+		run.setTriggerAt(new Date(0L));
+		run.setCompleteAt(new Date(1000L));
+		
+		Optional<RunBean> maybeRun = Optional.of(run);
+		given(runRepository.findById(456)).willReturn(maybeRun);
+		
+		service.runByMessage(runMessage);
+		
+		ArgumentCaptor<RunBean> runCaptor = ArgumentCaptor.forClass(RunBean.class);
+		verify(runRepository, times(1)).saveAndFlush(runCaptor.capture());
+		assertTrue(runCaptor.getValue() instanceof FreestyleRunBean);
+		assertEquals(runCaptor.getValue().getStatus(), RunStatus.FAIL);
+		
+		ArgumentCaptor<InputStream> inputStreamCaptor = ArgumentCaptor.forClass(InputStream.class);
+		verify(minioRepository, times(1)).putRunOutputAndUpdateRunBean(eq(run), inputStreamCaptor.capture());
+		assertEquals(IOUtils.toString(inputStreamCaptor.getValue(), StandardCharsets.UTF_8.name()), "sh: echx: not found\n");
 	}
 	
 	@Test
@@ -118,7 +153,7 @@ public class DockerRunServiceTest {
 		FreestyleRunBean run = new FreestyleRunBean();
 		run.setId(456);
 		run.setJob(job);
-		run.setPhase(RunPhase.IN_PROGRESS);
+		run.setStatus(RunStatus.IN_PROGRESS);
 		run.setTriggerAt(new Date(0L));
 		run.setCompleteAt(new Date(1000L));
 		
@@ -135,7 +170,7 @@ public class DockerRunServiceTest {
 		ArgumentCaptor<RunBean> runCaptor = ArgumentCaptor.forClass(RunBean.class);
 		verify(runRepository, times(1)).saveAndFlush(runCaptor.capture());
 		assertTrue(runCaptor.getValue() instanceof FreestyleRunBean);
-		assertEquals(runCaptor.getValue().getPhase(), RunPhase.COMPLETE);
+		assertEquals(runCaptor.getValue().getStatus(), RunStatus.SUCCEED);
 		
 		ArgumentCaptor<InputStream> inputStreamCaptor = ArgumentCaptor.forClass(InputStream.class);
 		verify(minioRepository, times(1)).putRunOutputAndUpdateRunBean(eq(run), inputStreamCaptor.capture());
@@ -183,7 +218,7 @@ public class DockerRunServiceTest {
 		run.setId(456);
 		run.setJob(job);
 		run.setBranchName("master");
-		run.setPhase(RunPhase.IN_PROGRESS);
+		run.setStatus(RunStatus.IN_PROGRESS);
 		run.setTriggerAt(new Date(0L));
 		run.setCompleteAt(new Date(1000L));
 		
@@ -197,7 +232,7 @@ public class DockerRunServiceTest {
 		ArgumentCaptor<RunBean> runCaptor = ArgumentCaptor.forClass(RunBean.class);
 		verify(runRepository, times(1)).saveAndFlush(runCaptor.capture());
 		assertTrue(runCaptor.getValue() instanceof GitRunBean);
-		assertEquals(runCaptor.getValue().getPhase(), RunPhase.COMPLETE);
+		assertEquals(runCaptor.getValue().getStatus(), RunStatus.SUCCEED);
 		
 		ArgumentCaptor<InputStream> inputStreamCaptor = ArgumentCaptor.forClass(InputStream.class);
 		verify(minioRepository, times(1)).putRunConfigurationAndUpdateRunBean(eq(run), inputStreamCaptor.capture());
@@ -233,7 +268,7 @@ public class DockerRunServiceTest {
 		run.setId(456);
 		run.setJob(job);
 		run.setBranchName("master");
-		run.setPhase(RunPhase.IN_PROGRESS);
+		run.setStatus(RunStatus.IN_PROGRESS);
 		run.setTriggerAt(new Date(0L));
 		run.setCompleteAt(new Date(1000L));
 		
@@ -252,7 +287,7 @@ public class DockerRunServiceTest {
 		ArgumentCaptor<RunBean> runCaptor = ArgumentCaptor.forClass(RunBean.class);
 		verify(runRepository, times(1)).saveAndFlush(runCaptor.capture());
 		assertTrue(runCaptor.getValue() instanceof GitRunBean);
-		assertEquals(runCaptor.getValue().getPhase(), RunPhase.COMPLETE);
+		assertEquals(runCaptor.getValue().getStatus(), RunStatus.SUCCEED);
 		
 		ArgumentCaptor<InputStream> inputStreamCaptor = ArgumentCaptor.forClass(InputStream.class);
 		verify(minioRepository, times(1)).putRunConfigurationAndUpdateRunBean(eq(run), inputStreamCaptor.capture());
@@ -292,7 +327,7 @@ public class DockerRunServiceTest {
 		run.setId(456);
 		run.setJob(job);
 		run.setBranchName("master");
-		run.setPhase(RunPhase.IN_PROGRESS);
+		run.setStatus(RunStatus.IN_PROGRESS);
 		run.setTriggerAt(new Date(0L));
 		run.setCompleteAt(new Date(1000L));
 		
@@ -306,7 +341,7 @@ public class DockerRunServiceTest {
 		ArgumentCaptor<RunBean> runCaptor = ArgumentCaptor.forClass(RunBean.class);
 		verify(runRepository, times(1)).saveAndFlush(runCaptor.capture());
 		assertTrue(runCaptor.getValue() instanceof GitRunBean);
-		assertEquals(runCaptor.getValue().getPhase(), RunPhase.COMPLETE);
+		assertEquals(runCaptor.getValue().getStatus(), RunStatus.SUCCEED);
 		assertEquals(runCaptor.getValue().getRunResults().size(), 1);
 		RunResultBean runResult = new ArrayList<>(runCaptor.getValue().getRunResults()).get(0);
 		assertEquals(runResult.getType(), "plain-text");

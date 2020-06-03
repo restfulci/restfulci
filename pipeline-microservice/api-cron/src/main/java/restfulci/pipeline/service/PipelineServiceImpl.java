@@ -34,7 +34,7 @@ public class PipelineServiceImpl implements PipelineService {
 	@Override
 	public PipelineBean createPipeline(PipelineBean pipeline) {
 		
-		log.info("Create pipeline: "+pipeline);
+		log.info("Create pipeline: {}", pipeline);
 		return pipelineRepository.saveAndFlush(pipeline);
 	}
 
@@ -42,7 +42,7 @@ public class PipelineServiceImpl implements PipelineService {
 	public void deletePipeline(Integer pipelineId) throws IOException {
 		
 		PipelineBean pipeline = getPipeline(pipelineId);
-		log.info("Delete pipeline: "+pipeline);
+		log.info("Delete pipeline: {}", pipeline);
 		
 		pipelineRepository.delete(pipeline);
 	}
@@ -51,7 +51,7 @@ public class PipelineServiceImpl implements PipelineService {
 	public PipelineBean addReferredJob(Integer pipelineId, ReferredJobBean referredJob) throws IOException {
 		
 		PipelineBean pipeline = getPipeline(pipelineId);
-		log.info("Add referred job "+referredJob+" to pipeline "+pipeline);
+		log.info("Add referred job {} to pipeline {}", referredJob, pipeline);
 		
 		pipeline.addReferredJob(referredJob);
 		referredJob.setPipeline(pipeline);

@@ -1,0 +1,28 @@
+apiVersion: apps/v1
+
+kind: Deployment
+metadata:
+  name: restfulci-pipeline-api-cron-server
+  namespace: pipeline
+spec:
+  replicas: 1
+  revisionHistoryLimit: 3
+  selector:
+    matchLabels:
+      app: api-cron-server
+  template:
+    metadata:
+      labels:
+        app: api-cron-server
+    spec:
+      containers:
+      - name: api-cron-server
+        image: restfulci/pipeline-api-cron-server:c72dcd06192aeaf7ec45546cbd3da4caf5cc61eb
+        ports:
+        - containerPort: 8080
+        env:
+        - name: SPRING_PROFILES_ACTIVE
+          value: kubernetes
+        resources:
+          requests:
+            cpu: 50m

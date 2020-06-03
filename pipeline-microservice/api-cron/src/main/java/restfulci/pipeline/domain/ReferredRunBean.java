@@ -43,9 +43,9 @@ public class ReferredRunBean extends BaseEntity {
 	private Integer originalRunId;
 	
 	@NotNull
-	@Column(name="phase_shortname")
-	@Convert(converter=ReferredRunPhaseConventer.class)
-	private ReferredRunPhase phase;
+	@Column(name="status_shortname")
+	@Convert(converter=ReferredRunStatusConventer.class)
+	private ReferredRunStatus status;
 	
 	@Column(name="exit_code", updatable=true)
 	private Integer exitCode;
@@ -60,5 +60,11 @@ public class ReferredRunBean extends BaseEntity {
 	
 	public void addReferredUpstreamRun(ReferredRunBean referredRun) {
 		referredUpstreamRuns.add(referredRun);
+	}
+	
+	public void updateFromRemoteRun(RemoteRunBean remoteRun) {
+		originalRunId = remoteRun.getId();
+		status = ReferredRunStatus.valueOf(remoteRun.getStatus());
+		exitCode = remoteRun.getExitCode();
 	}
 }

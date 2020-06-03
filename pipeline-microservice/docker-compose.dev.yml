@@ -13,3 +13,12 @@ services:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
     restart: always
+
+  job-microservice-mock:
+    build:
+      context: ./job-microservice-mock
+      dockerfile: ./Dockerfile
+    ports:
+      - "5000:5000"
+    tty: true
+    restart: always

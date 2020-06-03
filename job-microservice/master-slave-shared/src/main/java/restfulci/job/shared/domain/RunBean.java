@@ -79,9 +79,9 @@ public abstract class RunBean extends BaseEntity {
 	}
 	
 	@NotNull
-	@Column(name="phase_shortname")
-	@Convert(converter=RunPhaseConventer.class)
-	private RunPhase phase;
+	@Column(name="status_shortname")
+	@Convert(converter=RunStatusConventer.class)
+	private RunStatus status;
 	
 	@JsonFormat(shape=JsonFormat.Shape.STRING, pattern="yyyy-MM-dd hh:mm:ss")
 	@NotNull

@@ -131,7 +131,7 @@ public class FreestyleJobUserJourneyIT {
 						.andExpect(status().isOk())
 						.andReturn().getResponse().getContentAsString(),
 				Map.class);
-		assertEquals(triggeredRun.get("phase"), "IN_PROGRESS");
+		assertEquals(triggeredRun.get("status"), "IN_PROGRESS");
 		assertEquals(triggeredRun.get("type"), "FREESTYLE");
 		assertEquals(
 				objectMapper.convertValue(triggeredRun.get("job"), Map.class).get("type"),
@@ -152,7 +152,7 @@ public class FreestyleJobUserJourneyIT {
 						.andExpect(status().isOk())
 						.andReturn().getResponse().getContentAsString(),
 				Map.class);
-		assertEquals(queriedRun.get("phase"), "IN_PROGRESS");
+		assertEquals(queriedRun.get("status"), "IN_PROGRESS");
 		
 		/*
 		 * curl -X GET -H "Content-Type: text/plain" -v localhost:8881/jobs/1/runs/1/console

@@ -132,7 +132,7 @@ public class GitJobUserJourneyIT {
 						.andExpect(status().isOk())
 						.andReturn().getResponse().getContentAsString(),
 				Map.class);
-		assertEquals(triggeredRun.get("phase"), "IN_PROGRESS");
+		assertEquals(triggeredRun.get("status"), "IN_PROGRESS");
 		assertEquals(triggeredRun.get("branchName"), branchName);
 		assertEquals(triggeredRun.get("type"), "GIT");
 		assertEquals(
@@ -151,7 +151,7 @@ public class GitJobUserJourneyIT {
 						.andExpect(status().isOk())
 						.andReturn().getResponse().getContentAsString(), 
 				Map.class);
-		assertEquals(queriedRun.get("phase"), "IN_PROGRESS");
+		assertEquals(queriedRun.get("status"), "IN_PROGRESS");
 		
 		mockMvc.perform(delete("/jobs/"+jobId))
 				.andExpect(status().isOk());

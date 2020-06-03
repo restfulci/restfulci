@@ -10,7 +10,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import restfulci.job.shared.domain.FreestyleJobBean;
 import restfulci.job.shared.domain.FreestyleRunBean;
-import restfulci.job.shared.domain.RunPhase;
+import restfulci.job.shared.domain.RunStatus;
 
 public class FreestyleRunBeanTest {
 
@@ -26,7 +26,7 @@ public class FreestyleRunBeanTest {
 		FreestyleRunBean run = new FreestyleRunBean();
 		run.setId(456);
 		run.setJob(job);
-		run.setPhase(RunPhase.IN_PROGRESS);
+		run.setStatus(RunStatus.IN_PROGRESS);
 		run.setTriggerAt(new Date(0L));
 		run.setCompleteAt(new Date(1000L));
 		run.setExitCode(0);
@@ -36,7 +36,7 @@ public class FreestyleRunBeanTest {
 				mapper.writeValueAsString(run),
 				"{\"id\":456,"
 				+ "\"job\":{\"id\":123,\"name\":\"job\",\"dockerImage\":\"busybox:1.31\",\"command\":[\"echo\",\"0\"],\"type\":\"FREESTYLE\"},"
-				+ "\"phase\":\"IN_PROGRESS\","
+				+ "\"status\":\"IN_PROGRESS\","
 				+ "\"triggerAt\":\"1970-01-01 12:00:00\","
 				+ "\"completeAt\":\"1970-01-01 12:00:01\","
 				+ "\"exitCode\":0,"

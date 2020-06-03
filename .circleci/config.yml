@@ -123,7 +123,7 @@ jobs:
       - run: cd job-microservice && mvn package -Dskip.unittest=true -Dskip.it=true
 
       - run:
-          name: Build and push job-master-api-serverss docker image
+          name: Build and push job-master-api-server docker image
           command: |
             cd job-microservice/master-api && docker build -t restfulci/job-master-api-server:$CIRCLE_SHA1 .
             echo $DOCKER_PWD | docker login -u $DOCKER_ID --password-stdin
@@ -135,6 +135,29 @@ jobs:
             cd job-microservice/slave-agent && docker build -t restfulci/job-slave-executor:$CIRCLE_SHA1 .
             echo $DOCKER_PWD | docker login -u $DOCKER_ID --password-stdin
             docker push restfulci/job-slave-executor:$CIRCLE_SHA1
+
+      - run:
+          name: Build and push job-postgres docker image
+          command: |
+            cd job-microservice/database && docker build -t restfulci/job-postgres:$CIRCLE_SHA1 .
+            echo $DOCKER_PWD | docker login -u $DOCKER_ID --password-stdin
+            docker push restfulci/job-postgres:$CIRCLE_SHA1
+
+      - run: cd pipeline-microservice/api-cron && mvn package -Dskip.unittest=true -Dskip.it=true
+
+      - run:
+          name: Build and push pipeline-api-cron-server docker image
+          command: |
+            cd pipeline-microservice/api-cron && docker build -t restfulci/pipeline-api-cron-server:$CIRCLE_SHA1 .
+            echo $DOCKER_PWD | docker login -u $DOCKER_ID --password-stdin
+            docker push restfulci/pipeline-api-cron-server:$CIRCLE_SHA1
+
+      - run:
+          name: Build and push pipeline-postgres docker image
+          command: |
+            cd pipeline-microservice/database && docker build -t restfulci/pipeline-postgres:$CIRCLE_SHA1 .
+            echo $DOCKER_PWD | docker login -u $DOCKER_ID --password-stdin
+            docker push restfulci/pipeline-postgres:$CIRCLE_SHA1
 
   java-pipeline-unittest:
     executor: java-with-sidecar-executor
@@ -164,8 +187,12 @@ jobs:
       - checkout
 
       - run: sudo pip3 install pipenv
+
       - run: cd e2e-api && pipenv install flake8
       - run: cd e2e-api && pipenv run flake8 --statistics
+
+      - run: cd pipeline-microservice/job-microservice-mock && pipenv install flake8
+      - run: cd pipeline-microservice/job-microservice-mock && pipenv run flake8 --statistics
 
 workflows:
   version: 2

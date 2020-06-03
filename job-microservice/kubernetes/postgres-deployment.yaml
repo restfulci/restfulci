@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: postgres
-          image: postgres:12.1
+          image: restfulci/job-postgres:c72dcd06192aeaf7ec45546cbd3da4caf5cc61eb
           imagePullPolicy: "IfNotPresent"
           ports:
           - containerPort: 5432

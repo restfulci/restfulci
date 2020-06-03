@@ -60,7 +60,7 @@ public class PipelineUserJourneyIT {
 		pipelineData.put("name", pipelineName);
 		
 		/*
-		 * curl -X POST -H "Content-Type: application/json" --data '{"name": "manual_pipeline_name"}' localhost:8881/pipelines
+		 * curl -X POST -H "Content-Type: application/json" --data '{"name": "manual_pipeline_name"}' localhost:8882/pipelines
 		 */
 		Map<?, ?> createdPipeline = objectMapper.readValue(
 				mockMvc.perform(post("/pipelines")
@@ -109,6 +109,11 @@ public class PipelineUserJourneyIT {
 				Map.class);
 		assertEquals(objectMapper.convertValue(anotherReferredJobAddedPipeline.get("referredJobs"), List.class).size(), 2);
 		Map<?, ?> anotherReferredJob = new HashMap<String, Object>();
+		/*
+		 * TODO:
+		 * A pipeline should not have 2 referred jobs with the same `originalJobId`.
+		 * Otherwise we cannot get the referred job id with a return pipeline JSON.
+		 */
 		for (Object obj : objectMapper.convertValue(anotherReferredJobAddedPipeline.get("referredJobs"), List.class)) {
 			Map<?, ?> iteratedReferredJob = objectMapper.convertValue(obj, Map.class);
 			if (((Integer)iteratedReferredJob.get("originalJobId")).equals(456)) {
@@ -139,8 +144,7 @@ public class PipelineUserJourneyIT {
 		}
 		
 		Map<?, ?> triggeredCycle = objectMapper.readValue(
-				mockMvc.perform(post("/pipelines/"+pipelineId+"/cycles")
-						.contentType(MediaType.APPLICATION_JSON))
+				mockMvc.perform(post("/pipelines/"+pipelineId+"/cycles"))
 						.andExpect(status().isOk())
 						.andReturn().getResponse().getContentAsString(),
 				Map.class);
