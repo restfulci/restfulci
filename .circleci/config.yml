@@ -191,6 +191,9 @@ jobs:
       - run: cd e2e-api && pipenv install flake8
       - run: cd e2e-api && pipenv run flake8 --statistics
 
+      - run: cd pipeline-microservice/job-microservice-mock && pipenv install flake8
+      - run: cd pipeline-microservice/job-microservice-mock && pipenv run flake8 --statistics
+
 workflows:
   version: 2
   build-test-and-deploy:

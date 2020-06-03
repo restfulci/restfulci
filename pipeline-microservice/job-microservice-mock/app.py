@@ -1,5 +1,8 @@
-from flask import Flask, jsonify, make_response
+from flask import Flask, jsonify, make_response, request
+
+
 app = Flask(__name__)
+
 
 class Run:
 
@@ -21,7 +24,7 @@ class Run:
                 "id": self.job_id,
                 "name": "job_name",
                 "dockerImage": "busybox:1.31",
-                "command": ["sh","-c","echo \"Hello world\""],
+                "command": ["sh", "-c", "echo \"Hello world\""],
                 "type": "FREESTYLE"
             },
             "status": self._status(),
@@ -65,11 +68,14 @@ class RunBuilder:
 
 run_builder = RunBuilder()
 
+
 @app.route('/jobs/<int:job_id>/runs', methods=['POST'])
 def trigger_run(job_id):
+    _ = request.get_json(force=True)
 
     # Always return IN_PROGRESS
     return make_response(jsonify(run_builder.initialize(job_id)))
+
 
 @app.route('/jobs/<int:job_id>/runs/<int:run_id>', methods=['GET'])
 def get_run(job_id, run_id):

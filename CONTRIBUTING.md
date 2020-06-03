@@ -7,21 +7,31 @@
 * Java, maven, STS, and docker are installed in the local machine.
 * Persistent storages are through `docker-compose.dev.yml`.
 
+In each microservice folder
+
 ```
 docker-compose -f docker-compose.dev.yml rm -v -f postgres
 docker-compose -f docker-compose.dev.yml up
-mvn test
+mvn verify
 ```
 
 ### `docker`
 
 ```
-cd job
+cd job-microservice
 bash docker_build-mac.sh
 docker-compose up
 ```
 
-Then you can access master API by `localhost:8881`.
+Then you can access job microservice API by `localhost:8881`.
+
+```
+cd pipeline-microservice
+bash docker_build-mac.sh
+docker-compose up
+```
+
+Then you can access pipeline microservice API by `localhost:8882` (with mocked job microservice).
 
 ## Deployment
 

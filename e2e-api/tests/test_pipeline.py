@@ -17,8 +17,8 @@ class TestPipeline(TestCase):
         self._test(1, 2, 3, 4)
 
     def test_kubernetes(self):
-        self.job_api_url = "http://35.237.33.233"
-        self.pipeline_api_url = "http://34.73.202.125"
+        self.job_api_url = "http://35.190.162.206"
+        self.pipeline_api_url = "http://35.190.139.27"
 
         job_id_1 = self._create_job_and_return_id()
         job_id_2 = self._create_job_and_return_id()
