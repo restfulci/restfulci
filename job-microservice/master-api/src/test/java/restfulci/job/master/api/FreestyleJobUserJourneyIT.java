@@ -118,7 +118,7 @@ public class FreestyleJobUserJourneyIT {
 		assertEquals(objectMapper.convertValue(anotherParameterAddedJob.get("parameters"), List.class).size(), 2);
 		
 		/*
-		 * curl -X POST -H "Content-Type: application/json" --data '{}' localhost:8881/jobs/1/runs
+		 * curl -X POST -H "Content-Type: application/json" --data '{"ENV": "staging", "ANOTHER", "foo"}' localhost:8881/jobs/1/runs
 		 */
 		Map<String, Object> runData = new HashMap<String, Object>();
 		runData.put("ENV", "staging");
@@ -163,5 +163,69 @@ public class FreestyleJobUserJourneyIT {
 		 */
 		mockMvc.perform(delete("/jobs/"+jobId))
 				.andExpect(status().isOk());
+	}
+	
+	@Test
+	public void testAInvalidJobReturnsBadRequest() throws Exception {
+		
+		mockMvc.perform(post("/jobs")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(objectWriter.writeValueAsString(new HashMap<String, String>())))
+				.andExpect(status().isBadRequest());
+	}
+	
+	@Test
+	public void testParameteredJobRunReturnOkWithValidInputAndReturnBadRequestWithInvalidInput() throws Exception {
+		
+		final String jobName = "it_freestyle_job_name";
+		Map<String, Object> jobData = new HashMap<String, Object>();
+		jobData.put("name", jobName);
+		jobData.put("dockerImage", "busybox:1.31");
+		jobData.put("command", new String[] {"sh", "-c", "expr $MINUEND - $SUBTRAHEND"});
+		
+		Map<?, ?> createdJob = objectMapper.readValue(
+				mockMvc.perform(post("/jobs")
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(objectWriter.writeValueAsString(jobData)))
+						.andExpect(status().isOk())
+						.andReturn().getResponse().getContentAsString(),
+				Map.class);
+		assertEquals(createdJob.get("name"), jobName);
+		assertEquals(createdJob.get("type"), "FREESTYLE");
+		
+		Integer jobId = (Integer)createdJob.get("id");
+		
+		Map<String, Object> minuendParameterData = new HashMap<String, Object>();
+		minuendParameterData.put("name", "MINUEND");
+		
+		mockMvc.perform(post("/jobs/"+jobId+"/parameters")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(objectWriter.writeValueAsString(minuendParameterData)))
+				.andExpect(status().isOk());
+		
+		Map<String, Object> subtraheadParameterData = new HashMap<String, Object>();
+		subtraheadParameterData.put("name", "SUBTRAHEND");
+		
+		mockMvc.perform(post("/jobs/"+jobId+"/parameters")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(objectWriter.writeValueAsString(subtraheadParameterData)))
+				.andExpect(status().isOk());
+		
+		Map<String, Object> runData = new HashMap<String, Object>();
+		runData.put("MINUEND", 5);
+		runData.put("SUBTRAHEND", 3);
+		
+		mockMvc.perform(post("/jobs/"+jobId+"/runs")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(objectWriter.writeValueAsString(runData)))
+				.andExpect(status().isOk());
+		
+		mockMvc.perform(post("/jobs/"+jobId+"/runs")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(objectWriter.writeValueAsString(new HashMap<String, Object>())))
+				.andExpect(status().isBadRequest());
+		
+		mockMvc.perform(delete("/jobs/"+jobId))
+		.andExpect(status().isOk());
 	}
 }

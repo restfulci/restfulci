@@ -6,7 +6,6 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
-import java.io.IOException;
 import java.util.ArrayList;
 
 import org.junit.jupiter.api.Assertions;
@@ -20,8 +19,6 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import restfulci.job.master.dto.RunDTO;
-import restfulci.job.master.service.JobService;
-import restfulci.job.master.service.RunService;
 import restfulci.job.shared.dao.MinioRepository;
 import restfulci.job.shared.dao.RunRepository;
 import restfulci.job.shared.dao.RunResultRepository;
@@ -33,6 +30,7 @@ import restfulci.job.shared.domain.GitJobBean;
 import restfulci.job.shared.domain.JobBean;
 import restfulci.job.shared.domain.ParameterBean;
 import restfulci.job.shared.domain.RunBean;
+import restfulci.job.shared.domain.exception.RunInputException;
 
 @ExtendWith(SpringExtension.class)
 @SpringBootTest
@@ -153,7 +151,7 @@ public class RunServiceTest {
 		
 		RunDTO runDTO = new RunDTO();
 		
-		Assertions.assertThrows(IOException.class, () -> {
+		Assertions.assertThrows(RunInputException.class, () -> {
 			runService.triggerRun(456, runDTO);
 		});
 	}
@@ -167,7 +165,7 @@ public class RunServiceTest {
 		RunDTO runDTO = new RunDTO();
 		runDTO.put("EXCLUDE", "staging");
 		
-		Assertions.assertThrows(IOException.class, () -> {
+		Assertions.assertThrows(RunInputException.class, () -> {
 			runService.triggerRun(456, runDTO);
 		});
 	}
@@ -185,7 +183,7 @@ public class RunServiceTest {
 		RunDTO runDTO = new RunDTO();
 		runDTO.put("ENV", "development");
 		
-		Assertions.assertThrows(IOException.class, () -> {
+		Assertions.assertThrows(RunInputException.class, () -> {
 			runService.triggerRun(456, runDTO);
 		});
 	}

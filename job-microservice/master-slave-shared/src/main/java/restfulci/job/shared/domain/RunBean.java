@@ -29,6 +29,7 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
+import restfulci.job.shared.domain.exception.RunInputException;
 
 @Getter
 @Setter
@@ -115,7 +116,7 @@ public abstract class RunBean extends BaseEntity {
 			ParameterBean parameter = job.getParameter(input.getName());
 			
 			if (parameter == null) {
-				throw new IOException("Input "+input.getName()+" is not in the associated job's parameter list");
+				throw new RunInputException("Input "+input.getName()+" is not in the associated job's parameter list");
 			}
 			
 			if (parameter.getChoices() == null) {
@@ -123,13 +124,13 @@ public abstract class RunBean extends BaseEntity {
 			}
 			else {
 				if (!Arrays.asList(parameter.getChoices()).contains(input.getValue())) {
-					throw new IOException("Input "+input.getName()+" has invalid value "+input.getValue());
+					throw new RunInputException("Input "+input.getName()+" has invalid value "+input.getValue());
 				}
 			}
 		}
 	}
 	
-	public void fillInDefaultInput() throws IOException {
+	public void fillInDefaultInput() throws RunInputException {
 		
 		for (ParameterBean parameter : job.getParameters()) {
 			if (getInput(parameter.getName()) == null) {
@@ -140,7 +141,7 @@ public abstract class RunBean extends BaseEntity {
 					addInput(input);
 				}
 				else {
-					throw new IOException("Missing input for "+parameter.getName());
+					throw new RunInputException("Missing input for "+parameter.getName());
 				}
 			}
 		}

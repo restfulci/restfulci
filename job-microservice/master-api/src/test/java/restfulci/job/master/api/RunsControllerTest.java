@@ -69,7 +69,7 @@ public class RunsControllerTest {
 	}
 	
 	@Test
-	public void testTriggerRunInvalidInput() throws Exception {
+	public void testTriggerRunInvalidInputType() throws Exception {
 		
 		Map<String, Object> runData = new HashMap<String, Object>();
 		runData.put("INTEGER", 1);
