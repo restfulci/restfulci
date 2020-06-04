@@ -22,7 +22,7 @@ class TestGitJob(TestCase):
             "hello-world",
             validate_console_log=validate_console_log)
 
-    def test_input_parameters(self):
+    def test_subtraction(self):
 
         def validate_console_log(response):
             self.assertEqual(response.text, "2\n")
@@ -78,7 +78,12 @@ class TestGitJob(TestCase):
             validate_console_log=validate_console_log,
             validate_results=validate_results)
 
-    def _test_skeleton(self, project_name, inputs={}, validate_console_log=None, validate_results=None):
+    def _test_skeleton(
+            self,
+            project_name,
+            inputs={},
+            validate_console_log=None,
+            validate_results=None):
 
         response = requests.post(
             urljoin(self.job_api_url, "/jobs"),
