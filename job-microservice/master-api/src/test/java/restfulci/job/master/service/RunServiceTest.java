@@ -30,7 +30,7 @@ import restfulci.job.shared.domain.GitJobBean;
 import restfulci.job.shared.domain.JobBean;
 import restfulci.job.shared.domain.ParameterBean;
 import restfulci.job.shared.domain.RunBean;
-import restfulci.job.shared.exception.RunApiDataException;
+import restfulci.job.shared.exception.RunDataException;
 
 @ExtendWith(SpringExtension.class)
 @SpringBootTest
@@ -59,7 +59,7 @@ public class RunServiceTest {
 		RunDTO runDTO = new RunDTO();
 		runDTO.put("branchName", "master");
 		
-		Assertions.assertThrows(RunApiDataException.class, () -> {
+		Assertions.assertThrows(RunDataException.class, () -> {
 			runService.triggerRun(456, runDTO);
 		});
 	}
@@ -72,7 +72,7 @@ public class RunServiceTest {
 		
 		RunDTO runDTO = new RunDTO();
 		
-		Assertions.assertThrows(RunApiDataException.class, () -> {
+		Assertions.assertThrows(RunDataException.class, () -> {
 			runService.triggerRun(456, runDTO);
 		});
 	}
@@ -178,7 +178,7 @@ public class RunServiceTest {
 		
 		RunDTO runDTO = new RunDTO();
 		
-		Assertions.assertThrows(RunApiDataException.class, () -> {
+		Assertions.assertThrows(RunDataException.class, () -> {
 			runService.triggerRun(456, runDTO);
 		});
 	}
@@ -192,7 +192,7 @@ public class RunServiceTest {
 		RunDTO runDTO = new RunDTO();
 		runDTO.put("EXCLUDE", "staging");
 		
-		Assertions.assertThrows(RunApiDataException.class, () -> {
+		Assertions.assertThrows(RunDataException.class, () -> {
 			runService.triggerRun(456, runDTO);
 		});
 	}
@@ -210,7 +210,7 @@ public class RunServiceTest {
 		RunDTO runDTO = new RunDTO();
 		runDTO.put("ENV", "development");
 		
-		Assertions.assertThrows(RunApiDataException.class, () -> {
+		Assertions.assertThrows(RunDataException.class, () -> {
 			runService.triggerRun(456, runDTO);
 		});
 	}

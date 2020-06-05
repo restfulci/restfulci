@@ -1,10 +1,10 @@
 package restfulci.job.shared.exception;
 
-public class JobApiDataException extends ApiDataException {
+public class JobDataException extends ApiDataException {
 
 	private static final long serialVersionUID = 1L;
 	
-	public JobApiDataException(String message) {
+	public JobDataException(String message) {
 		super(message);
 	}
 }

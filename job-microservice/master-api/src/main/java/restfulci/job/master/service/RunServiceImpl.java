@@ -26,7 +26,8 @@ import restfulci.job.shared.domain.JobBean;
 import restfulci.job.shared.domain.JobType;
 import restfulci.job.shared.domain.RunBean;
 import restfulci.job.shared.domain.RunResultBean;
-import restfulci.job.shared.exception.RunApiDataException;
+import restfulci.job.shared.exception.IdNonExistenceException;
+import restfulci.job.shared.exception.RunDataException;
 
 @Service
 @Transactional
@@ -49,7 +50,7 @@ public class RunServiceImpl implements RunService {
 			return runs.get();
 		}
 		else {
-			throw new IOException();
+			throw new IdNonExistenceException("Run ID does not exist yet.");
 		}
 	}
 	
@@ -88,10 +89,10 @@ public class RunServiceImpl implements RunService {
 		
 		if (!job.getType().equals(run.getType())) {
 			if (job.getType().equals(JobType.FREESTYLE)) {
-				throw new RunApiDataException("Run input doesn't match freestyle job.");
+				throw new RunDataException("Run input doesn't match freestyle job.");
 			}
 			if (job.getType().equals(JobType.GIT)) {
-				throw new RunApiDataException("Run input doesn't match git job.");
+				throw new RunDataException("Run input doesn't match git job.");
 			}
 		}
 		

@@ -181,4 +181,13 @@ public class PipelineUserJourneyIT {
 		mockMvc.perform(delete("/pipelines/"+pipelineId))
 				.andExpect(status().isOk());
 	}
+	
+	@Test
+	public void testGetPipelineWithNonExistenceIdReturnsNotFound() throws Exception {
+		
+		mockMvc.perform(get("/pipelines/123")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(objectWriter.writeValueAsString(new HashMap<String, String>())))
+				.andExpect(status().isNotFound());
+	}
 }

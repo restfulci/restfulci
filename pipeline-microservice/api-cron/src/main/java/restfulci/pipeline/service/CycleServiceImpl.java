@@ -18,6 +18,7 @@ import restfulci.pipeline.domain.ReferredJobBean;
 import restfulci.pipeline.domain.ReferredRunBean;
 import restfulci.pipeline.domain.ReferredRunStatus;
 import restfulci.pipeline.domain.RemoteRunBean;
+import restfulci.pipeline.exception.IdNonExistenceException;
 
 @Service
 @Transactional
@@ -36,7 +37,7 @@ public class CycleServiceImpl implements CycleService {
 		if (cycles.isPresent()) {
 			return cycles.get();
 		} else {
-			throw new IOException();
+			throw new IdNonExistenceException("Cycle ID does not exist yet.");
 		}
 	}
 

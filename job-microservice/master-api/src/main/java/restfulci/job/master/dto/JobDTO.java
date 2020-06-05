@@ -11,7 +11,7 @@ import lombok.ToString;
 import restfulci.job.shared.domain.FreestyleJobBean;
 import restfulci.job.shared.domain.GitJobBean;
 import restfulci.job.shared.domain.JobBean;
-import restfulci.job.shared.exception.JobApiDataException;
+import restfulci.job.shared.exception.JobDataException;
 
 @Getter
 @Setter
@@ -52,6 +52,6 @@ public class JobDTO {
 			return jobBean;
 		}
 		
-		throw new JobApiDataException("The job definition doesn't fit any existing job types.");
+		throw new JobDataException("The job definition doesn't fit any existing job types.");
 	}
 }

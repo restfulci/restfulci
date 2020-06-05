@@ -11,6 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 import restfulci.pipeline.dao.PipelineRepository;
 import restfulci.pipeline.domain.PipelineBean;
 import restfulci.pipeline.domain.ReferredJobBean;
+import restfulci.pipeline.exception.IdNonExistenceException;
 
 @Service
 @Transactional
@@ -27,7 +28,7 @@ public class PipelineServiceImpl implements PipelineService {
 			return pipelines.get();
 		}
 		else {
-			throw new IOException();
+			throw new IdNonExistenceException("Pipeline ID does not exist yet.");
 		}
 	}
 

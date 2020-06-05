@@ -1,5 +1,6 @@
 package restfulci.job.master.api;
 
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -26,7 +27,7 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
 @AutoConfigureMockMvc
-public class SharedTypeUserJourneyIT {
+public class ShareTypeUserJourneyIT {
 	
 	@Autowired private MockMvc mockMvc;
 	
@@ -67,5 +68,12 @@ public class SharedTypeUserJourneyIT {
 				.andExpect(status().isBadRequest());
 	}
 	
-
+	@Test
+	public void testGetJobWithNonExistenceIdReturnsNotFound() throws Exception {
+		
+		mockMvc.perform(get("/jobs/123")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(objectWriter.writeValueAsString(new HashMap<String, String>())))
+				.andExpect(status().isNotFound());
+	}
 }

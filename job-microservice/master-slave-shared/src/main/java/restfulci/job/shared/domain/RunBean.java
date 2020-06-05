@@ -29,7 +29,7 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
-import restfulci.job.shared.exception.RunApiDataException;
+import restfulci.job.shared.exception.RunDataException;
 
 @Getter
 @Setter
@@ -117,8 +117,13 @@ public abstract class RunBean extends BaseEntity {
 		for (InputBean input : inputs) {
 			ParameterBean parameter = job.getParameter(input.getName());
 			
+			/*
+			 * TODO:
+			 * We should probably silently swallow this error. This match what Spring default/Java validation API 
+			 * do if the API data include an attribute they don't know.
+			 */
 			if (parameter == null) {
-				throw new RunApiDataException("Input "+input.getName()+" is not in the associated job's parameter list");
+				throw new RunDataException("Input "+input.getName()+" is not in the associated job's parameter list");
 			}
 			
 			if (parameter.getChoices() == null) {
@@ -126,13 +131,13 @@ public abstract class RunBean extends BaseEntity {
 			}
 			else {
 				if (!Arrays.asList(parameter.getChoices()).contains(input.getValue())) {
-					throw new RunApiDataException("Input "+input.getName()+" has invalid value "+input.getValue());
+					throw new RunDataException("Input "+input.getName()+" has invalid value "+input.getValue());
 				}
 			}
 		}
 	}
 	
-	public void fillInDefaultInput() throws RunApiDataException {
+	public void fillInDefaultInput() throws RunDataException {
 		
 		for (ParameterBean parameter : job.getParameters()) {
 			if (getInput(parameter.getName()) == null) {
@@ -143,7 +148,7 @@ public abstract class RunBean extends BaseEntity {
 					addInput(input);
 				}
 				else {
-					throw new RunApiDataException("Missing input for "+parameter.getName());
+					throw new RunDataException("Missing input for "+parameter.getName());
 				}
 			}
 		}
