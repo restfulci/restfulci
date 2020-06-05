@@ -29,7 +29,7 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
-import restfulci.job.shared.domain.exception.RunInputException;
+import restfulci.job.shared.exception.RunApiDataException;
 
 @Getter
 @Setter
@@ -110,13 +110,15 @@ public abstract class RunBean extends BaseEntity {
 	 * `getDuration()`
 	 */
 	
+	public abstract JobType getType();
+	
 	public void validateInput() throws IOException {
 		
 		for (InputBean input : inputs) {
 			ParameterBean parameter = job.getParameter(input.getName());
 			
 			if (parameter == null) {
-				throw new RunInputException("Input "+input.getName()+" is not in the associated job's parameter list");
+				throw new RunApiDataException("Input "+input.getName()+" is not in the associated job's parameter list");
 			}
 			
 			if (parameter.getChoices() == null) {
@@ -124,13 +126,13 @@ public abstract class RunBean extends BaseEntity {
 			}
 			else {
 				if (!Arrays.asList(parameter.getChoices()).contains(input.getValue())) {
-					throw new RunInputException("Input "+input.getName()+" has invalid value "+input.getValue());
+					throw new RunApiDataException("Input "+input.getName()+" has invalid value "+input.getValue());
 				}
 			}
 		}
 	}
 	
-	public void fillInDefaultInput() throws RunInputException {
+	public void fillInDefaultInput() throws RunApiDataException {
 		
 		for (ParameterBean parameter : job.getParameters()) {
 			if (getInput(parameter.getName()) == null) {
@@ -141,7 +143,7 @@ public abstract class RunBean extends BaseEntity {
 					addInput(input);
 				}
 				else {
-					throw new RunInputException("Missing input for "+parameter.getName());
+					throw new RunApiDataException("Missing input for "+parameter.getName());
 				}
 			}
 		}

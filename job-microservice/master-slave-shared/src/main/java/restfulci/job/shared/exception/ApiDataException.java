@@ -1,14 +1,16 @@
-package restfulci.job.shared.domain.exception;
+package restfulci.job.shared.exception;
+
+import java.io.IOException;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
 @ResponseStatus(value=HttpStatus.BAD_REQUEST)
-public class RunInputException extends BeanException {
+public class ApiDataException extends IOException {
 
 	private static final long serialVersionUID = 1L;
 	
-	public RunInputException(String message) {
+	public ApiDataException(String message) {
 		super(message);
 	}
 }

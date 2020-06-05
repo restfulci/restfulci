@@ -166,16 +166,40 @@ public class FreestyleJobUserJourneyIT {
 	}
 	
 	@Test
-	public void testAInvalidJobReturnsBadRequest() throws Exception {
+	public void testRunReturnBadRequestWithJobTypeMismatchedInput() throws Exception {
 		
-		mockMvc.perform(post("/jobs")
+		final String jobName = "it_freestyle_job_name";
+		Map<String, Object> jobData = new HashMap<String, Object>();
+		jobData.put("name", jobName);
+		jobData.put("dockerImage", "busybox:1.31");
+		jobData.put("command", new String[] {"sh", "-c", "echo \"Hello world\""});
+		
+		Map<?, ?> createdJob = objectMapper.readValue(
+				mockMvc.perform(post("/jobs")
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(objectWriter.writeValueAsString(jobData)))
+						.andExpect(status().isOk())
+						.andReturn().getResponse().getContentAsString(),
+				Map.class);
+		assertEquals(createdJob.get("name"), jobName);
+		assertEquals(createdJob.get("type"), "FREESTYLE");
+		
+		Integer jobId = (Integer)createdJob.get("id");
+		
+		Map<String, Object> runData = new HashMap<String, Object>();
+		runData.put("branchName", "master");
+		
+		mockMvc.perform(post("/jobs/"+jobId+"/runs")
 				.contentType(MediaType.APPLICATION_JSON)
-				.content(objectWriter.writeValueAsString(new HashMap<String, String>())))
+				.content(objectWriter.writeValueAsString(runData)))
 				.andExpect(status().isBadRequest());
+		
+		mockMvc.perform(delete("/jobs/"+jobId))
+				.andExpect(status().isOk());
 	}
 	
 	@Test
-	public void testParameteredJobRunReturnOkWithValidInputAndReturnBadRequestWithInvalidInput() throws Exception {
+	public void testParameteredRunReturnOkWithValidInputAndReturnBadRequestWithInvalidInput() throws Exception {
 		
 		final String jobName = "it_freestyle_job_name";
 		Map<String, Object> jobData = new HashMap<String, Object>();
@@ -226,6 +250,6 @@ public class FreestyleJobUserJourneyIT {
 				.andExpect(status().isBadRequest());
 		
 		mockMvc.perform(delete("/jobs/"+jobId))
-		.andExpect(status().isOk());
+				.andExpect(status().isOk());
 	}
 }

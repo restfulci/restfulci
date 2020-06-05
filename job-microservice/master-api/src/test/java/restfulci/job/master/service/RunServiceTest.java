@@ -30,7 +30,7 @@ import restfulci.job.shared.domain.GitJobBean;
 import restfulci.job.shared.domain.JobBean;
 import restfulci.job.shared.domain.ParameterBean;
 import restfulci.job.shared.domain.RunBean;
-import restfulci.job.shared.domain.exception.RunInputException;
+import restfulci.job.shared.exception.RunApiDataException;
 
 @ExtendWith(SpringExtension.class)
 @SpringBootTest
@@ -51,7 +51,34 @@ public class RunServiceTest {
 //	@MockBean private AmqpTemplate template;
 	
 	@Test
-	public void testTriggerFreestyleRun() throws Exception {
+	public void testTriggerRunErrorsOutIfNotMatchingFreestyleJob() throws Exception {
+		
+		JobBean job = new FreestyleJobBean();
+		given(jobService.getJob(456)).willReturn(job);
+		
+		RunDTO runDTO = new RunDTO();
+		runDTO.put("branchName", "master");
+		
+		Assertions.assertThrows(RunApiDataException.class, () -> {
+			runService.triggerRun(456, runDTO);
+		});
+	}
+	
+	@Test
+	public void testTriggerRunErrorsOutIfNotMatchingGitJob() throws Exception {
+		
+		JobBean job = new GitJobBean();
+		given(jobService.getJob(456)).willReturn(job);
+		
+		RunDTO runDTO = new RunDTO();
+		
+		Assertions.assertThrows(RunApiDataException.class, () -> {
+			runService.triggerRun(456, runDTO);
+		});
+	}
+	
+	@Test
+	public void testTriggerFreestyleRunWithParameters() throws Exception {
 		
 		JobBean job = new FreestyleJobBean();
 		ParameterBean parameter = new ParameterBean();
@@ -73,7 +100,7 @@ public class RunServiceTest {
 	}
 	
 	@Test
-	public void testTriggerGitBranchRun() throws Exception {
+	public void testTriggerGitBranchRunWithParameters() throws Exception {
 		
 		JobBean job = new GitJobBean();
 		ParameterBean parameter = new ParameterBean();
@@ -96,7 +123,7 @@ public class RunServiceTest {
 	}
 	
 	@Test
-	public void testTriggerGitCommitRun() throws Exception {
+	public void testTriggerGitCommitRunWithParameters() throws Exception {
 		
 		JobBean job = new GitJobBean();
 		ParameterBean parameter = new ParameterBean();
@@ -151,7 +178,7 @@ public class RunServiceTest {
 		
 		RunDTO runDTO = new RunDTO();
 		
-		Assertions.assertThrows(RunInputException.class, () -> {
+		Assertions.assertThrows(RunApiDataException.class, () -> {
 			runService.triggerRun(456, runDTO);
 		});
 	}
@@ -165,7 +192,7 @@ public class RunServiceTest {
 		RunDTO runDTO = new RunDTO();
 		runDTO.put("EXCLUDE", "staging");
 		
-		Assertions.assertThrows(RunInputException.class, () -> {
+		Assertions.assertThrows(RunApiDataException.class, () -> {
 			runService.triggerRun(456, runDTO);
 		});
 	}
@@ -183,7 +210,7 @@ public class RunServiceTest {
 		RunDTO runDTO = new RunDTO();
 		runDTO.put("ENV", "development");
 		
-		Assertions.assertThrows(RunInputException.class, () -> {
+		Assertions.assertThrows(RunApiDataException.class, () -> {
 			runService.triggerRun(456, runDTO);
 		});
 	}
