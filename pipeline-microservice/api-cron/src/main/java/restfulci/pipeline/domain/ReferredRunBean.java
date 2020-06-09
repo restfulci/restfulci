@@ -47,6 +47,13 @@ public class ReferredRunBean extends BaseEntity {
 	@Convert(converter=ReferredRunStatusConventer.class)
 	private ReferredRunStatus status;
 	
+	/*
+	 * Can't use subclasses, because ReferredRun doesn't know its status
+	 * at the beginning.
+	 */
+	@Column(name="error_message", updatable=true)
+	private String errorMessage;
+	
 	@Column(name="exit_code", updatable=true)
 	private Integer exitCode;
 	

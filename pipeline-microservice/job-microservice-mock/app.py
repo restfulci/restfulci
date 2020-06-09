@@ -69,18 +69,105 @@ class RunBuilder:
 run_builder = RunBuilder()
 
 
+class BadRequest(Exception):
+
+    def __init__(self, message, path):
+        Exception.__init__(self)
+        self.message = message
+        self.path = path
+
+    def payload(self):
+        return {
+            "timestamp": "2020-06-04T04:37:37.154+0000",
+            "status": 400,
+            "error": "Bad Request",
+            "message": self.message,
+            "path": self.path
+        }
+
+
+class NotFound(Exception):
+
+    def __init__(self, message, path):
+        Exception.__init__(self)
+        self.message = message
+        self.path = path
+
+    def payload(self):
+        return {
+            "timestamp": "2020-06-04T04:37:37.154+0000",
+            "status": 404,
+            "error": "Not Found",
+            "message": self.message,
+            "path": self.path
+        }
+
+
+class InternalServerError(Exception):
+
+    def __init__(self, message, path):
+        Exception.__init__(self)
+        self.message = message
+        self.path = path
+
+    def payload(self):
+        return {
+            "timestamp": "2020-06-04T04:37:37.154+0000",
+            "status": 500,
+            "error": "Internal Server Error",
+            "message": self.message,
+            "path": self.path
+        }
+
+
+@app.errorhandler(BadRequest)
+def handle_bad_request(error):
+    response = jsonify(error.payload())
+    response.status_code = 400
+    return response
+
+@app.errorhandler(NotFound)
+def handle_not_found(error):
+    response = jsonify(error.payload())
+    response.status_code = 404
+    return response
+
+@app.errorhandler(InternalServerError)
+def handle_internal_server_error(error):
+    response = jsonify(error.payload())
+    response.status_code = 500
+    return response
+
 @app.route('/jobs/<int:job_id>/runs', methods=['POST'])
 def trigger_run(job_id):
-    _ = request.get_json(force=True)
+    if job_id in range(1, 11):
+        try:
+            _ = request.get_json(force=True)
+        except Exception as e:
+            raise BadRequest("foo", request.path)
 
-    # Always return IN_PROGRESS
-    return make_response(jsonify(run_builder.initialize(job_id)))
+        # Always return IN_PROGRESS
+        return make_response(jsonify(run_builder.initialize(job_id)))
 
+    elif job_id in range(11, 21):
+        raise BadRequest("foo", request.path)
+
+    elif job_id in range(21, 31):
+        raise InternalServerError("foo", request.path)
+
+    else:
+        raise NotFound("foo", request.path)
 
 @app.route('/jobs/<int:job_id>/runs/<int:run_id>', methods=['GET'])
 def get_run(job_id, run_id):
+    if job_id in range(1, 11):
+        # First time return IN_PROGRESS, second time return SUCCEED
+        # Get a run which is not triggered (yet) will give back 500
+        # error.
+        #
+        # TODO:
+        # Within it, also cover fail/abort/...
+        return make_response(jsonify(run_builder.get(job_id, run_id)))
 
-    # First time return IN_PROGRESS, second time return SUCCEED
-    # Get a run which is not triggered (yet) will give back 500
-    # error.
-    return make_response(jsonify(run_builder.get(job_id, run_id)))
+    else:
+        raise NotFound("foo", request.path)

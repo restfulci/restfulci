@@ -11,28 +11,68 @@ class TestPipeline(TestCase):
     job_api_url = None
     pipeline_api_url = None
 
-    def test_docker_compose(self):
+    def test_docker_compose_succeed(self):
         self.pipeline_api_url = "http://localhost:8882"
 
-        self._test(1, 2, 3, 4)
+        # Seems cannot share it for `test_docker_compose_succeed` and
+        # `test_kubernetes_succeed`, as it needs to access `self`.
+        def validate_cycle_succeed(response_body):
+            self.assertEqual(response_body["status"], "SUCCEED")
+            self.assertIsNotNone(response_body["completeAt"])
+            referred_runs = response_body["referredRuns"]
+            self.assertEqual(len(referred_runs), 4)
+            self.assertCountEqual(
+                [referred_run["status"] for referred_run in referred_runs],
+                ["SUCCEED", "SUCCEED", "SUCCEED", "SUCCEED"])
 
-    def test_kubernetes(self):
+        self._test(
+            1, 2, 3, 4,
+            validate_cycle_final_state=validate_cycle_succeed)
+
+    def test_docker_compose_errored(self):
+        self.pipeline_api_url = "http://localhost:8882"
+
+        def validate_cycle_succeed(response_body):
+            self.assertEqual(response_body["status"], "FAIL")
+            #self.assertIsNotNone(response_body["completeAt"])
+            referred_runs = response_body["referredRuns"]
+            self.assertEqual(len(referred_runs), 4)
+            self.assertTrue("ERROR" in [referred_run["status"] for referred_run in referred_runs])
+            # self.assertCountEqual(
+            #     [referred_run["status"] for referred_run in referred_runs],
+            #     ["ERROR", "SKIP", "SKIP", "SKIP"])
+
+        self._test(
+            11, 2, 3, 4,
+            validate_cycle_final_state=validate_cycle_succeed)
+
+    def test_kubernetes_succeed(self):
         self.job_api_url = "http://35.190.162.206"
         self.pipeline_api_url = "http://35.190.139.27"
+
+        def validate_cycle_succeed(response_body):
+            self.assertEqual(response_body["status"], "SUCCEED")
+            self.assertIsNotNone(response_body["completeAt"])
+            referred_runs = response_body["referredRuns"]
+            self.assertEqual(len(referred_runs), 4)
+            for i in range(4):
+                self.assertEqual(referred_runs[i]["status"], "SUCCEED")
 
         job_id_1 = self._create_job_and_return_id()
         job_id_2 = self._create_job_and_return_id()
         job_id_3 = self._create_job_and_return_id()
         job_id_4 = self._create_job_and_return_id()
 
-        self._test(job_id_1, job_id_2, job_id_3, job_id_4)
+        self._test(
+            job_id_1, job_id_2, job_id_3, job_id_4,
+            validate_cycle_final_state=validate_cycle_succeed)
 
         self._delete_job(job_id_1)
         self._delete_job(job_id_2)
         self._delete_job(job_id_3)
         self._delete_job(job_id_4)
 
-    def _test(self, job_id_1, job_id_2, job_id_3, job_id_4):
+    def _test(self, job_id_1, job_id_2, job_id_3, job_id_4, validate_cycle_final_state):
 
         response = requests.post(
             urljoin(self.pipeline_api_url, "/pipelines"),
@@ -93,18 +133,14 @@ class TestPipeline(TestCase):
             [job_id_1, job_id_2, job_id_3, job_id_4])
         self.assertEqual(referred_runs[0]["status"], "NOT_STARTED_YET")
 
+        # while response_body["completeAt"] is not None:
         while response_body["status"] == "IN_PROGRESS":
             response = requests.get(
                 urljoin(self.pipeline_api_url, "/pipelines/{}/cycles/{}".format(pipeline_id, cycle_id)))
             self.assertEqual(response.status_code, 200)
             response_body = json.loads(response.text)
             sleep(1)
-        self.assertEqual(response_body["status"], "SUCCEED")
-        self.assertIsNotNone(response_body["completeAt"])
-        referred_runs = response_body["referredRuns"]
-        self.assertEqual(len(referred_runs), 4)
-        for i in range(4):
-            self.assertEqual(referred_runs[i]["status"], "SUCCEED")
+        validate_cycle_final_state(response_body)
 
         requests.delete(
             urljoin(self.pipeline_api_url, "/pipelines/{}".format(pipeline_id)),

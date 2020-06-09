@@ -19,6 +19,7 @@ import restfulci.pipeline.domain.ReferredRunBean;
 import restfulci.pipeline.domain.ReferredRunStatus;
 import restfulci.pipeline.domain.RemoteRunBean;
 import restfulci.pipeline.exception.IdNonExistenceException;
+import restfulci.pipeline.exception.RunTriggerException;
 
 @Service
 @Transactional
@@ -108,38 +109,59 @@ public class CycleServiceImpl implements CycleService {
 			}
 			
 			if (referredRun.getStatus().equals(ReferredRunStatus.NOT_STARTED_YET)) {
-				allDone = false;
-
+				
+				boolean canSkip = false;
 				boolean canStart = true;
 				for (ReferredRunBean referredUpstreamRun : referredRun.getReferredUpstreamRuns()) {
 					if (referredUpstreamRun.getStatus().equals(ReferredRunStatus.NOT_STARTED_YET)
 							|| referredUpstreamRun.getStatus().equals(ReferredRunStatus.IN_PROGRESS)) {
 						canStart = false;
+						allDone = false;
+						break;
+					}
+					if (referredUpstreamRun.getStatus().equals(ReferredRunStatus.ERROR)) {
+						referredRun.setStatus(ReferredRunStatus.SKIP);
+						canSkip = true;
 						break;
 					}
 					if (referredUpstreamRun.getStatus().equals(ReferredRunStatus.ABORT)) {
 						referredRun.setStatus(ReferredRunStatus.SKIP);
-						canStart = false;
+						canSkip = true;
 						break;
 					}
 					if (referredUpstreamRun.getStatus().equals(ReferredRunStatus.SKIP)) {
 						referredRun.setStatus(ReferredRunStatus.SKIP);
-						canStart = false;
+						canSkip = true;
 						break;
 					}
 					if (referredUpstreamRun.getStatus().equals(ReferredRunStatus.FAIL)) {
 						referredRun.setStatus(ReferredRunStatus.SKIP);
-						canStart = false;
+						canSkip = true;
 						break;
 					}
 				}
 
-				if (canStart == true) {
-					RemoteRunBean remoteRun = remoteRunRepository.triggerRun(referredRun.getOriginalJobId());
-					referredRun.updateFromRemoteRun(remoteRun);
+				if (canSkip == false && canStart == true) {
+					try {
+						RemoteRunBean remoteRun = remoteRunRepository.triggerRun(referredRun.getOriginalJobId());
+						referredRun.updateFromRemoteRun(remoteRun);
+						if (remoteRun.getStatus().equals("IN_PROGRESS")) {
+							allDone = false;
+						}
+					}
+					catch (RunTriggerException e) {
+						referredRun.setStatus(ReferredRunStatus.ERROR);
+					}
 				}
 			}
 
+			/*
+			 * TODO:
+			 * Cycle status should only be finalized after all referred run "skip" has been finalized.
+			 */
+			if (referredRun.getStatus().equals(ReferredRunStatus.ERROR)) {
+				cycle.setStatus(CycleStatus.FAIL);
+			}
 			if (referredRun.getStatus().equals(ReferredRunStatus.FAIL)) {
 				cycle.setStatus(CycleStatus.FAIL);
 			}

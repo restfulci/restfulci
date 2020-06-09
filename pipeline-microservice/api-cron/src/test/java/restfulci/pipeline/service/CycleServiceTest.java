@@ -1,9 +1,11 @@
 package restfulci.pipeline.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -19,6 +21,7 @@ import restfulci.pipeline.domain.CycleStatus;
 import restfulci.pipeline.domain.ReferredRunBean;
 import restfulci.pipeline.domain.ReferredRunStatus;
 import restfulci.pipeline.domain.RemoteRunBean;
+import restfulci.pipeline.exception.RunTriggerException;
 
 @ExtendWith(SpringExtension.class)
 @SpringBootTest
@@ -55,6 +58,27 @@ public class CycleServiceTest {
 	}
 	
 	@Test
+	public void testTriggerRunErrorsOutResultCycleFail() throws Exception {
+		
+		ReferredRunBean referredRun = new ReferredRunBean();
+		referredRun.setOriginalJobId(123);
+		referredRun.setStatus(ReferredRunStatus.NOT_STARTED_YET);
+		
+		CycleBean cycle = new CycleBean();
+		cycle.setId(456);
+		cycle.setStatus(CycleStatus.IN_PROGRESS);
+		cycle.addReferredRun(referredRun);
+		
+		when(remoteRunRepository.triggerRun(123)).thenThrow(RunTriggerException.class);
+		
+		service.updateCycle(cycle);
+		
+		assertEquals(referredRun.getStatus(), ReferredRunStatus.ERROR);
+		assertEquals(cycle.getStatus(), CycleStatus.FAIL);
+		assertNotNull(cycle.getCompleteAt());
+	}
+	
+	@Test
 	public void testUpdateCycleSucceedInProgressWithoutDependency() throws Exception {
 		
 		ReferredRunBean referredRun = new ReferredRunBean();
@@ -76,6 +100,7 @@ public class CycleServiceTest {
 		
 		assertEquals(referredRun.getStatus(), ReferredRunStatus.SUCCEED);
 		assertEquals(cycle.getStatus(), CycleStatus.SUCCEED);
+		assertNotNull(cycle.getCompleteAt());
 	}
 	
 	@Test
@@ -100,6 +125,7 @@ public class CycleServiceTest {
 		
 		assertEquals(referredRun.getStatus(), ReferredRunStatus.FAIL);
 		assertEquals(cycle.getStatus(), CycleStatus.FAIL);
+		assertNotNull(cycle.getCompleteAt());
 	}
 	
 	@Test
@@ -177,6 +203,30 @@ public class CycleServiceTest {
 		assertEquals(upstreamRun.getStatus(), ReferredRunStatus.SUCCEED);
 		assertEquals(downstreamRun.getStatus(), ReferredRunStatus.IN_PROGRESS);
 		assertEquals(cycle.getStatus(), CycleStatus.IN_PROGRESS);
+	}
+	
+	@Test
+	public void testUpdateCycleDownstreamIsSkippedIfUpstreamError() throws Exception {
+		
+		ReferredRunBean upstreamRun = new ReferredRunBean();
+		upstreamRun.setOriginalJobId(123);
+		upstreamRun.setStatus(ReferredRunStatus.ERROR);
+		
+		ReferredRunBean downstreamRun = new ReferredRunBean();
+		downstreamRun.setOriginalJobId(234);
+		downstreamRun.setStatus(ReferredRunStatus.NOT_STARTED_YET);
+		downstreamRun.addReferredUpstreamRun(upstreamRun);
+		
+		CycleBean cycle = new CycleBean();
+		cycle.setId(456);
+		cycle.setStatus(CycleStatus.FAIL);
+		cycle.addReferredRun(upstreamRun);
+		cycle.addReferredRun(downstreamRun);
+		
+		service.updateCycle(cycle);
+		
+		assertEquals(downstreamRun.getStatus(), ReferredRunStatus.SKIP);
+		verify(remoteRunRepository, never()).triggerRun(234);
 	}
 	
 	@Test

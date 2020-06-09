@@ -3,6 +3,7 @@ package restfulci.pipeline.dao;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.DisabledIfEnvironmentVariable;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -11,6 +12,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import restfulci.pipeline.domain.RemoteRunBean;
+import restfulci.pipeline.exception.RunTriggerException;
 
 @ExtendWith(SpringExtension.class)
 @SpringBootTest
@@ -31,5 +33,21 @@ public class RemoteRunRepositoryTest {
 		assertEquals(queriedRun.getId(), runId);
 		assertEquals(queriedRun.getStatus(), "IN_PROGRESS");
 		assertNull(queriedRun.getExitCode());
+	}
+	
+	@Test
+	public void testTriggerRunBadRequest() throws Exception {
+		
+		Assertions.assertThrows(RunTriggerException.class, () -> {
+			runRepository.triggerRun(11);
+		});
+	}
+	
+	@Test
+	public void testTriggerRunInternalServerError() throws Exception {
+		
+		Assertions.assertThrows(RunTriggerException.class, () -> {
+			runRepository.triggerRun(21);
+		});
 	}
 }

@@ -37,8 +37,10 @@ CREATE TABLE referred_run (
     status_shortname='I' OR
     status_shortname='S' OR
     status_shortname='F' OR
+    status_shortname='E' OR
     status_shortname='K' OR
     status_shortname='A') DEFAULT 'N',
+  error_message text,
   exit_code integer
 );
 
