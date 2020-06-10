@@ -48,7 +48,6 @@ public class RunDTO extends HashMap<String, String> {
 			}
 		}
 
-		runBean.setStatus(RunStatus.IN_PROGRESS);
 		runBean.setTriggerAt(new Date());
 		
 		/*

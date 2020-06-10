@@ -20,7 +20,6 @@ class TestPipeline(TestCase):
             self.assertEqual(response_body["status"], "SUCCEED")
             self.assertIsNotNone(response_body["completeAt"])
             referred_runs = response_body["referredRuns"]
-            self.assertEqual(len(referred_runs), 4)
             self.assertCountEqual(
                 [referred_run["status"] for referred_run in referred_runs],
                 ["SUCCEED", "SUCCEED", "SUCCEED", "SUCCEED"])
@@ -34,13 +33,14 @@ class TestPipeline(TestCase):
 
         def validate_cycle_succeed(response_body):
             self.assertEqual(response_body["status"], "FAIL")
-            #self.assertIsNotNone(response_body["completeAt"])
+            self.assertIsNotNone(response_body["completeAt"])
             referred_runs = response_body["referredRuns"]
-            self.assertEqual(len(referred_runs), 4)
-            self.assertTrue("ERROR" in [referred_run["status"] for referred_run in referred_runs])
-            # self.assertCountEqual(
-            #     [referred_run["status"] for referred_run in referred_runs],
-            #     ["ERROR", "SKIP", "SKIP", "SKIP"])
+            self.assertCountEqual(
+                [referred_run["status"] for referred_run in referred_runs],
+                ["ERROR", "SKIP", "SKIP", "SKIP"])
+            for referred_run in referred_runs:
+                if referred_run["status"] == "ERROR":
+                    self.assertTrue("400 BAD REQUEST" in referred_run["errorMessage"])
 
         self._test(
             11, 2, 3, 4,
@@ -54,9 +54,9 @@ class TestPipeline(TestCase):
             self.assertEqual(response_body["status"], "SUCCEED")
             self.assertIsNotNone(response_body["completeAt"])
             referred_runs = response_body["referredRuns"]
-            self.assertEqual(len(referred_runs), 4)
-            for i in range(4):
-                self.assertEqual(referred_runs[i]["status"], "SUCCEED")
+            self.assertCountEqual(
+                [referred_run["status"] for referred_run in referred_runs],
+                ["SUCCEED", "SUCCEED", "SUCCEED", "SUCCEED"])
 
         job_id_1 = self._create_job_and_return_id()
         job_id_2 = self._create_job_and_return_id()
@@ -133,7 +133,6 @@ class TestPipeline(TestCase):
             [job_id_1, job_id_2, job_id_3, job_id_4])
         self.assertEqual(referred_runs[0]["status"], "NOT_STARTED_YET")
 
-        # while response_body["completeAt"] is not None:
         while response_body["status"] == "IN_PROGRESS":
             response = requests.get(
                 urljoin(self.pipeline_api_url, "/pipelines/{}/cycles/{}".format(pipeline_id, cycle_id)))

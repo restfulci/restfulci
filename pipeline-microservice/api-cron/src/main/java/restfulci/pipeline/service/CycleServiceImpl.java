@@ -50,13 +50,11 @@ public class CycleServiceImpl implements CycleService {
 
 		CycleBean cycle = new CycleBean();
 		cycle.setPipeline(pipeline);
-		cycle.setStatus(CycleStatus.IN_PROGRESS);
 		cycle.setTriggerAt(new Date());
 
 		for (ReferredJobBean referredJob : pipeline.getReferredJobs()) {
 			ReferredRunBean referredRun = new ReferredRunBean();
 			referredRun.setOriginalJobId(referredJob.getOriginalJobId());
-			referredRun.setStatus(ReferredRunStatus.NOT_STARTED_YET);
 
 			referredRun.setCycle(cycle);
 			cycle.addReferredRun(referredRun);
@@ -151,22 +149,21 @@ public class CycleServiceImpl implements CycleService {
 					}
 					catch (RunTriggerException e) {
 						referredRun.setStatus(ReferredRunStatus.ERROR);
+						referredRun.setErrorMessage(e.getMessage());
 					}
 				}
 			}
 
-			/*
-			 * TODO:
-			 * Cycle status should only be finalized after all referred run "skip" has been finalized.
-			 */
 			if (referredRun.getStatus().equals(ReferredRunStatus.ERROR)) {
-				cycle.setStatus(CycleStatus.FAIL);
+				cycle.setUnfinalizedStatus(CycleStatus.FAIL);
 			}
 			if (referredRun.getStatus().equals(ReferredRunStatus.FAIL)) {
-				cycle.setStatus(CycleStatus.FAIL);
+				cycle.setUnfinalizedStatus(CycleStatus.FAIL);
 			}
 			if (cycle.getStatus() == null && referredRun.getStatus().equals(ReferredRunStatus.ABORT)) {
-				cycle.setStatus(CycleStatus.ABORT);
+				if (!cycle.getUnfinalizedStatus().equals(CycleStatus.FAIL)) {
+					cycle.setUnfinalizedStatus(CycleStatus.ABORT);
+				}
 			}
 
 			/*
@@ -177,7 +174,7 @@ public class CycleServiceImpl implements CycleService {
 
 		if (allDone == true) {
 			if (cycle.getStatus().equals(CycleStatus.IN_PROGRESS)) {
-				cycle.setStatus(CycleStatus.SUCCEED);
+				cycle.setStatus(cycle.getUnfinalizedStatus());
 			}
 
 			cycle.setCompleteAt(new Date());

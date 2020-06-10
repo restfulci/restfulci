@@ -45,15 +45,17 @@ public class ReferredRunBean extends BaseEntity {
 	@NotNull
 	@Column(name="status_shortname")
 	@Convert(converter=ReferredRunStatusConventer.class)
-	private ReferredRunStatus status;
+	private ReferredRunStatus status = ReferredRunStatus.NOT_STARTED_YET;
 	
 	/*
 	 * Can't use subclasses, because ReferredRun doesn't know its status
 	 * at the beginning.
 	 */
+	@JsonInclude(Include.NON_NULL)
 	@Column(name="error_message", updatable=true)
 	private String errorMessage;
 	
+	@JsonInclude(Include.NON_NULL)
 	@Column(name="exit_code", updatable=true)
 	private Integer exitCode;
 	

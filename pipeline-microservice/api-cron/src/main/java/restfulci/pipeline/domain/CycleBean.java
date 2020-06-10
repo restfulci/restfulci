@@ -18,6 +18,7 @@ import javax.persistence.TemporalType;
 import javax.validation.constraints.NotNull;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 
@@ -40,7 +41,13 @@ public class CycleBean extends BaseEntity {
 	@NotNull
 	@Column(name="status_shortname")
 	@Convert(converter=CycleStatusConventer.class)
-	private CycleStatus status;
+	private CycleStatus status = CycleStatus.IN_PROGRESS;
+	
+	@JsonIgnore
+	@NotNull
+	@Column(name="unfinalized_status_shortname")
+	@Convert(converter=CycleStatusConventer.class)
+	private CycleStatus unfinalizedStatus = CycleStatus.SUCCEED;
 	
 	@JsonFormat(shape=JsonFormat.Shape.STRING, pattern="yyyy-MM-dd hh:mm:ss")
 	@Column(name="trigger_at", updatable=false)

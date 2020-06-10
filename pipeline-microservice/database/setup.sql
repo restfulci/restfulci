@@ -23,6 +23,10 @@ CREATE TABLE cycle (
     status_shortname='S' OR
     status_shortname='F' OR
     status_shortname='A') DEFAULT 'I',
+  unfinalized_status_shortname char(1) CHECK (
+    unfinalized_status_shortname='S' OR
+    unfinalized_status_shortname='F' OR
+    unfinalized_status_shortname='A') DEFAULT 'S',
   trigger_at timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   complete_at timestamp
 );

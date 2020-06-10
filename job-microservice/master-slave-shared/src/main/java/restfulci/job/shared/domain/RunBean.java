@@ -82,7 +82,7 @@ public abstract class RunBean extends BaseEntity {
 	@NotNull
 	@Column(name="status_shortname")
 	@Convert(converter=RunStatusConventer.class)
-	private RunStatus status;
+	private RunStatus status = RunStatus.IN_PROGRESS;
 	
 	@JsonFormat(shape=JsonFormat.Shape.STRING, pattern="yyyy-MM-dd hh:mm:ss")
 	@NotNull
