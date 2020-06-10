@@ -14,6 +14,7 @@ import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
 
 import restfulci.pipeline.domain.RemoteRunBean;
+import restfulci.pipeline.exception.RunGetterException;
 import restfulci.pipeline.exception.RunTriggerException;
 
 @Repository
@@ -43,7 +44,15 @@ public class RemoteRunRepositoryImpl implements RemoteRunRepository {
 	}
 
 	@Override
-	public RemoteRunBean getRun(Integer jobId, Integer runId) {
-		return restTemplate.getForObject("/jobs/{jobId}/runs/{runId}", RemoteRunBean.class, jobId, runId);
+	public RemoteRunBean getRun(Integer jobId, Integer runId) throws IOException {
+		try {
+			return restTemplate.getForObject("/jobs/{jobId}/runs/{runId}", RemoteRunBean.class, jobId, runId);
+		}
+		catch (HttpClientErrorException e) {
+			throw new RunGetterException(e.getMessage());
+		}
+		catch (HttpServerErrorException e) {
+			throw new RunGetterException(e.getMessage());
+		}
 	}
 }

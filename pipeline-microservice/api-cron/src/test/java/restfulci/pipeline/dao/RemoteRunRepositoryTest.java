@@ -39,7 +39,7 @@ public class RemoteRunRepositoryTest {
 	public void testTriggerRunBadRequest() throws Exception {
 		
 		Assertions.assertThrows(RunTriggerException.class, () -> {
-			runRepository.triggerRun(11);
+			runRepository.triggerRun(31);
 		});
 	}
 	
@@ -47,7 +47,7 @@ public class RemoteRunRepositoryTest {
 	public void testTriggerRunInternalServerError() throws Exception {
 		
 		Assertions.assertThrows(RunTriggerException.class, () -> {
-			runRepository.triggerRun(21);
+			runRepository.triggerRun(41);
 		});
 	}
 }

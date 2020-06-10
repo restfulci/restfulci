@@ -19,6 +19,7 @@ import restfulci.pipeline.domain.ReferredRunBean;
 import restfulci.pipeline.domain.ReferredRunStatus;
 import restfulci.pipeline.domain.RemoteRunBean;
 import restfulci.pipeline.exception.IdNonExistenceException;
+import restfulci.pipeline.exception.RunGetterException;
 import restfulci.pipeline.exception.RunTriggerException;
 
 @Service
@@ -87,7 +88,7 @@ public class CycleServiceImpl implements CycleService {
 	 * We should probably decide which is a better approach.
 	 */
 	@Override
-	public void updateCycle(CycleBean cycle) throws IOException {
+	public CycleBean updateCycle(CycleBean cycle) throws IOException {
 
 		boolean allDone = true;
 		for (ReferredRunBean referredRun : cycle.getReferredRuns()) {
@@ -97,9 +98,19 @@ public class CycleServiceImpl implements CycleService {
 			 * the just started one enter this if again.
 			 */
 			if (referredRun.getStatus().equals(ReferredRunStatus.IN_PROGRESS)) {
-				RemoteRunBean remoteRun = remoteRunRepository.getRun(referredRun.getOriginalJobId(),
-						referredRun.getOriginalRunId());
-				referredRun.updateFromRemoteRun(remoteRun);
+				try {
+					RemoteRunBean remoteRun = remoteRunRepository.getRun(referredRun.getOriginalJobId(),
+							referredRun.getOriginalRunId());
+					referredRun.updateFromRemoteRun(remoteRun);
+				}
+				catch (RunGetterException e) {
+					/*
+					 * This happens if the run (since it is a different microservice) has been deleted
+					 * by some reason.
+					 */
+					referredRun.setStatus(ReferredRunStatus.ERROR);
+					referredRun.setErrorMessage(e.getMessage());
+				}
 
 				if (referredRun.getStatus().equals(ReferredRunStatus.IN_PROGRESS)) {
 					allDone = false;
@@ -160,7 +171,7 @@ public class CycleServiceImpl implements CycleService {
 			if (referredRun.getStatus().equals(ReferredRunStatus.FAIL)) {
 				cycle.setUnfinalizedStatus(CycleStatus.FAIL);
 			}
-			if (cycle.getStatus() == null && referredRun.getStatus().equals(ReferredRunStatus.ABORT)) {
+			if (referredRun.getStatus().equals(ReferredRunStatus.ABORT)) {
 				if (!cycle.getUnfinalizedStatus().equals(CycleStatus.FAIL)) {
 					cycle.setUnfinalizedStatus(CycleStatus.ABORT);
 				}
@@ -179,6 +190,8 @@ public class CycleServiceImpl implements CycleService {
 
 			cycle.setCompleteAt(new Date());
 		}
+		
+		return cycleRepository.saveAndFlush(cycle);
 	}
 
 	@Override

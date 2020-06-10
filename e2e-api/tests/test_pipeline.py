@@ -11,8 +11,15 @@ class TestPipeline(TestCase):
     job_api_url = None
     pipeline_api_url = None
 
-    def test_docker_compose_succeed(self):
+    def _setup_docker_compose_urls(self):
         self.pipeline_api_url = "http://localhost:8882"
+
+    def _setup_kubernetes_urls(self):
+        self.job_api_url = "http://35.190.162.206"
+        self.pipeline_api_url = "http://35.190.139.27"
+
+    def test_docker_compose_succeed(self):
+        self._setup_docker_compose_urls()
 
         # Seems cannot share it for `test_docker_compose_succeed` and
         # `test_kubernetes_succeed`, as it needs to access `self`.
@@ -28,12 +35,39 @@ class TestPipeline(TestCase):
             1, 2, 3, 4,
             validate_cycle_final_state=validate_cycle_succeed)
 
-    def test_docker_compose_errored(self):
-        self.pipeline_api_url = "http://localhost:8882"
+    def test_docker_compose_fail(self):
+        self._setup_docker_compose_urls()
 
-        def validate_cycle_succeed(response_body):
+        def validate_cycle_fail(response_body):
             self.assertEqual(response_body["status"], "FAIL")
-            self.assertIsNotNone(response_body["completeAt"])
+            referred_runs = response_body["referredRuns"]
+            self.assertCountEqual(
+                [referred_run["status"] for referred_run in referred_runs],
+                ["FAIL", "SKIP", "SKIP", "SKIP"])
+
+        self._test(
+            11, 2, 3, 4,
+            validate_cycle_final_state=validate_cycle_fail)
+
+    def test_docker_compose_abort(self):
+        self._setup_docker_compose_urls()
+
+        def validate_cycle_abort(response_body):
+            self.assertEqual(response_body["status"], "ABORT")
+            referred_runs = response_body["referredRuns"]
+            self.assertCountEqual(
+                [referred_run["status"] for referred_run in referred_runs],
+                ["ABORT", "SKIP", "SKIP", "SKIP"])
+
+        self._test(
+            21, 2, 3, 4,
+            validate_cycle_final_state=validate_cycle_abort)
+
+    def test_docker_compose_error(self):
+        self._setup_docker_compose_urls()
+
+        def validate_cycle_error(response_body):
+            self.assertEqual(response_body["status"], "FAIL")
             referred_runs = response_body["referredRuns"]
             self.assertCountEqual(
                 [referred_run["status"] for referred_run in referred_runs],
@@ -43,12 +77,11 @@ class TestPipeline(TestCase):
                     self.assertTrue("400 BAD REQUEST" in referred_run["errorMessage"])
 
         self._test(
-            11, 2, 3, 4,
-            validate_cycle_final_state=validate_cycle_succeed)
+            31, 2, 3, 4,
+            validate_cycle_final_state=validate_cycle_error)
 
     def test_kubernetes_succeed(self):
-        self.job_api_url = "http://35.190.162.206"
-        self.pipeline_api_url = "http://35.190.139.27"
+        self._setup_kubernetes_urls()
 
         def validate_cycle_succeed(response_body):
             self.assertEqual(response_body["status"], "SUCCEED")
@@ -139,6 +172,7 @@ class TestPipeline(TestCase):
             self.assertEqual(response.status_code, 200)
             response_body = json.loads(response.text)
             sleep(1)
+        self.assertIsNotNone(response_body["completeAt"])
         validate_cycle_final_state(response_body)
 
         requests.delete(
