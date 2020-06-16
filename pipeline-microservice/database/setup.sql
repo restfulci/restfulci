@@ -3,10 +3,23 @@ CREATE TABLE pipeline (
   name text NOT NULL UNIQUE
 );
 
+CREATE TABLE parameter (
+  id serial PRIMARY KEY,
+  pipeline_id serial REFERENCES pipeline(id) ON DELETE CASCADE,
+  name text NOT NULL CHECK (name ~ '^[A-Z_][A-Z0-9_]*$')
+);
+
 CREATE TABLE referred_job (
   id serial PRIMARY KEY,
   pipeline_id serial REFERENCES pipeline(id) ON DELETE CASCADE,
   original_job_id integer NOT NULL
+);
+
+CREATE TABLE parameter_map (
+  id serial PRIMARY KEY,
+  referred_job_id serial REFERENCES referred_job(id) ON DELETE CASCADE,
+  parameter_id integer REFERENCES parameter(id) ON DELETE RESTRICT,
+  remote_name text NOT NULL
 );
 
 CREATE TABLE referred_job_dependency (

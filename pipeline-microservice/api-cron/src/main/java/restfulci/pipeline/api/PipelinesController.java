@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import restfulci.pipeline.domain.ParameterBean;
 import restfulci.pipeline.domain.PipelineBean;
 import restfulci.pipeline.domain.ReferredJobBean;
 import restfulci.pipeline.service.PipelineService;
@@ -41,12 +42,28 @@ public class PipelinesController {
 		pipelineService.deletePipeline(pipelineId);
 	}
 	
+	@PostMapping("/{pipelineId}/parameters")
+	public PipelineBean addParameter(
+			@PathVariable @Min(1) Integer pipelineId,
+			@RequestBody @Valid ParameterBean parameter) throws Exception {
+		
+		return pipelineService.addParameter(pipelineId, parameter);
+	}
+	
 	@PostMapping("/{pipelineId}/referred-jobs")
 	public PipelineBean addReferredJob(
 			@PathVariable @Min(1) Integer pipelineId,
 			@RequestBody @Valid ReferredJobBean referredJob) throws Exception {
 		
 		return pipelineService.addReferredJob(pipelineId, referredJob);
+	}
+	
+	@PutMapping("/{pipelineId}/referred-jobs/{referredJobId}")
+	public ReferredJobBean updateReferredJobParameters(
+			@PathVariable @Min(1) Integer pipelineId,
+			@PathVariable @Min(1) Integer referredJobId) throws Exception {
+		
+		return pipelineService.updateReferredJobParameters(referredJobId);
 	}
 	
 	@PutMapping("/{pipelineId}/referred-jobs/{referredJobId}/referred-upstream-jobs/{referredUpstreamJobId}")

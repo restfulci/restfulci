@@ -9,8 +9,13 @@ import org.springframework.transaction.annotation.Transactional;
 
 import lombok.extern.slf4j.Slf4j;
 import restfulci.pipeline.dao.PipelineRepository;
+import restfulci.pipeline.dao.ReferredJobRepository;
+import restfulci.pipeline.dao.RemoteJobRepository;
+import restfulci.pipeline.domain.ParameterBean;
+import restfulci.pipeline.domain.ParameterMapBean;
 import restfulci.pipeline.domain.PipelineBean;
 import restfulci.pipeline.domain.ReferredJobBean;
+import restfulci.pipeline.domain.RemoteJobBean;
 import restfulci.pipeline.exception.IdNonExistenceException;
 
 @Service
@@ -19,6 +24,8 @@ import restfulci.pipeline.exception.IdNonExistenceException;
 public class PipelineServiceImpl implements PipelineService {
 
 	@Autowired private PipelineRepository pipelineRepository;
+	@Autowired private ReferredJobRepository referredJobRepository;
+	@Autowired private RemoteJobRepository remoteJobRepository;
 	
 	@Override
 	public PipelineBean getPipeline(Integer pipelineId) throws IOException {
@@ -29,6 +36,17 @@ public class PipelineServiceImpl implements PipelineService {
 		}
 		else {
 			throw new IdNonExistenceException("Pipeline ID does not exist yet.");
+		}
+	}
+	
+	private ReferredJobBean getReferredJob(Integer referredJobId) throws IOException {
+		
+		Optional<ReferredJobBean> ReferredJobs = referredJobRepository.findById(referredJobId);
+		if (ReferredJobs.isPresent()) {
+			return ReferredJobs.get();
+		}
+		else {
+			throw new IdNonExistenceException("Referred job ID does not exist yet.");
 		}
 	}
 
@@ -47,6 +65,17 @@ public class PipelineServiceImpl implements PipelineService {
 		
 		pipelineRepository.delete(pipeline);
 	}
+	
+	@Override
+	public PipelineBean addParameter(Integer pipelineId, ParameterBean parameter) throws IOException {
+		
+		PipelineBean pipeline = getPipeline(pipelineId);
+		log.info("Add parameter {} to pipeline {}", parameter, pipeline);
+		
+		pipeline.addParameter(parameter);
+		parameter.setPipeline(pipeline);
+		return pipelineRepository.saveAndFlush(pipeline);
+	}
 
 	@Override
 	public PipelineBean addReferredJob(Integer pipelineId, ReferredJobBean referredJob) throws IOException {
@@ -57,6 +86,24 @@ public class PipelineServiceImpl implements PipelineService {
 		pipeline.addReferredJob(referredJob);
 		referredJob.setPipeline(pipeline);
 		return pipelineRepository.saveAndFlush(pipeline);
+	}
+	
+	@Override
+	public ReferredJobBean updateReferredJobParameters(Integer referredJobId) throws IOException {
+		
+		ReferredJobBean referredJob = getReferredJob(referredJobId);
+		
+		RemoteJobBean remoteJob = remoteJobRepository.getJob(referredJob.getOriginalJobId());
+		for (RemoteJobBean.Parameter remoteParameter : remoteJob.getParameters()) {
+			
+			ParameterMapBean parameterMap = new ParameterMapBean();
+			parameterMap.setRemoteName(remoteParameter.getName());
+			
+			parameterMap.setReferredJob(referredJob);
+			referredJob.addParameterMap(parameterMap);
+		}
+		
+		return referredJobRepository.saveAndFlush(referredJob);
 	}
 
 	@Override

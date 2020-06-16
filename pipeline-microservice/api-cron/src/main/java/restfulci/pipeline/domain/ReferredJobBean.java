@@ -3,6 +3,7 @@ package restfulci.pipeline.domain;
 import java.util.HashSet;
 import java.util.Set;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
@@ -10,6 +11,7 @@ import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 
@@ -37,6 +39,14 @@ public class ReferredJobBean extends BaseEntity {
 	@NotNull
 	@Column(name="original_job_id")
 	private Integer originalJobId;
+	
+	@JsonInclude(Include.NON_EMPTY)
+	@OneToMany(targetEntity=ParameterMapBean.class, fetch=FetchType.EAGER, cascade=CascadeType.ALL, mappedBy="referredJob")
+	private Set<ParameterMapBean> parameterMaps = new HashSet<ParameterMapBean>();
+	
+	public void addParameterMap(ParameterMapBean parameterMap) {
+		parameterMaps.add(parameterMap);
+	}
 	
 	@JsonInclude(Include.NON_EMPTY)
 	@ManyToMany

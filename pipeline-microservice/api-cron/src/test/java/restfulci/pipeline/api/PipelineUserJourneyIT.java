@@ -80,6 +80,24 @@ public class PipelineUserJourneyIT {
 				Map.class);
 		assertEquals(queriedPipeline.get("name"), pipelineName);
 		
+		Map<String, Object> parameterData = new HashMap<String, Object>();
+		parameterData.put("name", "ENV");
+		
+		Map<?, ?> parameterAddedPipeline = objectMapper.readValue(
+				mockMvc.perform(post("/pipelines/"+pipelineId+"/parameters")
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(objectWriter.writeValueAsString(parameterData)))
+						.andExpect(status().isOk())
+						.andReturn().getResponse().getContentAsString(),
+				Map.class);
+		assertEquals(parameterAddedPipeline.get("name"), pipelineName);
+		assertEquals(objectMapper.convertValue(parameterAddedPipeline.get("parameters"), List.class).size(), 1);
+		assertEquals(
+				objectMapper.convertValue(
+						objectMapper.convertValue(parameterAddedPipeline.get("parameters"), List.class).get(0),
+						Map.class).get("name"), 
+				"ENV");
+		
 		Map<String, Object> referredJobData = new HashMap<String, Object>();
 		referredJobData.put("originalJobId", 123);
 		

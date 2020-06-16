@@ -4,6 +4,22 @@ from flask import Flask, jsonify, make_response, request
 app = Flask(__name__)
 
 
+def job(job_id):
+    return {
+        "id": job_id,
+        "name": "job_name",
+        "dockerImage": "busybox:1.31",
+        "command": ["sh", "-c", "echo \"Hello $ENV\""],
+        "type": "FREESTYLE",
+        "parameters": [
+            {
+                "id": job_id,
+                "name": "ENV"
+            }
+        ]
+    }
+
+
 class Run:
 
     def __init__(self, job_id, run_id, final_status):
@@ -21,13 +37,7 @@ class Run:
     def _get(self):
         return {
             "id": self.run_id,
-            "job": {
-                "id": self.job_id,
-                "name": "job_name",
-                "dockerImage": "busybox:1.31",
-                "command": ["sh", "-c", "echo \"Hello world\""],
-                "type": "FREESTYLE"
-            },
+            "job": job(self.job_id),
             "status": self._status(),
             "triggerAt": "2020-05-19 03:47:01",
             "completeAt": None,
@@ -140,6 +150,11 @@ def handle_internal_server_error(error):
     response = jsonify(error.payload())
     response.status_code = 500
     return response
+
+
+@app.route('/jobs/<int:job_id>', methods=['GET'])
+def get_job(job_id):
+    return job(job_id)
 
 
 @app.route('/jobs/<int:job_id>/runs', methods=['POST'])

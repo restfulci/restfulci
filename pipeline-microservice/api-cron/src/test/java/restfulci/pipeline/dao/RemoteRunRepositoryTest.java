@@ -19,17 +19,17 @@ import restfulci.pipeline.exception.RunTriggerException;
 @DisabledIfEnvironmentVariable(named="CI", matches="CircleCI")
 public class RemoteRunRepositoryTest {
 	
-	@Autowired private RemoteRunRepository runRepository;
+	@Autowired private RemoteRunRepository remoteRunRepository;
 
 	@Test
 	public void testTriggerAndGetRun() throws Exception {
 		
-		RemoteRunBean triggeredRun = runRepository.triggerRun(1);
+		RemoteRunBean triggeredRun = remoteRunRepository.triggerRun(1);
 		Integer runId = triggeredRun.getId();
 		assertEquals(triggeredRun.getStatus(), "IN_PROGRESS");
 		assertNull(triggeredRun.getExitCode());
 		
-		RemoteRunBean queriedRun = runRepository.getRun(1, runId);
+		RemoteRunBean queriedRun = remoteRunRepository.getRun(1, runId);
 		assertEquals(queriedRun.getId(), runId);
 		assertEquals(queriedRun.getStatus(), "IN_PROGRESS");
 		assertNull(queriedRun.getExitCode());
@@ -39,7 +39,7 @@ public class RemoteRunRepositoryTest {
 	public void testTriggerRunBadRequest() throws Exception {
 		
 		Assertions.assertThrows(RunTriggerException.class, () -> {
-			runRepository.triggerRun(31);
+			remoteRunRepository.triggerRun(31);
 		});
 	}
 	
@@ -47,7 +47,7 @@ public class RemoteRunRepositoryTest {
 	public void testTriggerRunInternalServerError() throws Exception {
 		
 		Assertions.assertThrows(RunTriggerException.class, () -> {
-			runRepository.triggerRun(41);
+			remoteRunRepository.triggerRun(41);
 		});
 	}
 }
