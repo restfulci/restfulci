@@ -48,6 +48,15 @@ public class ReferredJobBean extends BaseEntity {
 		parameterMaps.add(parameterMap);
 	}
 	
+	public ParameterMapBean getParameterMap(Integer parameterMapId) {
+		for (ParameterMapBean parameterMap : parameterMaps) {
+			if (parameterMap.getId().equals(parameterMapId)) {
+				return parameterMap;
+			}
+		}
+		return null;
+	}
+	
 	@JsonInclude(Include.NON_EMPTY)
 	@ManyToMany
 	@JoinTable(

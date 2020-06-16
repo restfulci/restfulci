@@ -20,5 +20,8 @@ public interface PipelineService {
 	 */
 	
 	public ReferredJobBean updateReferredJobParameters(Integer referredJobId) throws IOException;
+	public PipelineBean linkReferredJobParameter(
+			Integer pipelineId, Integer referredJobId, Integer parameterMapId, Integer parameterId) throws IOException;
+	
 	public PipelineBean addReferredUpstreamJob(Integer pipelineId, Integer referredJobId, Integer referredUpstreamJobId) throws IOException;
 }

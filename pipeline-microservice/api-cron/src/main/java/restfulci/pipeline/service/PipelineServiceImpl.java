@@ -105,6 +105,29 @@ public class PipelineServiceImpl implements PipelineService {
 		
 		return referredJobRepository.saveAndFlush(referredJob);
 	}
+	
+	@Override
+	public PipelineBean linkReferredJobParameter(
+			Integer pipelineId, Integer referredJobId, Integer parameterMapId, Integer parameterId) throws IOException {
+	
+		PipelineBean pipeline = getPipeline(pipelineId);
+		ParameterBean parameter = pipeline.getParameter(parameterId);
+		/*
+		 * TODO:
+		 * Raise 400 if parameter is null. Give message that `parameterId` does not belongs 
+		 * to pipeline with `pipelineId`.
+		 */
+		
+		ReferredJobBean referredJob = pipeline.getReferredJob(referredJobId);
+		ParameterMapBean parameterMap = referredJob.getParameterMap(parameterMapId);
+		parameterMap.setParameter(parameter);
+		/*
+		 * TODO:
+		 * Raise 404 if referredJob or parameterMap is null.
+		 */
+		
+		return pipelineRepository.saveAndFlush(pipeline);
+	}
 
 	@Override
 	public PipelineBean addReferredUpstreamJob(Integer pipelineId, Integer referredJobId, Integer referredUpstreamJobId) throws IOException {
