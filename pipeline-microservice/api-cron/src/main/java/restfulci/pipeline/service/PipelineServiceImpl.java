@@ -102,6 +102,12 @@ public class PipelineServiceImpl implements PipelineService {
 			parameterMap.setReferredJob(referredJob);
 			referredJob.addParameterMap(parameterMap);
 		}
+		/*
+		 * TODO:
+		 * We need to build an "or" relationship for `parameter` and
+		 * `parameter_map`, to handle git remote job, for which we need
+		 * to pass either `branchName` or `commitSha`.
+		 */
 		
 		return referredJobRepository.saveAndFlush(referredJob);
 	}

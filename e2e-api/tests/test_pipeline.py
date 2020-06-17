@@ -179,7 +179,13 @@ class TestPipeline(TestCase):
                     [referred_job2_id, referred_job3_id])
 
         response = requests.post(
-            urljoin(self.pipeline_api_url, "/pipelines/{}/cycles".format(pipeline_id)))
+            urljoin(self.pipeline_api_url, "/pipelines/{}/cycles".format(pipeline_id)),
+            headers={
+                "Content-Type": "application/json"
+            },
+            json={
+                "ENV": "stage"
+            })
         self.assertEqual(response.status_code, 200)
         response_body = json.loads(response.text)
         cycle_id = response_body["id"]

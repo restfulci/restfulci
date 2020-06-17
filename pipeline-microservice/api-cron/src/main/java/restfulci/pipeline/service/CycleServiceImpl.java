@@ -18,6 +18,7 @@ import restfulci.pipeline.domain.ReferredJobBean;
 import restfulci.pipeline.domain.ReferredRunBean;
 import restfulci.pipeline.domain.ReferredRunStatus;
 import restfulci.pipeline.domain.RemoteRunBean;
+import restfulci.pipeline.dto.CycleDTO;
 import restfulci.pipeline.exception.IdNonExistenceException;
 import restfulci.pipeline.exception.RunGetterException;
 import restfulci.pipeline.exception.RunTriggerException;
@@ -44,14 +45,16 @@ public class CycleServiceImpl implements CycleService {
 	}
 
 	@Override
-	public CycleBean triggerCycle(Integer pipelineId) throws IOException {
+	public CycleBean triggerCycle(Integer pipelineId, CycleDTO cycleDTO) throws IOException {
 
 		PipelineBean pipeline = pipelineService.getPipeline(pipelineId);
 		log.info("Create cycle under pipeline {}", pipeline);
 
-		CycleBean cycle = new CycleBean();
+		CycleBean cycle = cycleDTO.toCycleBean();
 		cycle.setPipeline(pipeline);
-		cycle.setTriggerAt(new Date());
+		
+		cycle.fillInDefaultInput();
+		cycle.validateInput();
 
 		for (ReferredJobBean referredJob : pipeline.getReferredJobs()) {
 			ReferredRunBean referredRun = new ReferredRunBean();

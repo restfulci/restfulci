@@ -79,39 +79,6 @@ public abstract class RunBean extends BaseEntity {
 		return null;
 	}
 	
-	@NotNull
-	@Column(name="status_shortname")
-	@Convert(converter=RunStatusConventer.class)
-	private RunStatus status = RunStatus.IN_PROGRESS;
-	
-	@JsonFormat(shape=JsonFormat.Shape.STRING, pattern="yyyy-MM-dd hh:mm:ss")
-	@NotNull
-	@Column(name="trigger_at", updatable=false)
-	@Temporal(TemporalType.TIMESTAMP)
-	private Date triggerAt;
-	
-	@JsonFormat(shape=JsonFormat.Shape.STRING, pattern="yyyy-MM-dd hh:mm:ss")
-	@Column(name="complete_at", updatable=true)
-	@Temporal(TemporalType.TIMESTAMP)
-	private Date completeAt;
-	
-	@Column(name="exit_code", updatable=true)
-	private Integer exitCode;
-	
-	@JsonIgnore
-	@Column(name="run_output_object_referral", updatable=true)
-	private String runOutputObjectReferral;
-	
-	@OneToMany(targetEntity=RunResultBean.class, fetch=FetchType.EAGER, cascade=CascadeType.ALL, mappedBy="run")
-	private Set<RunResultBean> runResults = new HashSet<RunResultBean>();
-	
-	/*
-	 * TODO:
-	 * `getDuration()`
-	 */
-	
-	public abstract JobType getType();
-	
 	public void validateInput() throws IOException {
 		
 		for (InputBean input : inputs) {
@@ -153,6 +120,39 @@ public abstract class RunBean extends BaseEntity {
 			}
 		}
 	}
+	
+	@NotNull
+	@Column(name="status_shortname")
+	@Convert(converter=RunStatusConventer.class)
+	private RunStatus status = RunStatus.IN_PROGRESS;
+	
+	@JsonFormat(shape=JsonFormat.Shape.STRING, pattern="yyyy-MM-dd hh:mm:ss")
+	@NotNull
+	@Column(name="trigger_at", updatable=false)
+	@Temporal(TemporalType.TIMESTAMP)
+	private Date triggerAt = new Date();
+	
+	@JsonFormat(shape=JsonFormat.Shape.STRING, pattern="yyyy-MM-dd hh:mm:ss")
+	@Column(name="complete_at", updatable=true)
+	@Temporal(TemporalType.TIMESTAMP)
+	private Date completeAt;
+	
+	@Column(name="exit_code", updatable=true)
+	private Integer exitCode;
+	
+	@JsonIgnore
+	@Column(name="run_output_object_referral", updatable=true)
+	private String runOutputObjectReferral;
+	
+	@OneToMany(targetEntity=RunResultBean.class, fetch=FetchType.EAGER, cascade=CascadeType.ALL, mappedBy="run")
+	private Set<RunResultBean> runResults = new HashSet<RunResultBean>();
+	
+	/*
+	 * TODO:
+	 * `getDuration()`
+	 */
+	
+	public abstract JobType getType();
 	
 	public RunMessageBean toRunMessage() {
 		

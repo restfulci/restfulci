@@ -161,8 +161,13 @@ public class PipelineUserJourneyIT {
 			}
 		}
 		
+		Map<String, Object> cycleData = new HashMap<String, Object>();
+		cycleData.put("ENV", "staging");
+		
 		Map<?, ?> triggeredCycle = objectMapper.readValue(
-				mockMvc.perform(post("/pipelines/"+pipelineId+"/cycles"))
+				mockMvc.perform(post("/pipelines/"+pipelineId+"/cycles")
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(objectWriter.writeValueAsString(cycleData)))
 						.andExpect(status().isOk())
 						.andReturn().getResponse().getContentAsString(),
 				Map.class);

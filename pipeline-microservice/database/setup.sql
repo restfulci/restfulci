@@ -6,7 +6,9 @@ CREATE TABLE pipeline (
 CREATE TABLE parameter (
   id serial PRIMARY KEY,
   pipeline_id serial REFERENCES pipeline(id) ON DELETE CASCADE,
-  name text NOT NULL CHECK (name ~ '^[A-Z_][A-Z0-9_]*$')
+  name text NOT NULL CHECK (name ~ '^[A-Z_][A-Z0-9_]*$'),
+  default_value text,
+  choices text[]
 );
 
 CREATE TABLE referred_job (
@@ -15,11 +17,17 @@ CREATE TABLE referred_job (
   original_job_id integer NOT NULL
 );
 
+-- TODO:
+-- We need to build an "or" relationship for `parameter` and
+-- `parameter_map`, to handle git remote job, for which we need
+-- to pass either `branchName` or `commitSha`.
 CREATE TABLE parameter_map (
   id serial PRIMARY KEY,
   referred_job_id serial REFERENCES referred_job(id) ON DELETE CASCADE,
   parameter_id integer REFERENCES parameter(id) ON DELETE RESTRICT,
   remote_name text NOT NULL
+  -- TODO:
+  -- `optional` flag.
 );
 
 CREATE TABLE referred_job_dependency (
@@ -42,6 +50,13 @@ CREATE TABLE cycle (
     unfinalized_status_shortname='A') DEFAULT 'S',
   trigger_at timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   complete_at timestamp
+);
+
+CREATE TABLE input (
+  id serial PRIMARY KEY,
+  cycle_id serial REFERENCES cycle(id) ON DELETE CASCADE,
+  name text NOT NULL CHECK (name ~ '^[A-Z_][A-Z0-9_]*$'),
+  value text
 );
 
 CREATE TABLE referred_run (

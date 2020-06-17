@@ -9,7 +9,6 @@ import restfulci.job.shared.domain.GitBranchRunBean;
 import restfulci.job.shared.domain.GitCommitRunBean;
 import restfulci.job.shared.domain.InputBean;
 import restfulci.job.shared.domain.RunBean;
-import restfulci.job.shared.domain.RunStatus;
 
 public class RunDTO extends HashMap<String, String> {
 
@@ -47,8 +46,6 @@ public class RunDTO extends HashMap<String, String> {
 				runBean.addInput(input);
 			}
 		}
-
-		runBean.setTriggerAt(new Date());
 		
 		/*
 		 * TODO:

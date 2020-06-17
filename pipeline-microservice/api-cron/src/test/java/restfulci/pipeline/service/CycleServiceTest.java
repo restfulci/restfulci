@@ -4,11 +4,16 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.util.ArrayList;
+
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -18,9 +23,13 @@ import restfulci.pipeline.dao.CycleRepository;
 import restfulci.pipeline.dao.RemoteRunRepository;
 import restfulci.pipeline.domain.CycleBean;
 import restfulci.pipeline.domain.CycleStatus;
+import restfulci.pipeline.domain.ParameterBean;
+import restfulci.pipeline.domain.PipelineBean;
 import restfulci.pipeline.domain.ReferredRunBean;
 import restfulci.pipeline.domain.ReferredRunStatus;
 import restfulci.pipeline.domain.RemoteRunBean;
+import restfulci.pipeline.dto.CycleDTO;
+import restfulci.pipeline.exception.CycleDataException;
 import restfulci.pipeline.exception.RunTriggerException;
 
 @ExtendWith(SpringExtension.class)
@@ -32,6 +41,75 @@ public class CycleServiceTest {
 	@MockBean private CycleRepository cycleRepository;
 	@MockBean private RemoteRunRepository remoteRunRepository;
 	@MockBean private PipelineService pipelineService;
+	
+	@Test
+	public void testTriggerCycleWithCorrectParameter() throws Exception {
+		
+		PipelineBean pipeline = new PipelineBean();
+		ParameterBean parameter = new ParameterBean();
+		parameter.setName("INCLUDE");
+		pipeline.addParameter(parameter);
+		given(pipelineService.getPipeline(456)).willReturn(pipeline);
+		
+		CycleDTO cycleDTO = new CycleDTO();
+		cycleDTO.put("INCLUDE", "foo");
+		
+		service.triggerCycle(456, cycleDTO);
+		
+		ArgumentCaptor<CycleBean> cycleCaptor = ArgumentCaptor.forClass(CycleBean.class);
+		verify(cycleRepository, times(1)).saveAndFlush(cycleCaptor.capture());
+		assertEquals(cycleCaptor.getValue().getInputs().size(), 1);
+		assertEquals(new ArrayList<>(cycleCaptor.getValue().getInputs()).get(0).getName(), "INCLUDE");
+		assertEquals(new ArrayList<>(cycleCaptor.getValue().getInputs()).get(0).getValue(), "foo");
+	}
+	
+	@Test
+	public void testTriggerCycleErrorsOutIfExtraInput() throws Exception {
+		
+		PipelineBean pipeline = new PipelineBean();
+		given(pipelineService.getPipeline(456)).willReturn(pipeline);
+		
+		CycleDTO cycleDTO = new CycleDTO();
+		cycleDTO.put("EXCLUDE", "foo");
+		
+		Assertions.assertThrows(CycleDataException.class, () -> {
+			service.triggerCycle(456, cycleDTO);
+		});
+	}
+	
+	@Test
+	public void testTriggerCycleErrorsOutIfMissInput() throws Exception {
+		
+		PipelineBean pipeline = new PipelineBean();
+		ParameterBean parameter = new ParameterBean();
+		parameter.setName("INCLUDE");
+		pipeline.addParameter(parameter);
+		given(pipelineService.getPipeline(456)).willReturn(pipeline);
+		
+		CycleDTO cycleDTO = new CycleDTO();
+		
+		Assertions.assertThrows(CycleDataException.class, () -> {
+			service.triggerCycle(456, cycleDTO);
+		});
+	}
+	
+	@Test
+	public void testTriggerCycleErrorsOutIfInputNotUnderChoices() throws Exception {
+		
+		PipelineBean pipeline = new PipelineBean();
+		ParameterBean parameter = new ParameterBean();
+		parameter.setName("ENV");
+		parameter.setChoices(new String[] {"testing", "staging", "production"});
+		pipeline.addParameter(parameter);
+		given(pipelineService.getPipeline(456)).willReturn(pipeline);
+		
+		CycleDTO cycleDTO = new CycleDTO();
+		cycleDTO.put("ENV", "development");
+		
+		Assertions.assertThrows(CycleDataException.class, () -> {
+			service.triggerCycle(456, cycleDTO);
+		});
+	}
 	
 	@Test
 	public void testUpdateCycleStartNotStartedYetWithoutDependency() throws Exception {

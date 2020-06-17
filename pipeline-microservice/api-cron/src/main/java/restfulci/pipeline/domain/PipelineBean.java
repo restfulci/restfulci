@@ -49,6 +49,16 @@ public class PipelineBean extends BaseEntity {
 		return null;
 	}
 	
+	ParameterBean getParameter(String name) {
+		
+		for (ParameterBean parameter : parameters) {
+			if (parameter.getName().equals(name)) {
+				return parameter;
+			}
+		}
+		return null;
+	}
+	
 	@JsonInclude(Include.NON_EMPTY)
 	@OneToMany(targetEntity=ReferredJobBean.class, fetch=FetchType.EAGER, cascade=CascadeType.ALL, mappedBy="pipeline")
 	private Set<ReferredJobBean> referredJobs = new HashSet<ReferredJobBean>();
