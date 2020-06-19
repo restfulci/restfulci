@@ -95,12 +95,13 @@ public class PipelineServiceImpl implements PipelineService {
 		
 		RemoteJobBean remoteJob = remoteJobRepository.getJob(referredJob.getOriginalJobId());
 		for (RemoteJobBean.Parameter remoteParameter : remoteJob.getParameters()) {
-			
-			ParameterMapBean parameterMap = new ParameterMapBean();
-			parameterMap.setRemoteName(remoteParameter.getName());
-			
-			parameterMap.setReferredJob(referredJob);
-			referredJob.addParameterMap(parameterMap);
+			if (referredJob.getParameterMap(remoteParameter.getName()) == null) {
+				ParameterMapBean parameterMap = new ParameterMapBean();
+				parameterMap.setRemoteName(remoteParameter.getName());
+				
+				parameterMap.setReferredJob(referredJob);
+				referredJob.addParameterMap(parameterMap);
+			}
 		}
 		/*
 		 * TODO:

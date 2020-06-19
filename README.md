@@ -8,18 +8,18 @@ CI/CD job triggering and job status checks as RESTful API calls. E.g. run a unit
 
 ```
 curl --request POST -H "Authorization: Bearer abc.def.ghi" \
-https://my-ci-server.com/job/unit-test \
--d '{"sha": "0000000000000000000000000000000000000000"}'
+https://my-ci-server.com/jobs/unit-test/runs \
+-d '{"commitSha": "0000000000000000000000000000000000000000"}'
 curl --request POST -H "Authorization: Bearer abc.def.ghi" \
-https://my-ci-server.com/jobs/unit-test \
--d '{"branch": "master"}'
+https://my-ci-server.com/jobs/unit-test/runs \
+-d '{"branchName": "master"}'
 ```
 
 check a unit test status:
 
 ```
 curl --request GET -H "Authorization: Bearer abc.def.ghi" \
-https://my-ci-server.com.com/jobs/unit-test/runs/12345
+https://my-ci-server.com/jobs/unit-test/runs/12345
 ```
 
 It may have multiple clients. The below listed clients should be part of the official framework support.
@@ -28,7 +28,7 @@ It may have multiple clients. The below listed clients should be part of the off
 * Command line tool
 * GitHub PR hooks
 
-Framework configuration (see list below) should be setup by API calls. There can then be command line interface, which can further be wrapped as an infrastructure-as-code infrastructure (maybe through Terraform) which can setup those properties in an idempotent way. Relavent data stay in database (deployed application/files stay unchanged).
+Framework configuration (see list below) should be setup by API calls. There can then be command line interface, which can further be wrapped as an infrastructure-as-code infrastructure (maybe through Terraform) which can setup those properties in an idempotent way. Relevant data stay in database (deployed application/files stay unchanged).
 
 * Job specific:
 	* Job name.
@@ -39,7 +39,7 @@ Framework configuration (see list below) should be setup by API calls. There can
 		* Freestyle jobs:
 			* Everything.
   * Job specific input parameters.
-    * It should not be in version controlled config file, because in that case setup of one run will leak to another.
+    * It should not be in version controlled config file, because in that case setup of a run in one branch (not merged into master yet) will leak to another run in a different branch.
 * Overall config:
 	* What kind of servers (number of cores) can a job run onto. Or this is hard to be customized.
 
@@ -183,14 +183,23 @@ Results should be queried from API endpoint, for example `/jobs/123/tasks/456/re
 
 #### Pipeline where to?
 
-Pipeline should be a client side setup/setup in a layer on top of the RESTful API layer, as it breaks independency between jobs/RESTful endpoints. It can be implemented as [batch operation](https://www.codementor.io/blog/batch-endpoints-6olbjay1hd).
+Pipeline should be a client side setup/setup in a layer on top of the RESTful API layer, as it breaks independency between jobs/RESTful endpoints. It can be implemented as:
 
-* Pipeline in UI client is obvious/through common sense.
-* Command line client shouldn't have shared pipeline. User can have their shellscript with multiple steps.
-* There may be an pipeline extension GitHub PR hooks client (for deployment after a master commit).
-  * But this makes the GitHub PR hooks client not universally applied, but depend on indivitual job. Better approach?
+* [Batch operation](https://www.codementor.io/blog/batch-endpoints-6olbjay1hd)
+* A pipeline microservice on top of the job microservice, which defines its own endpoints, and call job endpoints as dependencies.
+  * Pros:
+    * Can build a UI on top of the pipeline API through common sense.
+  * Cons:
+    * There are a lot of similarities between the two microservices, e.g. how to define in parameters.
+    * Simple code logic (pass input to downstream jobs) needs to save/implemented in SQL/RESTful calls. That introduces a lot of complicities.
+* User can define a job, and inside of the job `curl` dependent jobs' RESTful endpoints.
+  * Cons:
+    * Need to pass the credentials into the container in which we `curl`.
+    * User needs to implement the check status loop themselves inside of the job logic, through we may provide a library for them to do so.
 
-In case pipeline definition is in code (not necessarily to be in the same repo as the endpoint job), consider the pipeline layer git fetch a single file from [a single commit](https://stackoverflow.com/a/30701724/11335489) (GitHub does not support, GitLab supports) or [a single branch](https://stackoverflow.com/questions/1778088/how-do-i-clone-a-single-branch-in-git/7034921#7034921) (GitHub supports). Then each step/endpoint git fetch seperately.
+Command line client shouldn't have shared pipeline. User can have their shellscript with multiple steps.
+
+In case pipeline definition is in code (not necessarily to be in the same repo as the endpoint job), consider the pipeline layer git fetch a single file from [a single commit](https://stackoverflow.com/a/30701724/11335489) (GitHub does not support, GitLab supports) or [a single branch](https://stackoverflow.com/questions/1778088/how-do-i-clone-a-single-branch-in-git/7034921#7034921) (GitHub supports). Then each step/endpoint git fetch separately.
 
 ```
 git clone <source> -b <branch-name> --single-branch --depth 1
