@@ -3,6 +3,8 @@ package restfulci.pipeline.dao;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
+import java.util.HashMap;
+
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.DisabledIfEnvironmentVariable;
@@ -24,7 +26,7 @@ public class RemoteRunRepositoryTest {
 	@Test
 	public void testTriggerAndGetRun() throws Exception {
 		
-		RemoteRunBean triggeredRun = remoteRunRepository.triggerRun(1);
+		RemoteRunBean triggeredRun = remoteRunRepository.triggerRun(1, new HashMap<String, String>());
 		Integer runId = triggeredRun.getId();
 		assertEquals(triggeredRun.getStatus(), "IN_PROGRESS");
 		assertNull(triggeredRun.getExitCode());
@@ -39,7 +41,7 @@ public class RemoteRunRepositoryTest {
 	public void testTriggerRunBadRequest() throws Exception {
 		
 		Assertions.assertThrows(RunTriggerException.class, () -> {
-			remoteRunRepository.triggerRun(31);
+			remoteRunRepository.triggerRun(31, new HashMap<String, String>());
 		});
 	}
 	
@@ -47,7 +49,7 @@ public class RemoteRunRepositoryTest {
 	public void testTriggerRunInternalServerError() throws Exception {
 		
 		Assertions.assertThrows(RunTriggerException.class, () -> {
-			remoteRunRepository.triggerRun(41);
+			remoteRunRepository.triggerRun(41, new HashMap<String, String>());
 		});
 	}
 }

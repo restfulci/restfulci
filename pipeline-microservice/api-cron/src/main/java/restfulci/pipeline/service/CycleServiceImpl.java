@@ -2,6 +2,8 @@ package restfulci.pipeline.service;
 
 import java.io.IOException;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,6 +15,8 @@ import restfulci.pipeline.dao.CycleRepository;
 import restfulci.pipeline.dao.RemoteRunRepository;
 import restfulci.pipeline.domain.CycleBean;
 import restfulci.pipeline.domain.CycleStatus;
+import restfulci.pipeline.domain.InputMapBean;
+import restfulci.pipeline.domain.ParameterMapBean;
 import restfulci.pipeline.domain.PipelineBean;
 import restfulci.pipeline.domain.ReferredJobBean;
 import restfulci.pipeline.domain.ReferredRunBean;
@@ -59,6 +63,21 @@ public class CycleServiceImpl implements CycleService {
 		for (ReferredJobBean referredJob : pipeline.getReferredJobs()) {
 			ReferredRunBean referredRun = new ReferredRunBean();
 			referredRun.setOriginalJobId(referredJob.getOriginalJobId());
+			
+			for (ParameterMapBean parameterMap : referredJob.getParameterMaps()) {
+				InputMapBean inputMap = new InputMapBean();
+				inputMap.setReferredRun(referredRun);
+				/*
+				 * TODO:
+				 * Error out if `cycle.getInput` returns null.
+				 * And/or mark a pipeline "complete" if or desired `parameterMap` has been
+				 * setting up.
+				 */
+				inputMap.setInput(cycle.getInput(parameterMap.getParameter().getName()));
+				inputMap.setRemoteName(parameterMap.getRemoteName());
+				
+				referredRun.addInputMap(inputMap);
+			}
 
 			referredRun.setCycle(cycle);
 			cycle.addReferredRun(referredRun);
@@ -155,7 +174,12 @@ public class CycleServiceImpl implements CycleService {
 
 				if (canSkip == false && canStart == true) {
 					try {
-						RemoteRunBean remoteRun = remoteRunRepository.triggerRun(referredRun.getOriginalJobId());
+						Map<String, String> parameterValuePair = new HashMap<String, String>();
+						for (InputMapBean inputMap : referredRun.getInputMaps()) {
+							parameterValuePair.put(inputMap.getRemoteName(), inputMap.getInput().getValue());
+						}
+						
+						RemoteRunBean remoteRun = remoteRunRepository.triggerRun(referredRun.getOriginalJobId(), parameterValuePair);
 						referredRun.updateFromRemoteRun(remoteRun);
 						if (remoteRun.getStatus().equals("IN_PROGRESS")) {
 							allDone = false;

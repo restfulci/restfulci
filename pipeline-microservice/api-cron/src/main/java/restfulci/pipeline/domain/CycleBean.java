@@ -49,7 +49,7 @@ public class CycleBean extends BaseEntity {
 		inputs.add(input);
 	}
 	
-	private InputBean getInput(String name) {
+	public InputBean getInput(String name) {
 		/*
 		 * TODO:
 		 * A lazy evaluated lookup table.

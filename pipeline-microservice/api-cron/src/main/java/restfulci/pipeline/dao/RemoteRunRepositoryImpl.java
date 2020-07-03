@@ -1,7 +1,6 @@
 package restfulci.pipeline.dao;
 
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,14 +22,12 @@ public class RemoteRunRepositoryImpl implements RemoteRunRepository {
 	@Autowired private RestTemplate restTemplate;
 	
 	@Override
-	public RemoteRunBean triggerRun(Integer jobId) throws IOException {
+	public RemoteRunBean triggerRun(Integer jobId, Map<String, String> parameterValuePair) throws IOException {
 		
-		Map<String, Object> postBody = new HashMap<String, Object>();
-
 		HttpHeaders headers = new HttpHeaders();
 		headers.setContentType(MediaType.APPLICATION_JSON);
 
-		HttpEntity<Map<String, Object>> request = new HttpEntity<>(postBody, headers);
+		HttpEntity<Map<String, String>> request = new HttpEntity<>(parameterValuePair, headers);
 		
 		try {
 			return restTemplate.postForObject("/jobs/{jobId}/runs", request, RemoteRunBean.class, jobId);
