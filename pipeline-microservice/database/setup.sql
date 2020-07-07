@@ -79,7 +79,7 @@ CREATE TABLE referred_run (
 CREATE TABLE input_map (
   id serial PRIMARY KEY,
   referred_run_id serial REFERENCES referred_job(id) ON DELETE CASCADE,
-  input_id integer REFERENCES parameter(id) ON DELETE RESTRICT,
+  input_id integer REFERENCES input(id) ON DELETE RESTRICT,
   remote_name text NOT NULL
 );
 

@@ -22,11 +22,22 @@ def job(job_id):
 
 class Run:
 
-    def __init__(self, job_id, run_id, final_status):
+    def __init__(self, job_id, run_id, final_status, params):
         self.job_id = job_id
         self.run_id = run_id
         self.final_status = final_status
         self.access_count = 0
+
+        if "ENV" in params:
+            self.env = params["ENV"]
+        else:
+            raise BadRequest("Missing input for ENV", "/jobs/{}/runs/{}".format(job_id, run_id))
+
+        params.pop("ENV")
+        for param_name in params:
+            raise BadRequest(
+                "Input {} is not in the associated job's parameter list".format(param_name),
+                "/jobs/{}/runs/{}".format(job_id, run_id))
 
     def _status(self):
         if self.access_count <= 2:
@@ -50,6 +61,9 @@ class Run:
         self.access_count += 1
         return self._get()
 
+    def console(self):
+        return "Hello {}".format(self.env)
+
 
 class RunBuilder:
 
@@ -58,7 +72,7 @@ class RunBuilder:
         # is `job_id` and the second layer key is `run_id`.
         self.runs = {}
 
-    def initialize(self, job_id, final_status):
+    def initialize(self, job_id, final_status, params):
         if job_id not in self.runs:
             self.runs[job_id] = {}
 
@@ -69,12 +83,15 @@ class RunBuilder:
         else:
             run_id = max(self.runs[job_id].keys()) + 1
 
-        run = Run(job_id, run_id, final_status)
+        run = Run(job_id, run_id, final_status, params)
         self.runs[job_id][run_id] = run
         return run.get()
 
     def get(self, job_id, run_id):
         return self.runs[job_id][run_id].get()
+
+    def console(self, job_id, run_id):
+        return self.runs[job_id][run_id].console()
 
 
 run_builder = RunBuilder()
@@ -161,19 +178,19 @@ def get_job(job_id):
 def trigger_run(job_id):
     if job_id in range(1, 31):
         try:
-            _ = request.get_json(force=True)
+            params = request.get_json(force=True)
         except Exception:
-            raise BadRequest("foo", request.path)
+            raise BadRequest("Required request body is missing.", request.path)
 
         # Always return IN_PROGRESS
         if job_id in range(1, 11):
-            return make_response(jsonify(run_builder.initialize(job_id, "SUCCEED")))
+            return make_response(jsonify(run_builder.initialize(job_id, "SUCCEED", params)))
 
         if job_id in range(11, 21):
-            return make_response(jsonify(run_builder.initialize(job_id, "FAIL")))
+            return make_response(jsonify(run_builder.initialize(job_id, "FAIL", params)))
 
         if job_id in range(21, 31):
-            return make_response(jsonify(run_builder.initialize(job_id, "ABORT")))
+            return make_response(jsonify(run_builder.initialize(job_id, "ABORT", params)))
 
     elif job_id in range(31, 41):
         raise BadRequest("foo", request.path)
@@ -193,6 +210,15 @@ def get_run(job_id, run_id):
     # error.
     if job_id in range(1, 31):
         return make_response(jsonify(run_builder.get(job_id, run_id)))
+
+    else:
+        raise NotFound("foo", request.path)
+
+
+@app.route('/jobs/<int:job_id>/runs/<int:run_id>/console', methods=['GET'])
+def get_run_console(job_id, run_id):
+    if job_id in range(1, 31):
+        return make_response(jsonify(run_builder.console(job_id, run_id)))
 
     else:
         raise NotFound("foo", request.path)
