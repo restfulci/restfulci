@@ -25,9 +25,8 @@ CREATE TABLE parameter_map (
   id serial PRIMARY KEY,
   referred_job_id serial REFERENCES referred_job(id) ON DELETE CASCADE,
   parameter_id integer REFERENCES parameter(id) ON DELETE RESTRICT,
-  remote_name text NOT NULL
-  -- TODO:
-  -- `optional` flag.
+  remote_name text NOT NULL,
+  optional boolean NOT NULL
 );
 
 CREATE TABLE referred_job_dependency (

@@ -38,4 +38,8 @@ public class ParameterMapBean extends BaseEntity {
 	@Pattern(regexp="^[A-Z_][A-Z0-9_]*$")
 	@Column(name="remote_name", updatable=false)
 	private String remoteName;
+	
+	@NotNull
+	@Column(name="optional")
+	private Boolean optional;
 }

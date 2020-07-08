@@ -95,14 +95,26 @@ public class PipelineServiceImpl implements PipelineService {
 		
 		RemoteJobBean remoteJob = remoteJobRepository.getJob(referredJob.getOriginalJobId());
 		for (RemoteJobBean.Parameter remoteParameter : remoteJob.getParameters()) {
-			if (referredJob.getParameterMap(remoteParameter.getName()) == null) {
-				ParameterMapBean parameterMap = new ParameterMapBean();
-				parameterMap.setRemoteName(remoteParameter.getName());
+			ParameterMapBean parameterMap = referredJob.getParameterMap(remoteParameter.getName());
+			if (parameterMap == null) {
+				ParameterMapBean newParameterMap = new ParameterMapBean();
+				newParameterMap.setRemoteName(remoteParameter.getName());
+				newParameterMap.setOptional(remoteParameter.isOptional());
 				
-				parameterMap.setReferredJob(referredJob);
-				referredJob.addParameterMap(parameterMap);
+				newParameterMap.setReferredJob(referredJob);
+				referredJob.addParameterMap(newParameterMap);
+			}
+			else {
+				parameterMap.setOptional(remoteParameter.isOptional());
 			}
 		}
+		
+		for (ParameterMapBean parameterMap : referredJob.getParameterMaps()) {
+			if (remoteJob.getParameter(parameterMap.getRemoteName()) == null) {
+				referredJob.removeParameterMap(parameterMap);
+			}
+		}
+			
 		/*
 		 * TODO:
 		 * We need to build an "or" relationship for `parameter` and

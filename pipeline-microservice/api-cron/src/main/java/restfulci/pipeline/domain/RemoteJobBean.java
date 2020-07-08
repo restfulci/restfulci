@@ -4,6 +4,7 @@ import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
@@ -19,7 +20,20 @@ public class RemoteJobBean {
 	public static class Parameter {
 		
 		private Integer id;
+		
 		private String name;
+		
+		@Getter(AccessLevel.NONE)
+		private String defaultValue;
+		
+		public Boolean isOptional() {
+			if (defaultValue == null) {
+				return false;
+			}
+			else {
+				return true;
+			}
+		}
 	}
 
 	private Integer id;
@@ -33,4 +47,13 @@ public class RemoteJobBean {
 	private String type;
 	
 	private List<Parameter> parameters;
+	
+	public Parameter getParameter(String name) {
+		for (Parameter parameter : parameters) {
+			if (parameter.getName().equals(name)) {
+				return parameter;
+			}
+		}
+		return null;
+	}
 }

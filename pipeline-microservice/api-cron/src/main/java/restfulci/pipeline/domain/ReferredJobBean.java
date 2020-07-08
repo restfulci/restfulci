@@ -48,6 +48,10 @@ public class ReferredJobBean extends BaseEntity {
 		parameterMaps.add(parameterMap);
 	}
 	
+	public void removeParameterMap(ParameterMapBean parameterMap) {
+		parameterMaps.remove(parameterMap);
+	}
+	
 	public ParameterMapBean getParameterMap(Integer parameterMapId) {
 		for (ParameterMapBean parameterMap : parameterMaps) {
 			if (parameterMap.getId().equals(parameterMapId)) {
