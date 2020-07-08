@@ -1,47 +1,42 @@
 package restfulci.pipeline.dao;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.method;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo;
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withStatus;
 
-import java.net.URI;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.autoconfigure.web.client.AutoConfigureWebClient;
+import org.springframework.boot.test.autoconfigure.web.client.RestClientTest;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.client.ExpectedCount;
 import org.springframework.test.web.client.MockRestServiceServer;
-import org.springframework.web.client.RestTemplate;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import restfulci.pipeline.domain.RemoteJobBean;
 
 @ExtendWith(SpringExtension.class)
-@SpringBootTest
+@RestClientTest(RemoteJobRepository.class)
+@AutoConfigureWebClient(registerRestTemplate=true)
 public class RemoteJobRepositoryTest {
 	
 	@Autowired private RemoteJobRepository remoteJobRepository;
-	@Autowired private RestTemplate restTemplate;
+	@Autowired private MockRestServiceServer mockServer;
 	
-	private MockRestServiceServer mockServer;
 	private ObjectMapper objectMapper = new ObjectMapper();
-	
-	@BeforeEach
-	public void setUp() {
-		mockServer = MockRestServiceServer.createServer(restTemplate);
-	}
 
 	@Test
 	public void testGetJobWithoutParamDefault() throws Exception {
@@ -59,7 +54,7 @@ public class RemoteJobRepositoryTest {
 		
 		mockServer.expect(
 				ExpectedCount.once(), 
-				requestTo(new URI("http://localhost:5000/jobs/1")))
+				requestTo("/jobs/1"))
 				.andExpect(method(HttpMethod.GET))
 				.andRespond(withStatus(HttpStatus.OK)
 				.contentType(MediaType.APPLICATION_JSON)
@@ -75,7 +70,7 @@ public class RemoteJobRepositoryTest {
 		assertEquals(queriedJob.getType(), "FREESTYLE");
 		assertEquals(queriedJob.getParameters().size(), 1);
 		assertEquals(queriedJob.getParameters().get(0).getName(), "ENV");
-		assertEquals(queriedJob.getParameters().get(0).isOptional(), false);
+		assertFalse(queriedJob.getParameters().get(0).isOptional());
 	}
 	
 	@Test
@@ -95,7 +90,7 @@ public class RemoteJobRepositoryTest {
 		
 		mockServer.expect(
 				ExpectedCount.once(), 
-				requestTo(new URI("http://localhost:5000/jobs/1")))
+				requestTo("/jobs/1"))
 				.andExpect(method(HttpMethod.GET))
 				.andRespond(withStatus(HttpStatus.OK)
 				.contentType(MediaType.APPLICATION_JSON)
@@ -111,6 +106,6 @@ public class RemoteJobRepositoryTest {
 		assertEquals(queriedJob.getType(), "FREESTYLE");
 		assertEquals(queriedJob.getParameters().size(), 1);
 		assertEquals(queriedJob.getParameters().get(0).getName(), "ENV");
-		assertEquals(queriedJob.getParameters().get(0).isOptional(), true);
+		assertTrue(queriedJob.getParameters().get(0).isOptional());
 	}
 }

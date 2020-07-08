@@ -1,7 +1,8 @@
 package restfulci.pipeline.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -42,11 +43,18 @@ public class PipelineServiceTest {
 		referredJob.setOriginalJobId(456);
 		given(referredJobRepository.findById(123)).willReturn(Optional.of(referredJob));
 		
-		RemoteJobBean.Parameter remoteParameter = new RemoteJobBean.Parameter();
-		remoteParameter.setName("ENV");
-		RemoteJobBean remoteJob = new RemoteJobBean();
 		List<RemoteJobBean.Parameter> remoteParameters = new ArrayList<RemoteJobBean.Parameter>();
-		remoteParameters.add(remoteParameter);
+		
+		RemoteJobBean.Parameter requiredRemoteParameter = new RemoteJobBean.Parameter();
+		requiredRemoteParameter.setName("REQUIRED");
+		remoteParameters.add(requiredRemoteParameter);
+		
+		RemoteJobBean.Parameter optionalRemoteParameter = new RemoteJobBean.Parameter();
+		optionalRemoteParameter.setName("OPTIONAL");
+		optionalRemoteParameter.setDefaultValue("default");
+		remoteParameters.add(optionalRemoteParameter);
+		
+		RemoteJobBean remoteJob = new RemoteJobBean();
 		remoteJob.setParameters(remoteParameters);
 		given(remoteJobRepository.getJob(456)).willReturn(remoteJob);
 		
@@ -54,14 +62,21 @@ public class PipelineServiceTest {
 		
 		ArgumentCaptor<ReferredJobBean> referredJobCaptor = ArgumentCaptor.forClass(ReferredJobBean.class);
 		verify(referredJobRepository, times(1)).saveAndFlush(referredJobCaptor.capture());
-		assertEquals(referredJobCaptor.getValue().getParameterMaps().size(), 1);
-		assertEquals(new ArrayList<ParameterMapBean>(referredJobCaptor.getValue().getParameterMaps()).get(0).getRemoteName(), "ENV");
-		assertNull(new ArrayList<ParameterMapBean>(referredJobCaptor.getValue().getParameterMaps()).get(0).getParameter());
-		
+		assertEquals(referredJobCaptor.getValue().getParameterMaps().size(), 2);
+		List<ParameterMapBean> parameterMaps = new ArrayList<ParameterMapBean>(referredJobCaptor.getValue().getParameterMaps());
+		for (int i = 0; i < 2; ++i) {
+			if (parameterMaps.get(i).getRemoteName().equals("REQUIRED")) {
+				assertFalse(parameterMaps.get(i).getOptional());
+			}
+			else {
+				assertEquals(parameterMaps.get(i).getRemoteName(), "OPTIONAL");
+				assertTrue(parameterMaps.get(i).getOptional());
+			}
+		}
 	}
 	
 	@Test
-	public void testReferredJobParametersIsNotUpdatedIfAlreadyExist() throws Exception {
+	public void testReferredJobParameterIsKeptAndUpdatedIfAlreadyExist() throws Exception {
 		
 		ParameterBean parameter = new ParameterBean();
 		ReferredJobBean referredJob = new ReferredJobBean();
@@ -70,12 +85,14 @@ public class PipelineServiceTest {
 		ParameterMapBean parameterMap = new ParameterMapBean();
 		parameterMap.setReferredJob(referredJob);
 		parameterMap.setParameter(parameter);
-		parameterMap.setRemoteName("ENV");
+		parameterMap.setRemoteName("EXIST");
+		parameterMap.setOptional(false);
 		referredJob.addParameterMap(parameterMap);
 		given(referredJobRepository.findById(123)).willReturn(Optional.of(referredJob));
 		
 		RemoteJobBean.Parameter remoteParameter = new RemoteJobBean.Parameter();
-		remoteParameter.setName("ENV");
+		remoteParameter.setName("EXIST");
+		remoteParameter.setDefaultValue("default");
 		RemoteJobBean remoteJob = new RemoteJobBean();
 		List<RemoteJobBean.Parameter> remoteParameters = new ArrayList<RemoteJobBean.Parameter>();
 		remoteParameters.add(remoteParameter);
@@ -87,7 +104,35 @@ public class PipelineServiceTest {
 		ArgumentCaptor<ReferredJobBean> referredJobCaptor = ArgumentCaptor.forClass(ReferredJobBean.class);
 		verify(referredJobRepository, times(1)).saveAndFlush(referredJobCaptor.capture());
 		assertEquals(referredJobCaptor.getValue().getParameterMaps().size(), 1);
-		assertEquals(new ArrayList<ParameterMapBean>(referredJobCaptor.getValue().getParameterMaps()).get(0).getRemoteName(), "ENV");
-		assertEquals(new ArrayList<ParameterMapBean>(referredJobCaptor.getValue().getParameterMaps()).get(0).getParameter(), parameter);
+		ParameterMapBean newParameterMap = new ArrayList<ParameterMapBean>(referredJobCaptor.getValue().getParameterMaps()).get(0);
+		assertEquals(newParameterMap.getRemoteName(), "EXIST");
+		assertEquals(newParameterMap.getParameter(), parameter);
+		assertTrue(newParameterMap.getOptional());
+	}
+	
+	@Test
+	public void testReferredJobParameterIsDeletedIfNotInRemote() throws Exception {
+		
+		ParameterBean parameter = new ParameterBean();
+		ReferredJobBean referredJob = new ReferredJobBean();
+		referredJob.setId(123);
+		referredJob.setOriginalJobId(456);
+		ParameterMapBean parameterMap = new ParameterMapBean();
+		parameterMap.setReferredJob(referredJob);
+		parameterMap.setParameter(parameter);
+		parameterMap.setRemoteName("TO_BE_DELETED");
+		parameterMap.setOptional(false);
+		referredJob.addParameterMap(parameterMap);
+		given(referredJobRepository.findById(123)).willReturn(Optional.of(referredJob));
+		
+		RemoteJobBean remoteJob = new RemoteJobBean();
+		remoteJob.setParameters(new ArrayList<RemoteJobBean.Parameter>());
+		given(remoteJobRepository.getJob(456)).willReturn(remoteJob);
+		
+		service.updateReferredJobParameters(123);
+		
+		ArgumentCaptor<ReferredJobBean> referredJobCaptor = ArgumentCaptor.forClass(ReferredJobBean.class);
+		verify(referredJobRepository, times(1)).saveAndFlush(referredJobCaptor.capture());
+		assertEquals(referredJobCaptor.getValue().getParameterMaps().size(), 0);
 	}
 }
