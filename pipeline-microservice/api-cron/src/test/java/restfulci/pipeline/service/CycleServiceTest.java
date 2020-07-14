@@ -40,6 +40,7 @@ import restfulci.pipeline.domain.ReferredRunStatus;
 import restfulci.pipeline.domain.RemoteRunBean;
 import restfulci.pipeline.dto.CycleDTO;
 import restfulci.pipeline.exception.CycleDataException;
+import restfulci.pipeline.exception.IncompleteParameterLinkException;
 import restfulci.pipeline.exception.RunTriggerException;
 
 @ExtendWith(SpringExtension.class)
@@ -69,6 +70,7 @@ public class CycleServiceTest {
 		parameterMap.setReferredJob(referredJob);
 		parameterMap.setParameter(parameter);
 		parameterMap.setRemoteName("REMOTE_INCLUDE");
+		parameterMap.setOptional(false);
 		
 		referredJob.addParameterMap(parameterMap);
 		
@@ -122,10 +124,8 @@ public class CycleServiceTest {
 		pipeline.addParameter(parameter);
 		given(pipelineService.getPipeline(456)).willReturn(pipeline);
 		
-		CycleDTO cycleDTO = new CycleDTO();
-		
 		Assertions.assertThrows(CycleDataException.class, () -> {
-			service.triggerCycle(456, cycleDTO);
+			service.triggerCycle(456, new CycleDTO());
 		});
 	}
 	
@@ -145,6 +145,58 @@ public class CycleServiceTest {
 		Assertions.assertThrows(CycleDataException.class, () -> {
 			service.triggerCycle(456, cycleDTO);
 		});
+	}
+	
+	@Test
+	public void testTriggerCycleErrorOutIfMandatoryParameterIsNotLinked() throws Exception {
+		
+		PipelineBean pipeline = new PipelineBean();
+		
+		ReferredJobBean referredJob = new ReferredJobBean();
+		referredJob.setOriginalJobId(123);
+		referredJob.setPipeline(pipeline);
+		pipeline.addReferredJob(referredJob);
+		
+		ParameterMapBean parameterMap = new ParameterMapBean();
+		parameterMap.setReferredJob(referredJob);
+		parameterMap.setRemoteName("REMOTE_UNLINKED");
+		parameterMap.setOptional(false);
+		
+		referredJob.addParameterMap(parameterMap);
+		
+		given(pipelineService.getPipeline(456)).willReturn(pipeline);
+		
+		Assertions.assertThrows(IncompleteParameterLinkException.class, () -> {
+			service.triggerCycle(456, new CycleDTO());
+		});
+	}
+	
+	@Test
+	public void testTriggerCycleErrorOutIfOptionalParameterIsNotLinked() throws Exception {
+		
+		PipelineBean pipeline = new PipelineBean();
+		
+		ReferredJobBean referredJob = new ReferredJobBean();
+		referredJob.setOriginalJobId(123);
+		referredJob.setPipeline(pipeline);
+		pipeline.addReferredJob(referredJob);
+		
+		ParameterMapBean parameterMap = new ParameterMapBean();
+		parameterMap.setReferredJob(referredJob);
+		parameterMap.setRemoteName("REMOTE_UNLINKED");
+		parameterMap.setOptional(true);
+		
+		referredJob.addParameterMap(parameterMap);
+		
+		given(pipelineService.getPipeline(456)).willReturn(pipeline);
+		
+		service.triggerCycle(456, new CycleDTO());
+		
+		ArgumentCaptor<CycleBean> cycleCaptor = ArgumentCaptor.forClass(CycleBean.class);
+		verify(cycleRepository, times(1)).saveAndFlush(cycleCaptor.capture());
+		CycleBean triggeredCycle = cycleCaptor.getValue();
+		
+		assertEquals(triggeredCycle.getInputs().size(), 0);
 	}
 	
 	@Test

@@ -15,7 +15,9 @@ import restfulci.pipeline.dao.CycleRepository;
 import restfulci.pipeline.dao.RemoteRunRepository;
 import restfulci.pipeline.domain.CycleBean;
 import restfulci.pipeline.domain.CycleStatus;
+import restfulci.pipeline.domain.InputBean;
 import restfulci.pipeline.domain.InputMapBean;
+import restfulci.pipeline.domain.ParameterBean;
 import restfulci.pipeline.domain.ParameterMapBean;
 import restfulci.pipeline.domain.PipelineBean;
 import restfulci.pipeline.domain.ReferredJobBean;
@@ -23,7 +25,10 @@ import restfulci.pipeline.domain.ReferredRunBean;
 import restfulci.pipeline.domain.ReferredRunStatus;
 import restfulci.pipeline.domain.RemoteRunBean;
 import restfulci.pipeline.dto.CycleDTO;
+import restfulci.pipeline.exception.BackendException;
+import restfulci.pipeline.exception.CycleDataException;
 import restfulci.pipeline.exception.IdNonExistenceException;
+import restfulci.pipeline.exception.IncompleteParameterLinkException;
 import restfulci.pipeline.exception.RunGetterException;
 import restfulci.pipeline.exception.RunTriggerException;
 
@@ -49,7 +54,7 @@ public class CycleServiceImpl implements CycleService {
 	}
 
 	@Override
-	public CycleBean triggerCycle(Integer pipelineId, CycleDTO cycleDTO) throws IOException {
+	public CycleBean triggerCycle(Integer pipelineId, CycleDTO cycleDTO) throws IOException, BackendException {
 
 		PipelineBean pipeline = pipelineService.getPipeline(pipelineId);
 		log.info("Create cycle under pipeline {}", pipeline);
@@ -65,15 +70,30 @@ public class CycleServiceImpl implements CycleService {
 			referredRun.setOriginalJobId(referredJob.getOriginalJobId());
 			
 			for (ParameterMapBean parameterMap : referredJob.getParameterMaps()) {
+				
+				ParameterBean parameter = parameterMap.getParameter();
+				if (parameter == null) {
+					if (parameterMap.getOptional() == true) {
+						continue;
+					}
+					else {
+						throw new IncompleteParameterLinkException("Required remote parameter "+parameterMap.getRemoteName()+" is not linked to pipeline parameter.");
+					}
+				}
+				
+				InputBean input = cycle.getInput(parameter.getName());
+				if (input == null) {
+					/*
+					 * This should not happen in general. One possibility for it to happen is
+					 * the `parameterMaps` got updated after the pipeline input is setting up,
+					 * but before this particular remote job is triggered. 
+					 */
+					throw new CycleDataException("Input "+parameterMap.getParameter().getName()+" is missing");
+				}
+				
 				InputMapBean inputMap = new InputMapBean();
 				inputMap.setReferredRun(referredRun);
-				/*
-				 * TODO:
-				 * Error out if `cycle.getInput` returns null.
-				 * And/or mark a pipeline "complete" if or desired `parameterMap` has been
-				 * setting up.
-				 */
-				inputMap.setInput(cycle.getInput(parameterMap.getParameter().getName()));
+				inputMap.setInput(input);
 				inputMap.setRemoteName(parameterMap.getRemoteName());
 				
 				referredRun.addInputMap(inputMap);
