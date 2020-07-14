@@ -109,7 +109,26 @@ public class PipelineServiceImpl implements PipelineService {
 			}
 		}
 		
+		if (remoteJob.getType().equals("GIT")) {
+			for (String remoteName : new String[]{"branchName", "commitSha"}) {
+				if (referredJob.getParameterMap(remoteName) == null) {
+					ParameterMapBean newParameterMap = new ParameterMapBean();
+					newParameterMap.setRemoteName(remoteName);
+					newParameterMap.setOptional(true);
+					
+					newParameterMap.setReferredJob(referredJob);
+					referredJob.addParameterMap(newParameterMap);
+				}
+			}
+		}
+		
 		for (ParameterMapBean parameterMap : referredJob.getParameterMaps()) {
+			String remoteName = parameterMap.getRemoteName();
+			
+			if (remoteName.equals("branchName") || remoteName.equals("commitSha")) {
+				continue;
+			}
+			
 			if (remoteJob.getParameter(parameterMap.getRemoteName()) == null) {
 				referredJob.removeParameterMap(parameterMap);
 			}

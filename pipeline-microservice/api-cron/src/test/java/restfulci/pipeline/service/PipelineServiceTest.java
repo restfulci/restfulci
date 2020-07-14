@@ -55,6 +55,7 @@ public class PipelineServiceTest {
 		remoteParameters.add(optionalRemoteParameter);
 		
 		RemoteJobBean remoteJob = new RemoteJobBean();
+		remoteJob.setType("FREESTYLE");
 		remoteJob.setParameters(remoteParameters);
 		given(remoteJobRepository.getJob(456)).willReturn(remoteJob);
 		
@@ -94,6 +95,7 @@ public class PipelineServiceTest {
 		remoteParameter.setName("EXIST");
 		remoteParameter.setDefaultValue("default");
 		RemoteJobBean remoteJob = new RemoteJobBean();
+		remoteJob.setType("FREESTYLE");
 		List<RemoteJobBean.Parameter> remoteParameters = new ArrayList<RemoteJobBean.Parameter>();
 		remoteParameters.add(remoteParameter);
 		remoteJob.setParameters(remoteParameters);
@@ -126,6 +128,7 @@ public class PipelineServiceTest {
 		given(referredJobRepository.findById(123)).willReturn(Optional.of(referredJob));
 		
 		RemoteJobBean remoteJob = new RemoteJobBean();
+		remoteJob.setType("FREESTYLE");
 		remoteJob.setParameters(new ArrayList<RemoteJobBean.Parameter>());
 		given(remoteJobRepository.getJob(456)).willReturn(remoteJob);
 		
@@ -134,5 +137,34 @@ public class PipelineServiceTest {
 		ArgumentCaptor<ReferredJobBean> referredJobCaptor = ArgumentCaptor.forClass(ReferredJobBean.class);
 		verify(referredJobRepository, times(1)).saveAndFlush(referredJobCaptor.capture());
 		assertEquals(referredJobCaptor.getValue().getParameterMaps().size(), 0);
+	}
+	
+	@Test
+	public void testGitJobGetCorrespondingReferredJobParameters() throws Exception {
+		
+		ReferredJobBean referredJob = new ReferredJobBean();
+		referredJob.setId(123);
+		referredJob.setOriginalJobId(456);
+		given(referredJobRepository.findById(123)).willReturn(Optional.of(referredJob));
+		
+		List<RemoteJobBean.Parameter> remoteParameters = new ArrayList<RemoteJobBean.Parameter>();
+		
+		RemoteJobBean remoteJob = new RemoteJobBean();
+		remoteJob.setType("GIT");
+		remoteJob.setParameters(remoteParameters);
+		given(remoteJobRepository.getJob(456)).willReturn(remoteJob);
+		
+		service.updateReferredJobParameters(123);
+		service.updateReferredJobParameters(123);
+		
+		ArgumentCaptor<ReferredJobBean> referredJobCaptor = ArgumentCaptor.forClass(ReferredJobBean.class);
+		verify(referredJobRepository, times(2)).saveAndFlush(referredJobCaptor.capture());
+		assertEquals(referredJobCaptor.getValue().getParameterMaps().size(), 2);
+		List<ParameterMapBean> parameterMaps = new ArrayList<ParameterMapBean>(referredJobCaptor.getValue().getParameterMaps());
+		for (int i = 0; i < 2; ++i) {
+			String remoteName = parameterMaps.get(i).getRemoteName();
+			assertTrue(remoteName.equals("branchName") || remoteName.equals("commitSha"));
+			assertTrue(parameterMaps.get(i).getOptional());
+		}
 	}
 }
