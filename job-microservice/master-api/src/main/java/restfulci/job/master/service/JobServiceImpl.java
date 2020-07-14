@@ -12,6 +12,7 @@ import restfulci.job.master.dto.JobDTO;
 import restfulci.job.shared.dao.JobRepository;
 import restfulci.job.shared.domain.JobBean;
 import restfulci.job.shared.domain.ParameterBean;
+import restfulci.job.shared.exception.IdNonExistenceException;
 
 @Service
 @Transactional
@@ -28,7 +29,7 @@ public class JobServiceImpl implements JobService {
 			return jobs.get();
 		}
 		else {
-			throw new IOException();
+			throw new IdNonExistenceException("Job ID does not exist yet.");
 		}
 	}
 

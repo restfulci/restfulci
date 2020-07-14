@@ -11,6 +11,7 @@ import lombok.ToString;
 import restfulci.job.shared.domain.FreestyleJobBean;
 import restfulci.job.shared.domain.GitJobBean;
 import restfulci.job.shared.domain.JobBean;
+import restfulci.job.shared.exception.JobDataException;
 
 @Getter
 @Setter
@@ -51,10 +52,6 @@ public class JobDTO {
 			return jobBean;
 		}
 		
-		throw new IOException();
-		/* 
-		 * TODO:
-		 * Should input a type, rather than completely rely on input content negotiation?
-		 */
+		throw new JobDataException("The job definition doesn't fit any existing job types.");
 	}
 }

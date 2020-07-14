@@ -9,6 +9,7 @@ public enum ReferredRunStatus {
 	IN_PROGRESS('I', "In progress"),
 	SUCCEED('S', "Succeed"),
 	FAIL('F', "Fail"),
+	ERROR('E', "Error"),
 	SKIP('K', "Skip"),
 	ABORT('A', "Abort");
 	
@@ -30,6 +31,8 @@ public enum ReferredRunStatus {
 			return SUCCEED;
 		case 'F':
 			return FAIL;
+		case 'E':
+			return ERROR;
 		case 'K':
 			return SKIP;
 		case 'A':

@@ -29,6 +29,7 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
+import restfulci.job.shared.exception.RunDataException;
 
 @Getter
 @Setter
@@ -78,16 +79,58 @@ public abstract class RunBean extends BaseEntity {
 		return null;
 	}
 	
+	public void validateInput() throws IOException {
+		
+		for (InputBean input : inputs) {
+			ParameterBean parameter = job.getParameter(input.getName());
+			
+			/*
+			 * TODO:
+			 * We should probably silently swallow this error. This match what Spring default/Java validation API 
+			 * do if the API data include an attribute they don't know.
+			 */
+			if (parameter == null) {
+				throw new RunDataException("Input "+input.getName()+" is not in the associated job's parameter list");
+			}
+			
+			if (parameter.getChoices() == null) {
+				continue;
+			}
+			else {
+				if (!Arrays.asList(parameter.getChoices()).contains(input.getValue())) {
+					throw new RunDataException("Input "+input.getName()+" has invalid value "+input.getValue());
+				}
+			}
+		}
+	}
+	
+	public void fillInDefaultInput() throws RunDataException {
+		
+		for (ParameterBean parameter : job.getParameters()) {
+			if (getInput(parameter.getName()) == null) {
+				if (parameter.getDefaultValue() != null) {
+					InputBean input = new InputBean();
+					input.setName(parameter.getName());
+					input.setValue(parameter.getDefaultValue());
+					addInput(input);
+				}
+				else {
+					throw new RunDataException("Missing input for "+parameter.getName());
+				}
+			}
+		}
+	}
+	
 	@NotNull
 	@Column(name="status_shortname")
 	@Convert(converter=RunStatusConventer.class)
-	private RunStatus status;
+	private RunStatus status = RunStatus.IN_PROGRESS;
 	
 	@JsonFormat(shape=JsonFormat.Shape.STRING, pattern="yyyy-MM-dd hh:mm:ss")
 	@NotNull
 	@Column(name="trigger_at", updatable=false)
 	@Temporal(TemporalType.TIMESTAMP)
-	private Date triggerAt;
+	private Date triggerAt = new Date();
 	
 	@JsonFormat(shape=JsonFormat.Shape.STRING, pattern="yyyy-MM-dd hh:mm:ss")
 	@Column(name="complete_at", updatable=true)
@@ -109,42 +152,7 @@ public abstract class RunBean extends BaseEntity {
 	 * `getDuration()`
 	 */
 	
-	public void validateInput() throws IOException {
-		
-		for (InputBean input : inputs) {
-			ParameterBean parameter = job.getParameter(input.getName());
-			
-			if (parameter == null) {
-				throw new IOException("Input "+input.getName()+" is not in the associated job's parameter list");
-			}
-			
-			if (parameter.getChoices() == null) {
-				continue;
-			}
-			else {
-				if (!Arrays.asList(parameter.getChoices()).contains(input.getValue())) {
-					throw new IOException("Input "+input.getName()+" has invalid value "+input.getValue());
-				}
-			}
-		}
-	}
-	
-	public void fillInDefaultInput() throws IOException {
-		
-		for (ParameterBean parameter : job.getParameters()) {
-			if (getInput(parameter.getName()) == null) {
-				if (parameter.getDefaultValue() != null) {
-					InputBean input = new InputBean();
-					input.setName(parameter.getName());
-					input.setValue(parameter.getDefaultValue());
-					addInput(input);
-				}
-				else {
-					throw new IOException("Missing input for "+parameter.getName());
-				}
-			}
-		}
-	}
+	public abstract JobType getType();
 	
 	public RunMessageBean toRunMessage() {
 		

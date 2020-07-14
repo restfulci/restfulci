@@ -6,7 +6,6 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
-import java.io.IOException;
 import java.util.ArrayList;
 
 import org.junit.jupiter.api.Assertions;
@@ -20,8 +19,6 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import restfulci.job.master.dto.RunDTO;
-import restfulci.job.master.service.JobService;
-import restfulci.job.master.service.RunService;
 import restfulci.job.shared.dao.MinioRepository;
 import restfulci.job.shared.dao.RunRepository;
 import restfulci.job.shared.dao.RunResultRepository;
@@ -33,6 +30,7 @@ import restfulci.job.shared.domain.GitJobBean;
 import restfulci.job.shared.domain.JobBean;
 import restfulci.job.shared.domain.ParameterBean;
 import restfulci.job.shared.domain.RunBean;
+import restfulci.job.shared.exception.RunDataException;
 
 @ExtendWith(SpringExtension.class)
 @SpringBootTest
@@ -53,7 +51,34 @@ public class RunServiceTest {
 //	@MockBean private AmqpTemplate template;
 	
 	@Test
-	public void testTriggerFreestyleRun() throws Exception {
+	public void testTriggerRunErrorsOutIfNotMatchingFreestyleJob() throws Exception {
+		
+		JobBean job = new FreestyleJobBean();
+		given(jobService.getJob(456)).willReturn(job);
+		
+		RunDTO runDTO = new RunDTO();
+		runDTO.put("branchName", "master");
+		
+		Assertions.assertThrows(RunDataException.class, () -> {
+			runService.triggerRun(456, runDTO);
+		});
+	}
+	
+	@Test
+	public void testTriggerRunErrorsOutIfNotMatchingGitJob() throws Exception {
+		
+		JobBean job = new GitJobBean();
+		given(jobService.getJob(456)).willReturn(job);
+		
+		RunDTO runDTO = new RunDTO();
+		
+		Assertions.assertThrows(RunDataException.class, () -> {
+			runService.triggerRun(456, runDTO);
+		});
+	}
+	
+	@Test
+	public void testTriggerFreestyleRunWithParameters() throws Exception {
 		
 		JobBean job = new FreestyleJobBean();
 		ParameterBean parameter = new ParameterBean();
@@ -75,7 +100,7 @@ public class RunServiceTest {
 	}
 	
 	@Test
-	public void testTriggerGitBranchRun() throws Exception {
+	public void testTriggerGitBranchRunWithParameters() throws Exception {
 		
 		JobBean job = new GitJobBean();
 		ParameterBean parameter = new ParameterBean();
@@ -98,7 +123,7 @@ public class RunServiceTest {
 	}
 	
 	@Test
-	public void testTriggerGitCommitRun() throws Exception {
+	public void testTriggerGitCommitRunWithParameters() throws Exception {
 		
 		JobBean job = new GitJobBean();
 		ParameterBean parameter = new ParameterBean();
@@ -153,7 +178,7 @@ public class RunServiceTest {
 		
 		RunDTO runDTO = new RunDTO();
 		
-		Assertions.assertThrows(IOException.class, () -> {
+		Assertions.assertThrows(RunDataException.class, () -> {
 			runService.triggerRun(456, runDTO);
 		});
 	}
@@ -167,7 +192,7 @@ public class RunServiceTest {
 		RunDTO runDTO = new RunDTO();
 		runDTO.put("EXCLUDE", "staging");
 		
-		Assertions.assertThrows(IOException.class, () -> {
+		Assertions.assertThrows(RunDataException.class, () -> {
 			runService.triggerRun(456, runDTO);
 		});
 	}
@@ -185,7 +210,7 @@ public class RunServiceTest {
 		RunDTO runDTO = new RunDTO();
 		runDTO.put("ENV", "development");
 		
-		Assertions.assertThrows(IOException.class, () -> {
+		Assertions.assertThrows(RunDataException.class, () -> {
 			runService.triggerRun(456, runDTO);
 		});
 	}

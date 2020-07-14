@@ -9,8 +9,14 @@ import org.springframework.transaction.annotation.Transactional;
 
 import lombok.extern.slf4j.Slf4j;
 import restfulci.pipeline.dao.PipelineRepository;
+import restfulci.pipeline.dao.ReferredJobRepository;
+import restfulci.pipeline.dao.RemoteJobRepository;
+import restfulci.pipeline.domain.ParameterBean;
+import restfulci.pipeline.domain.ParameterMapBean;
 import restfulci.pipeline.domain.PipelineBean;
 import restfulci.pipeline.domain.ReferredJobBean;
+import restfulci.pipeline.domain.RemoteJobBean;
+import restfulci.pipeline.exception.IdNonExistenceException;
 
 @Service
 @Transactional
@@ -18,6 +24,8 @@ import restfulci.pipeline.domain.ReferredJobBean;
 public class PipelineServiceImpl implements PipelineService {
 
 	@Autowired private PipelineRepository pipelineRepository;
+	@Autowired private ReferredJobRepository referredJobRepository;
+	@Autowired private RemoteJobRepository remoteJobRepository;
 	
 	@Override
 	public PipelineBean getPipeline(Integer pipelineId) throws IOException {
@@ -27,7 +35,18 @@ public class PipelineServiceImpl implements PipelineService {
 			return pipelines.get();
 		}
 		else {
-			throw new IOException();
+			throw new IdNonExistenceException("Pipeline ID does not exist yet.");
+		}
+	}
+	
+	private ReferredJobBean getReferredJob(Integer referredJobId) throws IOException {
+		
+		Optional<ReferredJobBean> ReferredJobs = referredJobRepository.findById(referredJobId);
+		if (ReferredJobs.isPresent()) {
+			return ReferredJobs.get();
+		}
+		else {
+			throw new IdNonExistenceException("Referred job ID does not exist yet.");
 		}
 	}
 
@@ -46,6 +65,17 @@ public class PipelineServiceImpl implements PipelineService {
 		
 		pipelineRepository.delete(pipeline);
 	}
+	
+	@Override
+	public PipelineBean addParameter(Integer pipelineId, ParameterBean parameter) throws IOException {
+		
+		PipelineBean pipeline = getPipeline(pipelineId);
+		log.info("Add parameter {} to pipeline {}", parameter, pipeline);
+		
+		pipeline.addParameter(parameter);
+		parameter.setPipeline(pipeline);
+		return pipelineRepository.saveAndFlush(pipeline);
+	}
 
 	@Override
 	public PipelineBean addReferredJob(Integer pipelineId, ReferredJobBean referredJob) throws IOException {
@@ -55,6 +85,85 @@ public class PipelineServiceImpl implements PipelineService {
 		
 		pipeline.addReferredJob(referredJob);
 		referredJob.setPipeline(pipeline);
+		return pipelineRepository.saveAndFlush(pipeline);
+	}
+	
+	@Override
+	public ReferredJobBean updateReferredJobParameters(Integer referredJobId) throws IOException {
+		
+		ReferredJobBean referredJob = getReferredJob(referredJobId);
+		
+		RemoteJobBean remoteJob = remoteJobRepository.getJob(referredJob.getOriginalJobId());
+		for (RemoteJobBean.Parameter remoteParameter : remoteJob.getParameters()) {
+			ParameterMapBean parameterMap = referredJob.getParameterMap(remoteParameter.getName());
+			if (parameterMap == null) {
+				ParameterMapBean newParameterMap = new ParameterMapBean();
+				newParameterMap.setRemoteName(remoteParameter.getName());
+				newParameterMap.setOptional(remoteParameter.isOptional());
+				
+				newParameterMap.setReferredJob(referredJob);
+				referredJob.addParameterMap(newParameterMap);
+			}
+			else {
+				parameterMap.setOptional(remoteParameter.isOptional());
+			}
+		}
+		
+		if (remoteJob.getType().equals("GIT")) {
+			for (String remoteName : new String[]{"branchName", "commitSha"}) {
+				if (referredJob.getParameterMap(remoteName) == null) {
+					ParameterMapBean newParameterMap = new ParameterMapBean();
+					newParameterMap.setRemoteName(remoteName);
+					newParameterMap.setOptional(true);
+					
+					newParameterMap.setReferredJob(referredJob);
+					referredJob.addParameterMap(newParameterMap);
+				}
+			}
+		}
+		
+		for (ParameterMapBean parameterMap : referredJob.getParameterMaps()) {
+			String remoteName = parameterMap.getRemoteName();
+			
+			if (remoteName.equals("branchName") || remoteName.equals("commitSha")) {
+				continue;
+			}
+			
+			if (remoteJob.getParameter(parameterMap.getRemoteName()) == null) {
+				referredJob.removeParameterMap(parameterMap);
+			}
+		}
+			
+		/*
+		 * TODO:
+		 * We need to build an "or" relationship for `parameter` and
+		 * `parameter_map`, to handle git remote job, for which we need
+		 * to pass either `branchName` or `commitSha`.
+		 */
+		
+		return referredJobRepository.saveAndFlush(referredJob);
+	}
+	
+	@Override
+	public PipelineBean linkReferredJobParameter(
+			Integer pipelineId, Integer referredJobId, Integer parameterMapId, Integer parameterId) throws IOException {
+	
+		PipelineBean pipeline = getPipeline(pipelineId);
+		ParameterBean parameter = pipeline.getParameter(parameterId);
+		/*
+		 * TODO:
+		 * Raise 400 if parameter is null. Give message that `parameterId` does not belongs 
+		 * to pipeline with `pipelineId`.
+		 */
+		
+		ReferredJobBean referredJob = pipeline.getReferredJob(referredJobId);
+		ParameterMapBean parameterMap = referredJob.getParameterMap(parameterMapId);
+		parameterMap.setParameter(parameter);
+		/*
+		 * TODO:
+		 * Raise 404 if referredJob or parameterMap is null.
+		 */
+		
 		return pipelineRepository.saveAndFlush(pipeline);
 	}
 

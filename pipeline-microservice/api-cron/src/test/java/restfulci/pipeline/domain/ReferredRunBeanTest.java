@@ -10,7 +10,6 @@ public class ReferredRunBeanTest {
 	public void testUpdateFromRemoteRun() throws Exception {
 		
 		ReferredRunBean referredRun = new ReferredRunBean();
-		referredRun.setStatus(ReferredRunStatus.NOT_STARTED_YET);
 		
 		RemoteRunBean remoteRun = new RemoteRunBean();
 		remoteRun.setId(123);

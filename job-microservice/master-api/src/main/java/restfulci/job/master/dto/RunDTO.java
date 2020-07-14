@@ -9,7 +9,6 @@ import restfulci.job.shared.domain.GitBranchRunBean;
 import restfulci.job.shared.domain.GitCommitRunBean;
 import restfulci.job.shared.domain.InputBean;
 import restfulci.job.shared.domain.RunBean;
-import restfulci.job.shared.domain.RunStatus;
 
 public class RunDTO extends HashMap<String, String> {
 
@@ -39,6 +38,29 @@ public class RunDTO extends HashMap<String, String> {
 		for (String key : keySet()) {
 			if (!key.equals("branchName") && !key.equals("commitSha")) {
 				
+				/*
+				 * We should possibly define a map between data payload to 
+				 * input/environment variables, so our job can basically accept
+				 * payload in any format. And instead of saving the input key/value
+				 * pairs, we just save the entire payload as input.
+				 * 
+				 * Then either the payload format (as the interface) need to be 
+				 * defined outside of the config YAML -- same as currently we save 
+				 * the parameters. It is very hard as it is more complicated than
+				 * simply key/value pairs of input.
+				 * Maybe https://json-schema.org/ works? Or we can use XSD if our 
+				 * payload is XML?
+				 * 
+				 * Or we define the parameters in the YAML config. It is hard, as:
+				 * (1) The format can't be completely define in YAML. As we need a
+				 * fixed schema to know branchName/commitSha before we can ever 
+				 * reach the YAML. 
+				 * (2) It may work as a RESTful API (since potentially you can have
+				 * different input schema for different commitSha which loads different
+				 * config YAML). But if it has an UI, it is very hard to generate the
+				 * input form (as you need to first pass the commitSha (as part of the 
+				 * input) and then generate the input form).
+				 */
 				InputBean input = new InputBean();
 				input.setRun(runBean);
 				input.setName(key);
@@ -47,9 +69,6 @@ public class RunDTO extends HashMap<String, String> {
 				runBean.addInput(input);
 			}
 		}
-
-		runBean.setStatus(RunStatus.IN_PROGRESS);
-		runBean.setTriggerAt(new Date());
 		
 		/*
 		 * TODO:

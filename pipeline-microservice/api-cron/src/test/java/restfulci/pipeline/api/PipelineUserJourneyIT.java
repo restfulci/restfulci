@@ -80,6 +80,24 @@ public class PipelineUserJourneyIT {
 				Map.class);
 		assertEquals(queriedPipeline.get("name"), pipelineName);
 		
+		Map<String, Object> parameterData = new HashMap<String, Object>();
+		parameterData.put("name", "ENV");
+		
+		Map<?, ?> parameterAddedPipeline = objectMapper.readValue(
+				mockMvc.perform(post("/pipelines/"+pipelineId+"/parameters")
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(objectWriter.writeValueAsString(parameterData)))
+						.andExpect(status().isOk())
+						.andReturn().getResponse().getContentAsString(),
+				Map.class);
+		assertEquals(parameterAddedPipeline.get("name"), pipelineName);
+		assertEquals(objectMapper.convertValue(parameterAddedPipeline.get("parameters"), List.class).size(), 1);
+		assertEquals(
+				objectMapper.convertValue(
+						objectMapper.convertValue(parameterAddedPipeline.get("parameters"), List.class).get(0),
+						Map.class).get("name"), 
+				"ENV");
+		
 		Map<String, Object> referredJobData = new HashMap<String, Object>();
 		referredJobData.put("originalJobId", 123);
 		
@@ -143,8 +161,13 @@ public class PipelineUserJourneyIT {
 			}
 		}
 		
+		Map<String, Object> cycleData = new HashMap<String, Object>();
+		cycleData.put("ENV", "staging");
+		
 		Map<?, ?> triggeredCycle = objectMapper.readValue(
-				mockMvc.perform(post("/pipelines/"+pipelineId+"/cycles"))
+				mockMvc.perform(post("/pipelines/"+pipelineId+"/cycles")
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(objectWriter.writeValueAsString(cycleData)))
 						.andExpect(status().isOk())
 						.andReturn().getResponse().getContentAsString(),
 				Map.class);
@@ -180,5 +203,14 @@ public class PipelineUserJourneyIT {
 		 */
 		mockMvc.perform(delete("/pipelines/"+pipelineId))
 				.andExpect(status().isOk());
+	}
+	
+	@Test
+	public void testGetPipelineWithNonExistenceIdReturnsNotFound() throws Exception {
+		
+		mockMvc.perform(get("/pipelines/123")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(objectWriter.writeValueAsString(new HashMap<String, String>())))
+				.andExpect(status().isNotFound());
 	}
 }

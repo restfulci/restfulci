@@ -156,4 +156,34 @@ public class GitJobUserJourneyIT {
 		mockMvc.perform(delete("/jobs/"+jobId))
 				.andExpect(status().isOk());
 	}
+	
+	@Test
+	public void testRunReturnBadRequestWithJobTypeMismatchedInput() throws Exception {
+		
+		final String jobName = "it_git_job_name";
+		Map<String, String> jobData = new HashMap<String, String>();
+		jobData.put("name", jobName);
+		jobData.put("remoteOrigin", "git@github.com:dummy/dummy.git");
+		jobData.put("configFilepath", ".restfulci.yml");
+		
+		Map<?, ?> createdJob = objectMapper.readValue(
+				mockMvc.perform(post("/jobs")
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(objectWriter.writeValueAsString(jobData)))
+						.andExpect(status().isOk())
+						.andReturn().getResponse().getContentAsString(),
+				Map.class);
+		assertEquals(createdJob.get("name"), jobName);
+		assertEquals(createdJob.get("type"), "GIT");
+		
+		Integer jobId = (Integer)createdJob.get("id");
+		
+		mockMvc.perform(post("/jobs/"+jobId+"/runs")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(objectWriter.writeValueAsString(new HashMap<String, Object>())))
+				.andExpect(status().isBadRequest());
+		
+		mockMvc.perform(delete("/jobs/"+jobId))
+				.andExpect(status().isOk());
+	}
 }

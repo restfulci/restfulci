@@ -3,6 +3,7 @@ package restfulci.pipeline.domain;
 import java.util.HashSet;
 import java.util.Set;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Convert;
 import javax.persistence.Entity;
@@ -11,6 +12,7 @@ import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 
@@ -42,11 +44,28 @@ public class ReferredRunBean extends BaseEntity {
 	@Column(name="original_run_id")
 	private Integer originalRunId;
 	
+	@JsonInclude(Include.NON_EMPTY)
+	@OneToMany(targetEntity=InputMapBean.class, fetch=FetchType.EAGER, cascade=CascadeType.ALL, mappedBy="referredRun")
+	private Set<InputMapBean> inputMaps = new HashSet<InputMapBean>();
+	
+	public void addInputMap(InputMapBean inputMap) {
+		inputMaps.add(inputMap);
+	}
+	
 	@NotNull
 	@Column(name="status_shortname")
 	@Convert(converter=ReferredRunStatusConventer.class)
-	private ReferredRunStatus status;
+	private ReferredRunStatus status = ReferredRunStatus.NOT_STARTED_YET;
 	
+	/*
+	 * Can't use subclasses, because ReferredRun doesn't know its status
+	 * at the beginning.
+	 */
+	@JsonInclude(Include.NON_NULL)
+	@Column(name="error_message", updatable=true)
+	private String errorMessage;
+	
+	@JsonInclude(Include.NON_NULL)
 	@Column(name="exit_code", updatable=true)
 	private Integer exitCode;
 	

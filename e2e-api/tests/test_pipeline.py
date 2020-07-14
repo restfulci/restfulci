@@ -11,28 +11,101 @@ class TestPipeline(TestCase):
     job_api_url = None
     pipeline_api_url = None
 
-    def test_docker_compose(self):
+    def _setup_docker_compose_urls(self):
         self.pipeline_api_url = "http://localhost:8882"
 
-        self._test(1, 2, 3, 4)
-
-    def test_kubernetes(self):
+    def _setup_kubernetes_urls(self):
         self.job_api_url = "http://35.190.162.206"
         self.pipeline_api_url = "http://35.190.139.27"
+
+    def test_docker_compose_succeed(self):
+        self._setup_docker_compose_urls()
+
+        # Seems cannot share it for `test_docker_compose_succeed` and
+        # `test_kubernetes_succeed`, as it needs to access `self`.
+        def validate_cycle_succeed(response_body):
+            self.assertEqual(response_body["status"], "SUCCEED")
+            self.assertIsNotNone(response_body["completeAt"])
+            referred_runs = response_body["referredRuns"]
+            self.assertCountEqual(
+                [referred_run["status"] for referred_run in referred_runs],
+                ["SUCCEED", "SUCCEED", "SUCCEED", "SUCCEED"])
+
+        self._test(
+            1, 2, 3, 4,
+            validate_cycle_final_state=validate_cycle_succeed)
+
+    def test_docker_compose_fail(self):
+        self._setup_docker_compose_urls()
+
+        def validate_cycle_fail(response_body):
+            self.assertEqual(response_body["status"], "FAIL")
+            referred_runs = response_body["referredRuns"]
+            self.assertCountEqual(
+                [referred_run["status"] for referred_run in referred_runs],
+                ["FAIL", "SKIP", "SKIP", "SKIP"])
+
+        self._test(
+            11, 2, 3, 4,
+            validate_cycle_final_state=validate_cycle_fail)
+
+    def test_docker_compose_abort(self):
+        self._setup_docker_compose_urls()
+
+        def validate_cycle_abort(response_body):
+            self.assertEqual(response_body["status"], "ABORT")
+            referred_runs = response_body["referredRuns"]
+            self.assertCountEqual(
+                [referred_run["status"] for referred_run in referred_runs],
+                ["ABORT", "SKIP", "SKIP", "SKIP"])
+
+        self._test(
+            21, 2, 3, 4,
+            validate_cycle_final_state=validate_cycle_abort)
+
+    def test_docker_compose_error(self):
+        self._setup_docker_compose_urls()
+
+        def validate_cycle_error(response_body):
+            self.assertEqual(response_body["status"], "FAIL")
+            referred_runs = response_body["referredRuns"]
+            self.assertCountEqual(
+                [referred_run["status"] for referred_run in referred_runs],
+                ["ERROR", "SKIP", "SKIP", "SKIP"])
+            for referred_run in referred_runs:
+                if referred_run["status"] == "ERROR":
+                    self.assertTrue("400 BAD REQUEST" in referred_run["errorMessage"])
+
+        self._test(
+            31, 2, 3, 4,
+            validate_cycle_final_state=validate_cycle_error)
+
+    def test_kubernetes_succeed(self):
+        self._setup_kubernetes_urls()
+
+        def validate_cycle_succeed(response_body):
+            self.assertEqual(response_body["status"], "SUCCEED")
+            self.assertIsNotNone(response_body["completeAt"])
+            referred_runs = response_body["referredRuns"]
+            self.assertCountEqual(
+                [referred_run["status"] for referred_run in referred_runs],
+                ["SUCCEED", "SUCCEED", "SUCCEED", "SUCCEED"])
 
         job_id_1 = self._create_job_and_return_id()
         job_id_2 = self._create_job_and_return_id()
         job_id_3 = self._create_job_and_return_id()
         job_id_4 = self._create_job_and_return_id()
 
-        self._test(job_id_1, job_id_2, job_id_3, job_id_4)
+        self._test(
+            job_id_1, job_id_2, job_id_3, job_id_4,
+            validate_cycle_final_state=validate_cycle_succeed)
 
         self._delete_job(job_id_1)
         self._delete_job(job_id_2)
         self._delete_job(job_id_3)
         self._delete_job(job_id_4)
 
-    def _test(self, job_id_1, job_id_2, job_id_3, job_id_4):
+    def _test(self, job_id_1, job_id_2, job_id_3, job_id_4, validate_cycle_final_state):
 
         response = requests.post(
             urljoin(self.pipeline_api_url, "/pipelines"),
@@ -47,15 +120,36 @@ class TestPipeline(TestCase):
         pipeline_id = response_body["id"]
         self.assertEqual(response_body["name"], "pipeline_name")
 
+        response = requests.post(
+            urljoin(self.pipeline_api_url, "/pipelines/{}/parameters".format(pipeline_id)),
+            headers={
+                "Content-Type": "application/json"
+            },
+            json={
+                "name": "ENV"
+            })
+        self.assertEqual(response.status_code, 200)
+        response_body = json.loads(response.text)
+        self.assertEqual(response_body["name"], "pipeline_name")
+        parameters = response_body["parameters"]
+        self.assertEqual(len(parameters), 1)
+        self.assertEqual(parameters[0]["name"], "ENV")
+        parameter_id = parameters[0]["id"]
+
         referred_job1_id = self._add_referred_job(pipeline_id, job_id_1)
         referred_job2_id = self._add_referred_job(pipeline_id, job_id_2)
         referred_job3_id = self._add_referred_job(pipeline_id, job_id_3)
         referred_job4_id = self._add_referred_job(pipeline_id, job_id_4)
 
-        self._link_referred_jobs(pipeline_id, referred_job1_id, referred_job2_id)
-        self._link_referred_jobs(pipeline_id, referred_job1_id, referred_job3_id)
-        self._link_referred_jobs(pipeline_id, referred_job2_id, referred_job4_id)
-        self._link_referred_jobs(pipeline_id, referred_job3_id, referred_job4_id)
+        self._update_and_link_referred_job_parameter(pipeline_id, referred_job1_id, parameter_id)
+        self._update_and_link_referred_job_parameter(pipeline_id, referred_job2_id, parameter_id)
+        self._update_and_link_referred_job_parameter(pipeline_id, referred_job3_id, parameter_id)
+        self._update_and_link_referred_job_parameter(pipeline_id, referred_job4_id, parameter_id)
+
+        self._link_referred_job_dependency(pipeline_id, referred_job1_id, referred_job2_id)
+        self._link_referred_job_dependency(pipeline_id, referred_job1_id, referred_job3_id)
+        self._link_referred_job_dependency(pipeline_id, referred_job2_id, referred_job4_id)
+        self._link_referred_job_dependency(pipeline_id, referred_job3_id, referred_job4_id)
 
         response = requests.get(
             urljoin(self.pipeline_api_url, "/pipelines/{}".format(pipeline_id)))
@@ -64,6 +158,11 @@ class TestPipeline(TestCase):
         self.assertEqual(response_body["name"], "pipeline_name")
         referred_jobs = response_body["referredJobs"]
         for referred_job in referred_jobs:
+            parameter_maps = referred_job["parameterMaps"]
+            self.assertEqual(len(parameter_maps), 1)
+            self.assertEqual(parameter_maps[0]["parameter"]["id"], parameter_id)
+            self.assertEqual(parameter_maps[0]["remoteName"], "ENV")
+
             if referred_job["id"] == referred_job1_id:
                 self.assertTrue("referredUpstreamJobs" not in referred_job)
             elif referred_job["id"] == referred_job2_id:
@@ -80,7 +179,13 @@ class TestPipeline(TestCase):
                     [referred_job2_id, referred_job3_id])
 
         response = requests.post(
-            urljoin(self.pipeline_api_url, "/pipelines/{}/cycles".format(pipeline_id)))
+            urljoin(self.pipeline_api_url, "/pipelines/{}/cycles".format(pipeline_id)),
+            headers={
+                "Content-Type": "application/json"
+            },
+            json={
+                "ENV": "stage"
+            })
         self.assertEqual(response.status_code, 200)
         response_body = json.loads(response.text)
         cycle_id = response_body["id"]
@@ -99,12 +204,8 @@ class TestPipeline(TestCase):
             self.assertEqual(response.status_code, 200)
             response_body = json.loads(response.text)
             sleep(1)
-        self.assertEqual(response_body["status"], "SUCCEED")
         self.assertIsNotNone(response_body["completeAt"])
-        referred_runs = response_body["referredRuns"]
-        self.assertEqual(len(referred_runs), 4)
-        for i in range(4):
-            self.assertEqual(referred_runs[i]["status"], "SUCCEED")
+        validate_cycle_final_state(response_body)
 
         requests.delete(
             urljoin(self.pipeline_api_url, "/pipelines/{}".format(pipeline_id)),
@@ -157,7 +258,28 @@ class TestPipeline(TestCase):
             if referred_job["originalJobId"] == original_job_id:
                 return referred_job["id"]
 
-    def _link_referred_jobs(self, pipeline_id, upstream_referred_job_id, downstream_referred_job_id):
+    def _update_and_link_referred_job_parameter(self, pipeline_id, referred_job_id, parameter_id):
+        response = requests.put(
+            urljoin(self.pipeline_api_url, "/pipelines/{}/referred-jobs/{}".format(pipeline_id, referred_job_id)))
+        self.assertEqual(response.status_code, 200)
+        response_body = json.loads(response.text)
+        parameter_maps = response_body["parameterMaps"]
+        self.assertEqual(len(parameter_maps), 1)
+        self.assertEqual(parameter_maps[0]["remoteName"], "ENV")
+        parameter_map_id = parameter_maps[0]["id"]
+
+        response = requests.put(
+            urljoin(
+                self.pipeline_api_url,
+                "/pipelines/{}/referred-jobs/{}/parameter-maps/{}".format(
+                    pipeline_id, referred_job_id, parameter_map_id)),
+            data={
+                "parameterId": parameter_id
+            })
+        self.assertEqual(response.status_code, 200)
+        response_body = json.loads(response.text)
+
+    def _link_referred_job_dependency(self, pipeline_id, upstream_referred_job_id, downstream_referred_job_id):
         response = requests.put(
             urljoin(self.pipeline_api_url, "/pipelines/{}/referred-jobs/{}/referred-upstream-jobs/{}".format(
                 pipeline_id, downstream_referred_job_id, upstream_referred_job_id)))
