@@ -275,3 +275,46 @@ article table.fill-in input[type=button]:hover {
 	color: #e6e472;
 	border: 1px solid #e6e472;
 }
+
+/****************************** In title setups ******************************/
+
+article h1 input[type=submit],
+article h2 input[type=submit],
+article h3 input[type=submit],
+article h4 input[type=submit],
+article h5 input[type=submit],
+article h6 input[type=submit] {
+
+	padding: 3px 7px 3px 7px;
+	border-radius: 5px;
+
+	background-color: #ffffff;
+	color: #2fc8a8;
+	border-color: #2fc8a8;
+
+	vertical-align: middle;
+	font-size: 16px;
+}
+
+article h1 input[type=submit]:hover,
+article h2 input[type=submit]:hover,
+article h3 input[type=submit]:hover,
+article h4 input[type=submit]:hover,
+article h5 input[type=submit]:hover,
+article h6 input[type=submit]:hover {
+
+	background-color: #2fc8a8;
+	color: #ffffff;
+	border-color: #2fc8a8;
+}
+
+article h1 span.explanation,
+article h2 span.explanation,
+article h3 span.explanation,
+article h4 span.explanation,
+article h5 span.explanation,
+article h6 span.explanation {
+
+	font-weight: normal;
+	color: #e6e472;
+}

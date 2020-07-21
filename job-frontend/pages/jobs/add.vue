@@ -96,8 +96,7 @@ export default {
           "Content-Type": "application/json"
         }
       }).then((response) => {
-          console.log(response);
-          // this.$router.push('/login');
+          this.$router.push('/jobs/'+response.data.id);
         })
         .catch((error) => {
           /*
