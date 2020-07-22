@@ -3,6 +3,7 @@ package restfulci.job.master.service;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 import java.util.Optional;
 
 import org.apache.commons.io.IOUtils;
@@ -10,6 +11,7 @@ import org.springframework.amqp.core.AmqpAdmin;
 import org.springframework.amqp.core.AmqpTemplate;
 import org.springframework.amqp.core.Queue;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -41,6 +43,17 @@ public class RunServiceImpl implements RunService {
 	
 	@Autowired private AmqpAdmin admin;
 	@Autowired private AmqpTemplate template;
+	
+	@Override
+	public List<RunBean> listRunsByJob(Integer jobId, Integer page, Integer size) throws IOException {
+		
+		/*
+		 * Looks like no easy way to filter by jobId rather than job.
+		 * So that also guarantee that the target job exists.
+		 */
+		JobBean job = jobService.getJob(jobId);
+		return runRepository.findAllByJob(job, PageRequest.of(page - 1, size));
+	}
 
 	@Override
 	public RunBean getRun(Integer runId) throws IOException {

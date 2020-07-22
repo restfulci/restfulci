@@ -1,6 +1,7 @@
 package restfulci.job.master.api;
 
 import java.io.IOException;
+import java.util.List;
 
 import javax.validation.Valid;
 import javax.validation.constraints.Min;
@@ -12,6 +13,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import restfulci.job.master.dto.JobDTO;
@@ -24,6 +26,22 @@ import restfulci.job.shared.domain.ParameterBean;
 public class JobsController {
 
 	@Autowired private JobService jobService;
+	
+	@GetMapping
+	public List<JobBean> listJobs(
+			@RequestParam(required=false) Integer page,
+			@RequestParam(required=false) Integer size) {
+		
+		if (page == null) {
+			page = 1;
+		}
+		
+		if (size == null) {
+			size = 10;
+		}
+		
+		return jobService.listJobs(page, size);
+	}
 	
 	@PostMapping
 	public JobBean createJob(@RequestBody @Valid JobDTO jobDTO) throws IOException {

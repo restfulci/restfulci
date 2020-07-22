@@ -84,6 +84,15 @@ public class FreestyleJobUserJourneyIT {
 		assertEquals(queriedJob.get("name"), jobName);
 		assertEquals(queriedJob.get("type"), "FREESTYLE");
 		
+		List<?> queriedJobs = objectMapper.readValue(
+				mockMvc.perform(get("/jobs?page=1&size=10"))
+						.andExpect(status().isOk())
+						.andReturn().getResponse().getContentAsString(),
+				List.class);
+		Map<?, ?> firstQueriedJob = objectMapper.convertValue(queriedJobs.get(0), Map.class);
+		assertEquals(firstQueriedJob.get("name"), jobName);
+		assertEquals(firstQueriedJob.get("type"), "FREESTYLE");
+		
 		Map<String, Object> parameterData = new HashMap<String, Object>();
 		parameterData.put("name", "ENV");
 		parameterData.put("defaultValue", "staging");
@@ -153,6 +162,14 @@ public class FreestyleJobUserJourneyIT {
 						.andReturn().getResponse().getContentAsString(),
 				Map.class);
 		assertEquals(queriedRun.get("status"), "IN_PROGRESS");
+		
+		List<?> queriedRuns = objectMapper.readValue(
+				mockMvc.perform(get("/jobs/"+jobId+"/runs?page=1&size=10"))
+						.andExpect(status().isOk())
+						.andReturn().getResponse().getContentAsString(),
+				List.class);
+		Map<?, ?> firstQueriedRun = objectMapper.convertValue(queriedRuns.get(0), Map.class);
+		assertEquals(firstQueriedRun.get("status"), "IN_PROGRESS");
 		
 		/*
 		 * curl -X GET -H "Content-Type: text/plain" -v localhost:8881/jobs/1/runs/1/console
