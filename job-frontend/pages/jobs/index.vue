@@ -16,15 +16,22 @@
             >
           </form>
         </h1>
+
+        <JobList />
       </div>
     </article>
   </div>
 </template>
 
 <script>
+import JobList from '~/components/JobList.vue';
+
 export default {
   layout: 'auth',
 
+  components: {
+    JobList
+  },
 };
 </script>
 

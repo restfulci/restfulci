@@ -17,14 +17,24 @@
             Trigger a run
           </nuxt-link>
         </h3>
+
+        <h3>Runs</h3>
+        <RunList v-bind:jobId="jobId" />
+
       </div>
     </article>
   </div>
 </template>
 
 <script>
+import RunList from '~/components/RunList.vue';
+
 export default {
   layout: 'auth',
+
+  components: {
+    RunList
+  },
 
   data() {
     return {
@@ -38,7 +48,7 @@ export default {
     .then(response => {
       this.job = response.data;
     });
-  }
+  },
 };
 </script>
 

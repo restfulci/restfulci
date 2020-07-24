@@ -1,14 +1,38 @@
 <template>
   <div>
     <article>
-      <div>
-        <p
-          v-for="(parameter, index) in job.parameters"
-          :key="index"
-        >
-          {{ parameter.name }}
-        </p>
-      </div>
+      <form @submit.prevent="triggerARun">
+        <table class="fill-in">
+          <tr
+            v-for="(parameter, index) in job.parameters"
+            :key="index"
+          >
+            <td>{{ parameter.name }}</td>
+            <td>
+              <!-- <input
+                id="parameter"
+                v-model="job.name"
+                name="parameter"
+                type="text"
+                value=""
+              > -->
+              <!-- <span
+                v-if="errors.name"
+                class="error"
+              >{{ errors.name }}</span> -->
+            </td>
+          </tr>
+          <tr>
+            <td />
+            <td class="button">
+              <input
+                type="submit"
+                value="Trigger a run"
+              >
+            </td>
+          </tr>
+        </table>
+      </form>
     </article>
   </div>
 </template>
@@ -20,7 +44,8 @@ export default {
   data() {
     return {
       jobId: this.$route.params.jobId,
-      job: ''
+      job: '',
+      parameters: {}
     };
   },
 
@@ -29,6 +54,12 @@ export default {
     .then(response => {
       this.job = response.data;
     });
+  },
+
+  methods: {
+    triggerARun() {
+
+    }
   }
 };
 </script>
