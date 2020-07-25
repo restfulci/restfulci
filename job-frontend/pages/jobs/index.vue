@@ -1,5 +1,9 @@
 <template>
   <div>
+    <nav>
+      <nuxt-link :to="'/'">Home</nuxt-link> &rarr;
+      <span class="nav-current">Jobs</span>
+    </nav>
     <article>
       <div>
         <h1>

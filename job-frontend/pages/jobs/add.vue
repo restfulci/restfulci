@@ -1,5 +1,10 @@
 <template>
   <div>
+    <nav>
+      <nuxt-link :to="'/'">Home</nuxt-link> &rarr;
+      <nuxt-link :to="'/jobs'">Jobs</nuxt-link> &rarr;
+      <span class="nav-current">Add</span>
+    </nav>
     <article>
       <div>
         <form @submit.prevent="addGitJob">
@@ -10,7 +15,6 @@
                 <input
                   id="name"
                   v-model="job.name"
-                  name="name"
                   type="text"
                   value=""
                 >
@@ -26,7 +30,6 @@
                 <input
                   id="remoteOrigin"
                   v-model="job.remoteOrigin"
-                  name="remoteOrigin"
                   type="text"
                   value=""
                 >
@@ -42,7 +45,6 @@
                 <input
                   id="configFilepath"
                   v-model="job.configFilepath"
-                  name="configFilepath"
                   type="text"
                   value=""
                 >

@@ -1,25 +1,25 @@
 <template>
   <div>
+    <nav>
+      <nuxt-link :to="'/'">Home</nuxt-link> &rarr;
+      <nuxt-link :to="'/jobs'">Jobs</nuxt-link> &rarr;
+      <nuxt-link :to="'/jobs/' + jobId">{{ job.name }}</nuxt-link> &rarr;
+      <span class="nav-current">Trigger new run</span>
+    </nav>
     <article>
-      <form @submit.prevent="triggerARun">
+      <form @submit.prevent="triggerNewRun">
         <table class="fill-in">
           <tr
             v-for="(parameter, index) in job.parameters"
             :key="index"
           >
-            <td>{{ parameter.name }}</td>
+            <td>{{ parameter.name }}<span v-if="parameter.isRequired">*</span></td>
             <td>
-              <!-- <input
-                id="parameter"
-                v-model="job.name"
-                name="parameter"
+              <input
+                v-model="parameter.value"
                 type="text"
                 value=""
-              > -->
-              <!-- <span
-                v-if="errors.name"
-                class="error"
-              >{{ errors.name }}</span> -->
+              >
             </td>
           </tr>
           <tr>
@@ -27,7 +27,7 @@
             <td class="button">
               <input
                 type="submit"
-                value="Trigger a run"
+                value="Trigger new run"
               >
             </td>
           </tr>
@@ -45,7 +45,6 @@ export default {
     return {
       jobId: this.$route.params.jobId,
       job: '',
-      parameters: {}
     };
   },
 
@@ -53,12 +52,34 @@ export default {
     this.$axios.get('/jobs/'+this.jobId)
     .then(response => {
       this.job = response.data;
+      if (this.job['type'] === 'GIT') {
+        this.job.parameters.unshift({'name': 'commitSha', 'isRequired': false})
+        this.job.parameters.unshift({'name': 'branchName', 'isRequired': false})
+      }
     });
   },
 
   methods: {
-    triggerARun() {
+    triggerNewRun() {
+      var input = {};
+      var i;
+      for (i = 0; i < this.job.parameters.length; ++i) {
+        var parameter = this.job.parameters[i];
+        if (parameter['value']) {
+          input[parameter['name']] = parameter['value']
+        }
+      }
+      this.$axios.post('/jobs/'+this.job.id+'/runs', input,
+      {
+        headers: {
+          "Content-Type": "application/json"
+        }
+      }).then((response) => {
+          this.$router.push('/jobs/'+this.job.id+'/runs/'+response.data.id);
+        })
+        .catch((error) => {
 
+        });
     }
   }
 };

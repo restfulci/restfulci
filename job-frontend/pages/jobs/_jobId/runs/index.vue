@@ -3,29 +3,13 @@
     <nav>
       <nuxt-link :to="'/'">Home</nuxt-link> &rarr;
       <nuxt-link :to="'/jobs'">Jobs</nuxt-link> &rarr;
-      <span class="nav-current">{{ job.name }}</span>
+      <nuxt-link :to="'/jobs/' + jobId">{{ job.name }}</nuxt-link> &rarr;
+      <span class="nav-current">Runs</span>
     </nav>
     <article>
       <div>
-        <h1>{{ job.name }}</h1>
-        <p>remote origin: {{ job.remoteOrigin }}</p>
-        <p>config filepath: {{ job.configFilepath }}</p>
-
-        <h3>
-          <nuxt-link :to="'/jobs/' + job.id + '/parameters'">
-            Config parameters
-          </nuxt-link>
-        </h3>
-
-        <h3>
-          <nuxt-link :to="'/jobs/' + job.id + '/trigger'">
-            Trigger a run
-          </nuxt-link>
-        </h3>
-
-        <h3>Runs</h3>
+        <h1>Runs</h1>
         <RunList v-bind:jobId="jobId" />
-
       </div>
     </article>
   </div>

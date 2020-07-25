@@ -77,6 +77,61 @@ header img.logo {
 	background-color: #ffffff;
 }
 
+/*************************** Navigator details *******************************/
+
+nav {
+
+	color: #888888;
+	background-color: #dddddd;
+
+	font-size: 14px;
+	font-weight: bold;
+
+	padding: 23px 27px 18px 27px;
+}
+
+nav div {
+  float: left;
+}
+
+nav span.nav-current {
+	color: #c53bce;
+	padding-bottom: 15px;
+	border-bottom: #c53bce 3px solid;
+}
+
+nav a:link { color: #444444; text-decoration: none; }
+nav a:visited { color: #444444; text-decoration: none; }
+nav a:hover { color: #aaaaaa; text-decoration: none; }
+nav a:active { color: #aaaaaa; text-decoration: none;}
+
+nav input[type=submit] {
+
+	background-color: #dddddd;
+	color: #2fc8a8;
+	border-color: #2fc8a8;
+
+	border: 1px solid;
+	margin: 0px 5px 0px 5px;
+	padding: 3px 5px 3px 5px;
+	border-radius: 5px;
+
+	font-weight: normal;
+	text-align: center;
+	text-decoration: none;
+	display: inline-block;
+	cursor: pointer;
+
+	transition-duration: 0.4s;
+}
+
+nav input[type=submit]:hover {
+
+	background-color: #2fc8a8;
+	color: #dddddd;
+	border-color: #2fc8a8;
+}
+
 /**************************** Article details ********************************/
 
 article {

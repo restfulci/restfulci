@@ -1,5 +1,11 @@
 <template>
   <div>
+    <nav>
+      <nuxt-link :to="'/'">Home</nuxt-link> &rarr;
+      <nuxt-link :to="'/jobs'">Jobs</nuxt-link> &rarr;
+      <nuxt-link :to="'/jobs/' + jobId">{{ job.name }}</nuxt-link> &rarr;
+      <span class="nav-current">Config parameters</span>
+    </nav>
     <article>
       <div>
         <h1>Current parameters</h1>
@@ -17,7 +23,6 @@
                 <input
                   id="name"
                   v-model="newParameter.name"
-                  name="name"
                   type="text"
                   value=""
                 >
@@ -93,7 +98,7 @@ export default {
           }
           console.log(this.errors);
         });
-    }
+    },
   }
 };
 </script>
