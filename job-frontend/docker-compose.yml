@@ -49,3 +49,14 @@ services:
       - minio
     tty: true
     restart: always
+
+  frontend:
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    ports:
+      - "5001:5000"
+    depends_on:
+      - master-api-server
+    tty: true
+    restart: always

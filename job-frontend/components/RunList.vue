@@ -15,8 +15,8 @@
 export default {
   props: {
     jobId: {
-      type: Number,
-      default: 0
+      type: String,
+      default: '0'
     }
   },
 
