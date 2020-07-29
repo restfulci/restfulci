@@ -55,4 +55,13 @@ public class ParameterBean extends BaseEntity {
 	@Type(type="string-array")
     @Column(name="choices", columnDefinition="text[]")
 	private String[] choices;
+	
+	public boolean getIsRequired() {
+		if (defaultValue == null) {
+			return true;
+		}
+		else {
+			return false;
+		}
+	}
 }

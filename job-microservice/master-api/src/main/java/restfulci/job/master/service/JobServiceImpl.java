@@ -1,9 +1,11 @@
 package restfulci.job.master.service;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,6 +22,14 @@ import restfulci.job.shared.exception.IdNonExistenceException;
 public class JobServiceImpl implements JobService {
 	
 	@Autowired private JobRepository jobRepository;
+	
+	@Override
+	public List<JobBean> listJobs(Integer page, Integer size) {
+		/*
+		 * `PageRequest` starts at 0, while our page number starts at 1.
+		 */
+		return jobRepository.findAll(PageRequest.of(page - 1, size)).getContent();
+	}
 
 	@Override
 	public JobBean getJob(Integer jobId) throws IOException {
@@ -61,5 +71,4 @@ public class JobServiceImpl implements JobService {
 		parameter.setJob(job);
 		return jobRepository.saveAndFlush(job);
 	}
-
 }

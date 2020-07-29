@@ -1,0 +1,62 @@
+version: "3"
+services:
+
+  postgres:
+    image: restfulci/job-postgres:cfeba6e434fcc1a0432b6b6c51950339ede94ad4
+    environment:
+      # TODO: Change name from `restfulci` to `restfulci-job`
+      - POSTGRES_DB=restfulci
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    restart: always
+
+  rabbitmq:
+    image: rabbitmq:3.8.2-management
+    ports:
+      - "15673:15672"
+
+  minio:
+    image: minio/minio:RELEASE.2020-04-02T21-34-49Z
+    environment:
+      - MINIO_ACCESS_KEY=restfulci
+      - MINIO_SECRET_KEY=secretpassword
+    command: server /data
+
+  master-api-server:
+    image: restfulci/job-master-api-server:cfeba6e434fcc1a0432b6b6c51950339ede94ad4
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+    ports:
+      - "8881:8080"
+    depends_on:
+      - postgres
+      - rabbitmq
+      - minio
+    tty: true
+    restart: always
+
+  slave-executor:
+    image: restfulci/job-slave-executor:cfeba6e434fcc1a0432b6b6c51950339ede94ad4
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - $SSH_AUTH_SOCK:${SSH_AUTH_SOCK}
+    environment:
+      - SSH_AUTH_SOCK
+      - SPRING_PROFILES_ACTIVE=docker
+    depends_on:
+      - postgres
+      - rabbitmq
+      - minio
+    tty: true
+    restart: always
+
+  frontend:
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    ports:
+      - "5001:5000"
+    depends_on:
+      - master-api-server
+    tty: true
+    restart: always

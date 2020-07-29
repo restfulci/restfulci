@@ -1,6 +1,7 @@
 package restfulci.job.master.api;
 
 import java.io.IOException;
+import java.util.List;
 
 import javax.validation.Valid;
 import javax.validation.constraints.Min;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import restfulci.job.master.dto.RunDTO;
@@ -26,6 +28,23 @@ import restfulci.job.shared.domain.RunBean;
 public class RunsController {
 
 	@Autowired private RunService runService;
+	
+	@GetMapping
+	public List<RunBean> listRuns(
+			@PathVariable @Min(1) Integer jobId,
+			@RequestParam(required=false) Integer page,
+			@RequestParam(required=false) Integer size) throws IOException {
+		
+		if (page == null) {
+			page = 1;
+		}
+		
+		if (size == null) {
+			size = 10;
+		}
+		
+		return runService.listRunsByJob(jobId, page, size);
+	}
 	
 	/*
 	 * TODO:

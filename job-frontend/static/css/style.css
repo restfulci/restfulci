@@ -1,0 +1,375 @@
+@charset "utf-8";
+
+/* *************************************************************************
+ * General replacement
+ * ************************************************************************* */
+
+body, img, form, table, tr, td, div, a {
+
+	border: 0px;
+	margin: 0px;
+	padding: 0px;
+}
+
+form {
+	display: inline-block;
+}
+
+table {
+	border-collapse: collapse;
+}
+
+h1, h2, h3, h4, h5, h6 {
+	border: 0px;
+	margin: 10px 0px 5px 0px;
+	padding: 0px;
+}
+
+p {
+	border: 0px;
+	margin: 0px 0px 5px 0px;
+	padding: 0px;
+}
+
+h1 { font-size: 30px; }
+h2 { font-size: 28px; }
+h3 { font-size: 26px; }
+h4 { font-size: 24px; }
+h5 { font-size: 22px; }
+h6 { font-size: 20px; }
+
+img.center {
+	display: block;
+	margin: 0 auto;
+}
+
+p.center {
+	text-align: center;
+}
+
+span.nowrap {
+	white-space: nowrap;
+}
+
+canvas {
+	display: inline;
+}
+
+/* *************************************************************************
+ * General layout
+ * ************************************************************************* */
+
+body {
+	font-family: "Open Sans", Sans, sans-serif, Arial;
+}
+
+
+/***************************** Header details *********************************/
+
+header {
+	background-color: #ffffff;
+	height: 60px;
+}
+
+header img.logo {
+	float: left;
+	width: 180px;
+	background-color: #ffffff;
+}
+
+/*************************** Navigator details *******************************/
+
+nav {
+
+	color: #888888;
+	background-color: #dddddd;
+
+	font-size: 14px;
+	font-weight: bold;
+
+	padding: 23px 27px 18px 27px;
+}
+
+nav div {
+  float: left;
+}
+
+nav span.nav-current {
+	color: #c53bce;
+	padding-bottom: 15px;
+	border-bottom: #c53bce 3px solid;
+}
+
+nav a:link { color: #444444; text-decoration: none; }
+nav a:visited { color: #444444; text-decoration: none; }
+nav a:hover { color: #aaaaaa; text-decoration: none; }
+nav a:active { color: #aaaaaa; text-decoration: none;}
+
+nav input[type=submit] {
+
+	background-color: #dddddd;
+	color: #2fc8a8;
+	border-color: #2fc8a8;
+
+	border: 1px solid;
+	margin: 0px 5px 0px 5px;
+	padding: 3px 5px 3px 5px;
+	border-radius: 5px;
+
+	font-weight: normal;
+	text-align: center;
+	text-decoration: none;
+	display: inline-block;
+	cursor: pointer;
+
+	transition-duration: 0.4s;
+}
+
+nav input[type=submit]:hover {
+
+	background-color: #2fc8a8;
+	color: #dddddd;
+	border-color: #2fc8a8;
+}
+
+/**************************** Article details ********************************/
+
+article {
+
+	color: #444444;
+	background-color: #ffffff;
+
+	width: calc(100% - 27px*2);
+	padding: 20px 27px 20px 27px;
+
+	font-size: 20px;
+}
+
+article a:link { color: #444444; text-decoration: none; }
+article a:visited { color: #444444; text-decoration: none; }
+article a:hover { color: #aaaaaa; text-decoration: none; }
+article a:active { color: #444444; text-decoration: none; }
+
+article div {
+	/*
+	 * Margin at top and bottom. So things will not look like next to each
+	 * other.
+	 */
+	margin-top: 5px;
+	margin-bottom: 5px;
+}
+
+div.error {
+	color: #ff0000;
+}
+
+article input[type=checkbox],
+article input[type=text],
+article input[type=password],
+article input[type=email],
+article textarea,
+article select {
+
+	border: 1px solid #bbbbbb;
+	margin: 0px;
+	padding: 5px;
+
+	font-size: 20px;
+	background-color: #dddddd;
+	color: #444444;
+}
+
+article input[type=submit],
+article input[type=button] {
+
+	border: 1px solid;
+	margin: 0px;
+	padding: 5px 10px 5px 10px;
+	border-radius: 10px;
+
+	font-weight: normal;
+	text-align: center;
+	text-decoration: none;
+	display: inline-block;
+	cursor: pointer;
+
+	transition-duration: 0.4s;
+}
+
+/***************************** Footer details ********************************/
+
+footer {
+	width: 100%;
+
+	color: #bbbbbb;
+	background-color: #ffffff;
+
+	font-size: 16px;
+	text-align: center;
+}
+
+footer a:link { color: #bbbbbb; text-decoration: none; }
+footer a:visited { color: #bbbbbb; text-decoration: none; }
+footer a:hover { color: #999999; text-decoration: none; }
+footer a:active { color: #bbbbbb; text-decoration: none;}
+
+/* *************************************************************************
+ * Tabled form
+ * ************************************************************************* */
+
+article table.fill-in {
+	/*
+	 * Match with the margin of headings.
+	 */
+	margin: 10px 0px 5px 0px;
+
+	/*
+	 * I want to put this table to the center. But it seems
+	 * doesn't work?
+	 */
+	float: center;
+}
+
+article table.fill-in td {
+	border: 1px;
+	padding-left: 3px;
+	padding-right: 3px;
+	margin: 0px;
+
+	vertical-align: top;
+}
+
+article table.fill-in td:nth-child(1) {
+	width: 250px;
+
+	/*
+	 * Padding equals the second column (1px) plus the
+	 * form padding (5px).
+	 */
+	padding-top: 6px;
+	padding-bottom: 6px;
+
+	text-align: right;
+}
+
+article table.fill-in td:nth-child(2) {
+	width: 600px;
+
+	padding-top: 1px;
+	padding-bottom: 1px;
+
+	text-align: left;
+}
+
+article table.fill-in td:nth-child(2).pre-fill,
+article table.fill-in td:nth-child(2).word,
+article table.fill-in td:nth-child(2).error,
+article table.fill-in td:nth-child(2).success {
+
+	/*
+	 * Padding equals the second column (3px) plus the
+	 * form padding (5px).
+	 */
+	padding-top: 6px;
+	padding-bottom: 6px;
+
+	padding-left: 8px;
+	padding-right: 8px;
+}
+
+article table.fill-in td:nth-child(2).pre-fill {
+	color: #999999;
+}
+
+article table.fill-in td:nth-child(2).error {
+	color: #ff0000;
+}
+
+article table.fill-in td:nth-child(2).success {
+	color: #00ff00;
+}
+
+article table.fill-in td span.error {
+	color: #ff0000;
+}
+
+article table.fill-in td.button {
+	padding-top: 5px;
+	padding-bottom: 5px;
+}
+
+article table.fill-in input[type=text],
+article table.fill-in input[type=password],
+article table.fill-in input[type=email] {
+	width: 400px;
+}
+
+article table.fill-in textarea {
+	width: 400px;
+	height: 100px;
+}
+
+article table.fill-in textarea.bigger {
+	width: 600px;
+	height: 150px;
+}
+
+article table.fill-in input[type=submit],
+article table.fill-in input[type=button] {
+
+	background-color: #e6e472;
+	color: #444444;
+	border-color: #e6e472;
+
+	font-size: 28px;
+}
+
+article table.fill-in input[type=submit]:hover,
+article table.fill-in input[type=button]:hover {
+	background-color: #ffffff;
+	color: #e6e472;
+	border: 1px solid #e6e472;
+}
+
+/****************************** In title setups ******************************/
+
+article h1 input[type=submit],
+article h2 input[type=submit],
+article h3 input[type=submit],
+article h4 input[type=submit],
+article h5 input[type=submit],
+article h6 input[type=submit] {
+
+	padding: 3px 7px 3px 7px;
+	border-radius: 5px;
+
+	background-color: #ffffff;
+	color: #2fc8a8;
+	border-color: #2fc8a8;
+
+	vertical-align: middle;
+	font-size: 16px;
+}
+
+article h1 input[type=submit]:hover,
+article h2 input[type=submit]:hover,
+article h3 input[type=submit]:hover,
+article h4 input[type=submit]:hover,
+article h5 input[type=submit]:hover,
+article h6 input[type=submit]:hover {
+
+	background-color: #2fc8a8;
+	color: #ffffff;
+	border-color: #2fc8a8;
+}
+
+article h1 span.explanation,
+article h2 span.explanation,
+article h3 span.explanation,
+article h4 span.explanation,
+article h5 span.explanation,
+article h6 span.explanation {
+
+	font-weight: normal;
+	color: #e6e472;
+}

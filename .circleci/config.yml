@@ -202,6 +202,28 @@ jobs:
       - run: cd pipeline-microservice/job-microservice-mock && pipenv install flake8
       - run: cd pipeline-microservice/job-microservice-mock && pipenv run flake8 --statistics
 
+  js-vue-linter:
+    docker:
+      - image: circleci/node:10.16.3
+    working_directory: ~/js
+    steps:
+      - checkout
+      - restore_cache:
+          name: Restore Yarn Package Cache
+          keys:
+            - yarn-packages-{{ checksum "job-frontend/yarn.lock" }}
+      - run:
+          name: Install Dependencies
+          command: cd job-frontend && yarn install --frozen-lockfile
+      - save_cache:
+          name: Save Yarn Package Cache
+          key: yarn-packages-{{ checksum "job-frontend/yarn.lock" }}
+          paths:
+            - ~/.cache/yarn
+      - run: # run tests
+          name: linter
+          command: cd job-frontend && node_modules/.bin/eslint --ext .js,.vue .
+
 workflows:
   version: 2
   build-test-and-deploy:
@@ -227,3 +249,4 @@ workflows:
               only: master
 
       - python-linter
+      - js-vue-linter
