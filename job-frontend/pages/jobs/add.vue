@@ -1,8 +1,12 @@
 <template>
   <div>
     <nav>
-      <nuxt-link :to="'/'">Home</nuxt-link> &rarr;
-      <nuxt-link :to="'/jobs'">Jobs</nuxt-link> &rarr;
+      <nuxt-link :to="'/'">
+        Home
+      </nuxt-link> &rarr;
+      <nuxt-link :to="'/jobs'">
+        Jobs
+      </nuxt-link> &rarr;
       <span class="nav-current">Add</span>
     </nav>
     <article>

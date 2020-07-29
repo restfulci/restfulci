@@ -13,9 +13,12 @@
 
 <script>
 export default {
-  props: [
-    'jobId'
-  ],
+  props: {
+    jobId: {
+      type: Number,
+      default: 0
+    }
+  },
 
   data() {
     return {

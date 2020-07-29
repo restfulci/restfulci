@@ -2,7 +2,7 @@ version: "3"
 services:
 
   postgres:
-    image: restfulci/job-postgres:d247de02bd704f41e322480dab3195a2f313fb39
+    image: restfulci/job-postgres:cfeba6e434fcc1a0432b6b6c51950339ede94ad4
     environment:
       # TODO: Change name from `restfulci` to `restfulci-job`
       - POSTGRES_DB=restfulci
@@ -23,7 +23,7 @@ services:
     command: server /data
 
   master-api-server:
-    image: restfulci/job-master-api-server:d247de02bd704f41e322480dab3195a2f313fb39
+    image: restfulci/job-master-api-server:cfeba6e434fcc1a0432b6b6c51950339ede94ad4
     environment:
       - SPRING_PROFILES_ACTIVE=docker
     ports:
@@ -36,7 +36,7 @@ services:
     restart: always
 
   slave-executor:
-    image: restfulci/job-slave-executor:d247de02bd704f41e322480dab3195a2f313fb39
+    image: restfulci/job-slave-executor:cfeba6e434fcc1a0432b6b6c51950339ede94ad4
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - $SSH_AUTH_SOCK:${SSH_AUTH_SOCK}

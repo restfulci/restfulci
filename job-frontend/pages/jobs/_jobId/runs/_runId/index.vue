@@ -1,14 +1,21 @@
 <template>
   <div>
     <nav>
-      <nuxt-link :to="'/'">Home</nuxt-link> &rarr;
-      <nuxt-link :to="'/jobs'">Jobs</nuxt-link> &rarr;
-      <nuxt-link :to="'/jobs/' + jobId">{{ job.name }}</nuxt-link> &rarr;
-      <nuxt-link :to="'/jobs/' + jobId + '/runs'">Runs</nuxt-link> &rarr;
+      <nuxt-link :to="'/'">
+        Home
+      </nuxt-link> &rarr;
+      <nuxt-link :to="'/jobs'">
+        Jobs
+      </nuxt-link> &rarr;
+      <nuxt-link :to="'/jobs/' + jobId">
+        {{ job.name }}
+      </nuxt-link> &rarr;
+      <nuxt-link :to="'/jobs/' + jobId + '/runs'">
+        Runs
+      </nuxt-link> &rarr;
       <span class="nav-current">{{ runId }}</span>
     </nav>
-    <article>
-    </article>
+    <article />
   </div>
 </template>
 
@@ -29,7 +36,7 @@ export default {
     this.$axios.get('/jobs/'+this.jobId + '/runs/' + this.runId)
     .then(response => {
       this.run = response.data;
-      this.job = this.run.job
+      this.job = this.run.job;
     });
   },
 };

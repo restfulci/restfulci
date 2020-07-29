@@ -1,9 +1,15 @@
 <template>
   <div>
     <nav>
-      <nuxt-link :to="'/'">Home</nuxt-link> &rarr;
-      <nuxt-link :to="'/jobs'">Jobs</nuxt-link> &rarr;
-      <nuxt-link :to="'/jobs/' + jobId">{{ job.name }}</nuxt-link> &rarr;
+      <nuxt-link :to="'/'">
+        Home
+      </nuxt-link> &rarr;
+      <nuxt-link :to="'/jobs'">
+        Jobs
+      </nuxt-link> &rarr;
+      <nuxt-link :to="'/jobs/' + jobId">
+        {{ job.name }}
+      </nuxt-link> &rarr;
       <span class="nav-current">Config parameters</span>
     </nav>
     <article>

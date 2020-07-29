@@ -1,8 +1,12 @@
 <template>
   <div>
     <nav>
-      <nuxt-link :to="'/'">Home</nuxt-link> &rarr;
-      <nuxt-link :to="'/jobs'">Jobs</nuxt-link> &rarr;
+      <nuxt-link :to="'/'">
+        Home
+      </nuxt-link> &rarr;
+      <nuxt-link :to="'/jobs'">
+        Jobs
+      </nuxt-link> &rarr;
       <span class="nav-current">{{ job.name }}</span>
     </nav>
     <article>
@@ -24,8 +28,7 @@
         </h3>
 
         <h3>Runs</h3>
-        <RunList v-bind:jobId="jobId" />
-
+        <RunList :job-id="jobId" />
       </div>
     </article>
   </div>
