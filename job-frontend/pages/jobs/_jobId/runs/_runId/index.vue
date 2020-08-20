@@ -15,7 +15,27 @@
       </nuxt-link> &rarr;
       <span class="nav-current">{{ runId }}</span>
     </nav>
-    <article />
+    <article>
+      <h1 v-if="run.status == 'IN_PROGRESS'">
+        ⌛
+      </h1>
+      <h1 v-if="run.status == 'SUCCEED'">
+        ✅
+      </h1>
+      <h1 v-if="run.status == 'FAIL'">
+        ❌
+      </h1>
+      <h1 v-if="run.status == 'ABORT'">
+        󠁿⚪
+      </h1>
+      <p>Triggered at: {{ run.triggerAt }}</p>
+      <p v-if="run.completeAt !== null">
+        Completed at: {{ run.completeAt }}
+      </p>
+      <p v-if="run.exitCode !== null">
+        Exit code: {{ run.exitCode }}
+      </p>
+    </article>
   </div>
 </template>
 
@@ -37,6 +57,7 @@ export default {
     .then(response => {
       this.run = response.data;
       this.job = this.run.job;
+      console.log(this.run);
     });
   },
 };

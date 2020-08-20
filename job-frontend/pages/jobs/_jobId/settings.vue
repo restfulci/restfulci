@@ -49,7 +49,7 @@ export default {
     deleteJob() {
       this.$axios.delete('/jobs/'+this.jobId)
       .then(response => {
-        this.$router.push('/jobs/');
+        this.$router.push('/jobs');
         return response;
       });
     },

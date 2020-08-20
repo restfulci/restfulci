@@ -20,8 +20,8 @@
             >
           </form>
         </h1>
-        <p>remote origin: {{ job.remoteOrigin }}</p>
-        <p>config filepath: {{ job.configFilepath }}</p>
+        <p>Remote origin: {{ job.remoteOrigin }}</p>
+        <p>Config filepath: {{ job.configFilepath }}</p>
 
         <h3>
           <nuxt-link :to="'/jobs/' + job.id + '/parameters'">
