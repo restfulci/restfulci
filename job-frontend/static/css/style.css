@@ -196,6 +196,24 @@ article input[type=button] {
 	transition-duration: 0.4s;
 }
 
+article input[type=submit].danger,
+article input[type=button].danger {
+
+	background-color: #CC0000;
+	color: #FFFFFF;
+	border-color: #CC0000;
+
+	font-size: 28px;
+}
+
+article input[type=submit].danger:hover,
+article input[type=button].danger:hover {
+
+	background-color: #FFFFFF;
+	color: #CC0000;
+	border-color: #CC0000;
+}
+
 /***************************** Footer details ********************************/
 
 footer {

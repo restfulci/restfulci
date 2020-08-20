@@ -1,6 +1,6 @@
 describe('Hello-world Git Job Test', () => {
   it('Visit jobs index page', () => {
-    cy.visit('http://localhost:5001/jobs')
+    cy.visit('http://localhost:3000/jobs')
     cy.contains('+').click()
 
     cy.url().should('include', '/jobs/add')
@@ -11,5 +11,17 @@ describe('Hello-world Git Job Test', () => {
 
     cy.url().should('match', /.*\/jobs\/\d+$/)
     cy.contains('cypress_git_job')
+
+    cy.visit('http://localhost:3000/jobs')
+    cy.contains('cypress_git_job').click()
+
+    cy.url().should('match', /.*\/jobs\/\d+$/)
+    cy.contains("Settings").click()
+
+    cy.url().should('match', /.*\/jobs\/\d+\/settings$/)
+    cy.contains("Delete job").click()
+
+    cy.url().should('include', '/jobs')
+    cy.contains('cypress_git_job').should('not.exist')
   })
 })

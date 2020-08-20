@@ -11,7 +11,15 @@
     </nav>
     <article>
       <div>
-        <h1>{{ job.name }}</h1>
+        <h1>
+          {{ job.name }}
+          <form @submit.prevent="goSettings">
+            <input
+              type="submit"
+              value="Settings"
+            >
+          </form>
+        </h1>
         <p>remote origin: {{ job.remoteOrigin }}</p>
         <p>config filepath: {{ job.configFilepath }}</p>
 
@@ -56,6 +64,12 @@ export default {
     .then(response => {
       this.job = response.data;
     });
+  },
+
+  methods: {
+    goSettings() {
+      this.$router.push("/jobs/" + this.jobId + "/settings");
+    },
   },
 };
 </script>
