@@ -14,3 +14,9 @@ $ yarn start
 # generate static project
 $ yarn generate
 ```
+
+Auto linter fix
+
+```
+node_modules/.bin/eslint --ext .js,.vue . --fix
+```

@@ -10,7 +10,7 @@
       <nuxt-link :to="'/jobs/' + jobId">
         {{ job.name }}
       </nuxt-link> &rarr;
-      <span class="nav-current">Trigger new run</span>
+      <span class="nav-current">Trigger a run</span>
     </nav>
     <article>
       <form @submit.prevent="triggerNewRun">
@@ -22,6 +22,7 @@
             <td>{{ parameter.name }}<span v-if="parameter.isRequired">*</span></td>
             <td>
               <input
+                :id="parameter.name"
                 v-model="parameter.value"
                 type="text"
                 value=""
@@ -33,7 +34,7 @@
             <td class="button">
               <input
                 type="submit"
-                value="Trigger new run"
+                value="Trigger it"
               >
             </td>
           </tr>
@@ -58,6 +59,9 @@ export default {
     this.$axios.get('/jobs/'+this.jobId)
     .then(response => {
       this.job = response.data;
+      if (!Object.prototype.hasOwnProperty.call(this.job, 'parameters')) {
+        this.job.parameters = [];
+      }
       if (this.job['type'] === 'GIT') {
         this.job.parameters.unshift({'name': 'commitSha', 'isRequired': false});
         this.job.parameters.unshift({'name': 'branchName', 'isRequired': false});

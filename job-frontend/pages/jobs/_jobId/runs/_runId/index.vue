@@ -15,7 +15,27 @@
       </nuxt-link> &rarr;
       <span class="nav-current">{{ runId }}</span>
     </nav>
-    <article />
+    <article>
+      <h1 v-if="run.status == 'IN_PROGRESS'">
+        ⌛
+      </h1>
+      <h1 v-if="run.status == 'SUCCEED'">
+        ✅
+      </h1>
+      <h1 v-if="run.status == 'FAIL'">
+        ❌
+      </h1>
+      <h1 v-if="run.status == 'ABORT'">
+        󠁿⚪
+      </h1>
+      <p>Triggered at: {{ run.triggerAt }}</p>
+      <p v-if="run.completeAt !== null">
+        Completed at: {{ run.completeAt }}
+      </p>
+      <p v-if="run.exitCode !== null">
+        Exit code: {{ run.exitCode }}
+      </p>
+    </article>
   </div>
 </template>
 
@@ -33,11 +53,24 @@ export default {
   },
 
   mounted() {
-    this.$axios.get('/jobs/'+this.jobId + '/runs/' + this.runId)
-    .then(response => {
-      this.run = response.data;
-      this.job = this.run.job;
-    });
+    this.loadRun();
+  },
+
+  /*
+   * Looks like there's no easy way to periodically update from API on
+   * the status in case of SSR. Life cycle hooks like `updated` is not
+   * called for SSR case.
+   */
+
+  methods: {
+    loadRun() {
+      this.$axios.get('/jobs/'+this.jobId + '/runs/' + this.runId)
+      .then(response => {
+        this.run = response.data;
+        this.job = this.run.job;
+        console.log(this.run);
+      });
+    },
   },
 };
 </script>
