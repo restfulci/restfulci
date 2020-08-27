@@ -1,5 +1,5 @@
 describe('Hello-world Git Job Test', () => {
-  it('Visit jobs index page', () => {
+  it('Create a job and a run and delete a job', () => {
     cy.visit('http://localhost:3000/jobs')
 
     cy.contains('+').click()
@@ -21,6 +21,22 @@ describe('Hello-world Git Job Test', () => {
     cy.contains('Trigger it').click()
     cy.url().should('match', /.*\/jobs\/\d+\/runs\/\d+$/)
     cy.contains('⌛')
+
+    function reloadReq () {
+      cy.reload().wait(1000)
+        .then((resp) => {
+          cy.get('body').then(($body) => {
+              if ($body.text().includes('⌛')) {
+                reloadReq()
+              }
+            })
+        })
+    }
+
+    cy.then(reloadReq)
+    cy.contains('✅')
+    cy.contains('Completed at')
+    cy.contains('Exit code')
 
     cy.contains('cypress_git_job').click()
     cy.url().should('match', /.*\/jobs\/\d+$/)
