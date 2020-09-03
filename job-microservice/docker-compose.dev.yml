@@ -28,3 +28,14 @@ services:
       MINIO_ACCESS_KEY: restfulci
       MINIO_SECRET_KEY: secretpassword
     command: server /data
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:11.0.2
+    ports:
+      - "8880:8080"
+    environment:
+      KEYCLOAK_USER: restfulci
+      KEYCLOAK_PASSWORD: secretpassword
+      # TODO:
+      # Change to postgres and setup the keycloak database.
+      DB_VENDOR: h2
