@@ -23,6 +23,7 @@
 
         <spring-boot.version>2.2.4.RELEASE</spring-boot.version>
         <junit.version>5.5.2</junit.version>
+        <keycloak.version>11.0.2</keycloak.version>
 
         <skip.unittest>false</skip.unittest>
         <skip.it>false</skip.it>
@@ -49,6 +50,15 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-validation</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-security</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.keycloak</groupId>
+            <artifactId>keycloak-spring-boot-starter</artifactId>
+            <version>${keycloak.version}</version>
         </dependency>
         <dependency>
             <groupId>io.minio</groupId>
@@ -142,6 +152,13 @@
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-dependencies</artifactId>
                 <version>${spring-boot.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.keycloak.bom</groupId>
+                <artifactId>keycloak-adapter-bom</artifactId>
+                <version>${keycloak.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
