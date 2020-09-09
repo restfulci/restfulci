@@ -29,6 +29,11 @@ services:
       MINIO_SECRET_KEY: secretpassword
     command: server /data
 
+  # Keycloak scripts are in path of `/opt/jboss/keycloak/bin` of the container.
+  # Detail usage can be seem from https://hub.docker.com/r/jboss/keycloak
+  #
+  # `realm.json` can be saved from keycloak UI. Command line seems doesn't work:
+  # docker-compose -f docker-compose.dev.yml exec keycloak /opt/jboss/keycloak/bin/standalone.sh -Djboss.socket.binding.port-offset=100 -Dkeycloak.migration.action=export -Dkeycloak.migration.provider=singleFile -Dkeycloak.migration.realmName=restfulci -Dkeycloak.migration.usersExportStrategy=REALM_FILE -Dkeycloak.migration.file=keycloak/realm.json
   keycloak:
     image: quay.io/keycloak/keycloak:11.0.2
     ports:
@@ -36,6 +41,11 @@ services:
     environment:
       KEYCLOAK_USER: restfulci
       KEYCLOAK_PASSWORD: secretpassword
+      # https://keycloak.discourse.group/t/cant-import-realm-using-docker-image/259/8
+      # otherwise see error "Script upload is disabled"
+      KEYCLOAK_IMPORT: "/tmp/realm.json -Dkeycloak.profile.feature.upload_scripts=enabled"
       # TODO:
       # Change to postgres and setup the keycloak database.
       DB_VENDOR: h2
+    volumes:
+      - ./keycloak/realm.json:/tmp/realm.json

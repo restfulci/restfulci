@@ -17,7 +17,14 @@ import org.springframework.security.web.authentication.session.RegisterSessionAu
 import org.springframework.security.web.authentication.session.SessionAuthenticationStrategy;
 
 /*
+ * Mostly following
  * https://medium.com/devops-dudes/securing-spring-boot-rest-apis-with-keycloak-1d760b2004e
+ * which is using Spring Boot adapter:
+ * https://www.keycloak.org/docs/latest/securing_apps/index.html#_spring_boot_adapter
+ * 
+ * Alternatively we may use Spring Security adapter
+ * https://www.keycloak.org/docs/latest/securing_apps/index.html#_spring_security_adapter
+ * for which we may customize more, and/or use different setups for different environments.
  */
 @Configuration
 @EnableWebSecurity
