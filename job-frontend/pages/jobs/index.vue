@@ -33,11 +33,11 @@
 import JobList from '~/components/JobList.vue';
 
 export default {
-  layout: 'auth',
 
   components: {
     JobList
   },
+  layout: 'auth',
 };
 </script>
 
