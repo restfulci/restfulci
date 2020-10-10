@@ -25,11 +25,11 @@
 import RunList from '~/components/RunList.vue';
 
 export default {
-  layout: 'auth',
 
   components: {
     RunList
   },
+  layout: 'auth',
 
   data() {
     return {
