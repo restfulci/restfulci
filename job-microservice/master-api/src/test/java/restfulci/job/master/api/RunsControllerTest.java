@@ -20,19 +20,26 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 
+import restfulci.job.master.MasterApplication;
 import restfulci.job.master.api.RunsController;
+import restfulci.job.master.config.OAuth2LoginConfig;
 import restfulci.job.master.dto.RunDTO;
 import restfulci.job.master.service.JobService;
 import restfulci.job.master.service.RunService;
 import restfulci.job.shared.domain.FreestyleJobBean;
 
 @WebMvcTest(RunsController.class)
+@ContextConfiguration(classes={
+		MasterApplication.class, 
+		OAuth2LoginConfig.class})
 public class RunsControllerTest {
 
 	@Autowired private MockMvc mockMvc;
@@ -50,6 +57,7 @@ public class RunsControllerTest {
 	}
 	
 	@Test
+	@WithMockUser
 	public void testTriggerRunValidInput() throws Exception {
 		
 		Map<String, String> runData = new HashMap<String, String>();
@@ -69,6 +77,7 @@ public class RunsControllerTest {
 	}
 	
 	@Test
+	@WithMockUser
 	public void testTriggerRunInvalidInputType() throws Exception {
 		
 		Map<String, Object> runData = new HashMap<String, Object>();
@@ -83,6 +92,7 @@ public class RunsControllerTest {
 	}
 
 	@Test
+	@WithMockUser
 	public void testRunResultContentType() throws Exception {
 		when(runService.getRunResultStream(any(Integer.class))).thenReturn(new NullInputStream(0));
 		this.mockMvc.perform(get("/jobs/1/runs/1/results/1"))

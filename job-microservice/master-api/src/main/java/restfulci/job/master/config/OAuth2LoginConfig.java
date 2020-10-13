@@ -32,6 +32,7 @@ public class OAuth2LoginConfig {
 //						.antMatchers("/", "/error").permitAll()
 						.anyRequest().authenticated()
 						)
+				.csrf().disable()
 				.oauth2Login(withDefaults());
 		}
 	}
