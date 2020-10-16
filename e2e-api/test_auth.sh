@@ -32,7 +32,11 @@ TEST_USER_TOKEN=$(curl -X POST \
 "$AUTH_HOST/auth/realms/restfulci/protocol/openid-connect/token" \
 --header 'Content-Type: application/x-www-form-urlencoded' \
 --data-urlencode 'client_id=job-microservice' \
---data-urlencode 'client_secret=81aff1bc-f122-4b03-adef-a6e255b26afd' \
+--data-urlencode 'client_secret=804ccb10-850e-40d9-aae5-9e69b91af511' \
 --data-urlencode 'username=test-user' \
 --data-urlencode 'password=password' \
 --data-urlencode 'grant_type=password' | jq -r '.access_token')
+
+curl -H "Authorization: Bearer ${TEST_USER_TOKEN}" http://localhost:8080/jobs
+
+curl -H "Authorization: Bearer ${TEST_USER_TOKEN}" http://localhost:8080/users/me
