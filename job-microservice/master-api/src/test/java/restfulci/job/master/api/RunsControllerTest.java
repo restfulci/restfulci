@@ -29,7 +29,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 
 import restfulci.job.master.MasterApplication;
-import restfulci.job.master.api.RunsController;
+import restfulci.job.master.config.KeycloakConfig;
 import restfulci.job.master.config.OAuth2LoginConfig;
 import restfulci.job.master.dto.RunDTO;
 import restfulci.job.master.service.JobService;
@@ -39,7 +39,8 @@ import restfulci.job.shared.domain.FreestyleJobBean;
 @WebMvcTest(RunsController.class)
 @ContextConfiguration(classes={
 		MasterApplication.class, 
-		OAuth2LoginConfig.class})
+		OAuth2LoginConfig.class,
+		KeycloakConfig.class})
 public class RunsControllerTest {
 
 	@Autowired private MockMvc mockMvc;

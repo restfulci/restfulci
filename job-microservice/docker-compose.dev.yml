@@ -34,6 +34,12 @@ services:
   #
   # `realm.json` can be saved from keycloak UI. Command line seems doesn't work:
   # docker-compose -f docker-compose.dev.yml exec keycloak /opt/jboss/keycloak/bin/standalone.sh -Djboss.socket.binding.port-offset=100 -Dkeycloak.migration.action=export -Dkeycloak.migration.provider=singleFile -Dkeycloak.migration.realmName=restfulci -Dkeycloak.migration.usersExportStrategy=REALM_FILE -Dkeycloak.migration.file=keycloak/realm.json
+  #
+  # TODO:
+  # Move keycloak logic to a standalone auth microservice.
+  # Bake realm.json into the image.
+  # But it is kind of hard, because client (master-api-server) URL
+  # need to be included in Keycloak setup.
   keycloak:
     image: quay.io/keycloak/keycloak:11.0.2
     ports:

@@ -1,3 +1,5 @@
+AUTH_HOST='http://keycloak:8080'
+
 AUTH_HOST='http://localhost:8880'
 
 MASTER_TOKEN=$(curl -X POST \
@@ -37,6 +39,8 @@ TEST_USER_TOKEN=$(curl -X POST \
 --data-urlencode 'password=password' \
 --data-urlencode 'grant_type=password' | jq -r '.access_token')
 
-curl -H "Authorization: Bearer ${TEST_USER_TOKEN}" http://localhost:8080/jobs
+curl -v -H "Authorization: Bearer ${TEST_USER_TOKEN}" http://localhost:8080/jobs
 
-curl -H "Authorization: Bearer ${TEST_USER_TOKEN}" http://localhost:8080/users/me
+curl -v -H "Authorization: Bearer ${TEST_USER_TOKEN}" http://localhost:8080/users/me
+
+curl -v -H "Authorization: Bearer ${TEST_USER_TOKEN}" http://localhost:8881/users/me

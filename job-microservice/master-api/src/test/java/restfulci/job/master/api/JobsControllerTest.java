@@ -14,17 +14,13 @@ import java.util.Map;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -32,6 +28,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 
 import restfulci.job.master.MasterApplication;
+import restfulci.job.master.config.KeycloakConfig;
 import restfulci.job.master.config.OAuth2LoginConfig;
 import restfulci.job.master.dto.JobDTO;
 import restfulci.job.master.service.JobService;
@@ -41,7 +38,8 @@ import restfulci.job.shared.domain.ParameterBean;
 @WebMvcTest(JobsController.class)
 @ContextConfiguration(classes={
 		MasterApplication.class, 
-		OAuth2LoginConfig.class})
+		OAuth2LoginConfig.class,
+		KeycloakConfig.class})
 public class JobsControllerTest {
 
 	@Autowired private MockMvc mockMvc;
