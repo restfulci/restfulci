@@ -43,6 +43,8 @@ services:
   keycloak:
     image: quay.io/keycloak/keycloak:11.0.2
     ports:
+      # TODO:
+      # Use 8443 instand for SSL.
       - "8880:8080"
     environment:
       KEYCLOAK_USER: restfulci
@@ -50,8 +52,20 @@ services:
       # https://keycloak.discourse.group/t/cant-import-realm-using-docker-image/259/8
       # otherwise see error "Script upload is disabled"
       KEYCLOAK_IMPORT: "/tmp/realm.json -Dkeycloak.profile.feature.upload_scripts=enabled"
-      # TODO:
-      # Change to postgres and setup the keycloak database.
-      DB_VENDOR: h2
+      DB_VENDOR: POSTGRES
+      DB_ADDR: keycloak-postgres
+      DB_DATABASE: keycloak
+      DB_USER: postgres
+      DB_PASSWORD: postgres
     volumes:
       - ./keycloak/realm.json:/tmp/realm.json
+    depends_on:
+      - keycloak-postgres
+
+  keycloak-postgres:
+    image: postgres:12.1
+    environment:
+      - POSTGRES_DB=keycloak
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    restart: always
