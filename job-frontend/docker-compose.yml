@@ -55,7 +55,7 @@ services:
       context: .
       dockerfile: ./Dockerfile
     ports:
-      - "5001:5000"
+      - "5111:5000"
     depends_on:
       - master-api-server
     tty: true
