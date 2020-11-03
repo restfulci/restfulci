@@ -70,34 +70,18 @@ export default {
   methods: {
     login() {
       console.log("Login user "+this.username+"!!");
-      /*
-       * TODO:
-       * Currently facing error
-       * > has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.
-       * Execute in CURL everything is fine.
-       * /jobs/add behaves the same when backend is 8080 (local)
-       * but is fine when it is 8881 (inside of docker-compose)
-       */
       setTimeout(() => { // we simulate the async request with timeout.
         this.$axios.post(
           'http://localhost:8880/auth/realms/restfulci/protocol/openid-connect/token',
           "client_id=job-microservice"
-          + "&client_secret=3b9857f3-56bd-43a0-befd-427cc14b5350"
+          + "&client_secret=f7335399-84c1-40fd-9708-9a90ff091d0d"
           + "&username="+self.username.value
           + "&password="+self.password.value
           + "&grant_type=password",
           {
             headers: {
               "Content-Type": "application/x-www-form-urlencoded",
-              // "Access-Control-Allow-Origin": "http://localhost:8880",
-              // "Access-Control-Allow-Origin": "*",
-              // "Access-Control-Allow-Methods": "GET,HEAD,OPTIONS,POST,PUT",
-              // "Access-Control-Allow-Headers": "Access-Control-Allow-Headers, Origin,Accept, X-Requested-With, Content-Type, Access-Control-Request-Method, Access-Control-Request-Headers",
             },
-            // auth: {
-            //   username: 'gitenter-envuelope',
-            //   password: 'secretpassword'
-            // },
             // withCredentials: true,
             // crossDomain: true,
           }

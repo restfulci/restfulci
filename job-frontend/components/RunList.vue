@@ -27,7 +27,13 @@ export default {
   },
 
   mounted() {
-    this.$axios.get('/jobs/'+this.jobId+"/runs")
+    this.$axios.get(
+      '/jobs/'+this.jobId+"/runs", {
+        headers: {
+          'Authorization': "Bearer " + this.$store.state.auth.accessToken
+        }
+      }
+    )
     .then(response => {
       this.runs = response.data;
     });

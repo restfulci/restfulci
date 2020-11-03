@@ -56,6 +56,7 @@
 
 <script>
 export default {
+  middleware: 'authenticated',
   layout: 'auth',
 
   data() {
@@ -77,7 +78,13 @@ export default {
 
   methods: {
     loadJob() {
-      this.$axios.get('/jobs/'+this.jobId)
+      this.$axios.get(
+        '/jobs/'+this.jobId, {
+          headers: {
+            'Authorization': "Bearer " + this.$store.state.auth.accessToken
+          }
+        }
+      )
       .then(response => {
         console.log(response.data);
         this.job = response.data;
@@ -85,12 +92,15 @@ export default {
     },
 
     addParameter() {
-      this.$axios.post('/jobs/'+this.job.id+'/parameters', this.newParameter,
-      {
-        headers: {
-          "Content-Type": "application/json"
+      this.$axios.post(
+        '/jobs/'+this.job.id+'/parameters', this.newParameter,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            'Authorization': "Bearer " + this.$store.state.auth.accessToken
+          }
         }
-      }).then((response) => {
+      ).then((response) => {
           console.log(response);
           this.loadJob();
         })
