@@ -234,9 +234,9 @@ workflows:
           requires:
             - java-job-unittest
             - java-job-integration-test
-          filters:
-            branches:
-              only: master
+          # filters:
+          #   branches:
+          #     only: master
 
       - java-pipeline-unittest
       - java-pipeline-integration-test
@@ -244,9 +244,9 @@ workflows:
           requires:
             - java-pipeline-unittest
             - java-pipeline-integration-test
-          filters:
-            branches:
-              only: master
+          # filters:
+          #   branches:
+          #     only: master
 
       - python-linter
       - js-vue-linter
