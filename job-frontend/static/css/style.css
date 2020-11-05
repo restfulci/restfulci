@@ -77,6 +77,47 @@ header img.logo {
 	background-color: #ffffff;
 }
 
+header div.text, header form, header button {
+
+	float: right;
+	overflow: auto;
+}
+
+header div.text, header input[type=submit], header button {
+
+	background-color: #ffffff;
+	color: #666666;
+}
+
+header div.text {
+	border: 0px;
+	padding: 15px 18px 7px 18px;
+	margin: 0px;
+
+	font-size: 17px;
+	font-weight: normal;
+	text-align: center;
+	text-decoration: none;
+}
+
+header input[type=submit], header button{
+
+	border: 0px;
+	padding: 16px 16px 8px 16px;
+	margin: 0px;
+
+	font-size: 16px;
+	font-weight: bold;
+	text-align: center;
+	text-decoration: none;
+	display: inline-block;
+	cursor: pointer;
+}
+
+header input[type=submit]:hover, header button:hover {
+	color: #444444;
+}
+
 /*************************** Navigator details *******************************/
 
 nav {

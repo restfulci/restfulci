@@ -57,6 +57,7 @@
 
 <script>
 const Cookie = process.client ? require('js-cookie') : undefined;
+
 export default {
   middleware: 'notAuthenticated',
   layout: 'unauth',
@@ -67,6 +68,7 @@ export default {
       errorMessage: '',
     };
   },
+
   methods: {
     login() {
       console.log("Login user "+this.username+"!!");
@@ -99,7 +101,7 @@ export default {
              * Redirect to where the access page is without an credential, rather than
              * always the front page.
              */
-            this.$router.push('/');
+            this.$router.push('/jobs');
           })
           .catch((error) => {
             this.username = '';
