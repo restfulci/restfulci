@@ -76,7 +76,7 @@ export default {
         this.$axios.post(
           'http://localhost:8880/auth/realms/restfulci/protocol/openid-connect/token',
           "client_id=job-microservice"
-          + "&client_secret=3b9857f3-56bd-43a0-befd-427cc14b5350"
+          + "&client_secret=2239f4f7-9b3d-40b9-b5df-9f2b1672ff7d"
           + "&username="+self.username.value
           + "&password="+self.password.value
           + "&grant_type=password",

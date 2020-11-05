@@ -32,6 +32,7 @@ services:
       - postgres
       - rabbitmq
       - minio
+      - keycloak
     tty: true
     restart: always
 
@@ -82,6 +83,13 @@ services:
       dockerfile: ./Dockerfile
     ports:
       - "5111:5000"
+    environment:
+      # This needs to be the API path to be seen from the browser, rather
+      # than the API path seen from the docker container (more specifically,
+      # in docker-compose http://master-api-server:8080/ will not work).
+      # It is because this path is in `_nuxt/app.***.js` executed in inside of
+      # the browser.
+      BROWSER_BASE_URL: http://localhost:8881
     depends_on:
       - master-api-server
     tty: true

@@ -42,6 +42,7 @@ services:
       - postgres
       - rabbitmq
       - minio
+      - keycloak
     tty: true
     restart: always
 
