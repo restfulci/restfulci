@@ -2,7 +2,7 @@ version: "3"
 services:
 
   postgres:
-    image: restfulci/job-postgres:cfeba6e434fcc1a0432b6b6c51950339ede94ad4
+    image: restfulci/job-postgres:d2ed56765fe483958e4b156c003ae423353876f6
     environment:
       # TODO: Change name from `restfulci` to `restfulci-job`
       - POSTGRES_DB=restfulci
@@ -23,7 +23,7 @@ services:
     command: server /data
 
   master-api-server:
-    image: restfulci/job-master-api-server:cfeba6e434fcc1a0432b6b6c51950339ede94ad4
+    image: restfulci/job-master-api-server:d2ed56765fe483958e4b156c003ae423353876f6
     environment:
       - SPRING_PROFILES_ACTIVE=docker
     ports:
@@ -36,7 +36,7 @@ services:
     restart: always
 
   slave-executor:
-    image: restfulci/job-slave-executor:cfeba6e434fcc1a0432b6b6c51950339ede94ad4
+    image: restfulci/job-slave-executor:d2ed56765fe483958e4b156c003ae423353876f6
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - $SSH_AUTH_SOCK:${SSH_AUTH_SOCK}
@@ -48,6 +48,32 @@ services:
       - rabbitmq
       - minio
     tty: true
+    restart: always
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:11.0.2
+    ports:
+      - "8880:8080"
+    environment:
+      KEYCLOAK_USER: restfulci
+      KEYCLOAK_PASSWORD: secretpassword
+      KEYCLOAK_IMPORT: "/tmp/realm.json -Dkeycloak.profile.feature.upload_scripts=enabled"
+      DB_VENDOR: POSTGRES
+      DB_ADDR: keycloak-postgres
+      DB_DATABASE: keycloak
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+    volumes:
+      - ../auth-microservice/realm.json:/tmp/realm.json
+    depends_on:
+      - keycloak-postgres
+
+  keycloak-postgres:
+    image: postgres:12.1
+    environment:
+      - POSTGRES_DB=keycloak
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
     restart: always
 
   frontend:
