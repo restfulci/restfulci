@@ -3,12 +3,13 @@ import os
 import requests
 from tempfile import NamedTemporaryFile
 from time import sleep
-from unittest import TestCase
 from urllib.parse import urljoin
 from zipfile import ZipFile
 
+from testsuites.auth_testsuite import AuthTestSuite
 
-class TestGitJob(TestCase):
+
+class TestGitJob(AuthTestSuite):
 
     job_api_url = "http://localhost:8881"
     # job_api_url = "http://34.73.0.219"
@@ -85,10 +86,15 @@ class TestGitJob(TestCase):
             validate_console_log=None,
             validate_results=None):
 
+        master_token = self.get_master_token()
+        self.create_user(master_token, "git-job-test-user", "password")
+        user_token = self.get_user_token("git-job-test-user", "password")
+
         response = requests.post(
             urljoin(self.job_api_url, "/jobs"),
             headers={
-                "Content-Type": "application/json"
+                "Content-Type": "application/json",
+                "Authorization": "Bearer {}".format(user_token)
             },
             json={
                 "name": "git_job_name",
@@ -102,7 +108,10 @@ class TestGitJob(TestCase):
         self.assertEqual(response_body["type"], "GIT")
 
         response = requests.get(
-            urljoin(self.job_api_url, "/jobs/{}".format(job_id)))
+            urljoin(self.job_api_url, "/jobs/{}".format(job_id)),
+            headers={
+                "Authorization": "Bearer {}".format(user_token)
+            })
         self.assertEqual(response.status_code, 200)
         response_body = json.loads(response.text)
         self.assertEqual(response_body["name"], "git_job_name")
@@ -112,7 +121,8 @@ class TestGitJob(TestCase):
             response = requests.post(
                 urljoin(self.job_api_url, "/jobs/{}/parameters".format(job_id)),
                 headers={
-                    "Content-Type": "application/json"
+                    "Content-Type": "application/json",
+                    "Authorization": "Bearer {}".format(user_token)
                 },
                 json={
                     "name": parameter_name
@@ -124,7 +134,8 @@ class TestGitJob(TestCase):
         response = requests.post(
             urljoin(self.job_api_url, "/jobs/{}/runs".format(job_id)),
             headers={
-                "Content-Type": "application/json"
+                "Content-Type": "application/json",
+                "Authorization": "Bearer {}".format(user_token)
             },
             json=dict({"branchName": "master"}, **inputs))
         self.assertEqual(response.status_code, 200)
@@ -137,7 +148,10 @@ class TestGitJob(TestCase):
 
         while response_body["status"] == "IN_PROGRESS":
             response = requests.get(
-                urljoin(self.job_api_url, "/jobs/{}/runs/{}".format(job_id, run_id)))
+                urljoin(self.job_api_url, "/jobs/{}/runs/{}".format(job_id, run_id)),
+                headers={
+                    "Authorization": "Bearer {}".format(user_token)
+                })
             self.assertEqual(response.status_code, 200)
             response_body = json.loads(response.text)
             sleep(1)
@@ -147,13 +161,19 @@ class TestGitJob(TestCase):
             run_results = response_body["runResults"]
 
         response = requests.get(
-            urljoin(self.job_api_url, "/jobs/{}/runs/{}/configuration".format(job_id, run_id)))
+            urljoin(self.job_api_url, "/jobs/{}/runs/{}/configuration".format(job_id, run_id)),
+            headers={
+                "Authorization": "Bearer {}".format(user_token)
+            })
         self.assertEqual(response.status_code, 200)
         self.assertTrue(response.text.startswith("version:"))
 
         if validate_console_log:
             response = requests.get(
-                urljoin(self.job_api_url, "/jobs/{}/runs/{}/console".format(job_id, run_id)))
+                urljoin(self.job_api_url, "/jobs/{}/runs/{}/console".format(job_id, run_id)),
+                headers={
+                    "Authorization": "Bearer {}".format(user_token)
+                })
             self.assertEqual(response.status_code, 200)
             validate_console_log(response)
 
@@ -165,6 +185,9 @@ class TestGitJob(TestCase):
                     urljoin(
                         self.job_api_url,
                         "/jobs/{}/runs/{}/results/{}".format(job_id, run_id, run_result["id"])),
+                    headers={
+                        "Authorization": "Bearer {}".format(user_token)
+                    },
                     stream=True)
                 self.assertEqual(response.status_code, 200)
 
@@ -184,5 +207,10 @@ class TestGitJob(TestCase):
 
         requests.delete(
             urljoin(self.job_api_url, "/jobs/{}".format(job_id)),
+            headers={
+                "Authorization": "Bearer {}".format(user_token)
+            }
         )
         self.assertEqual(response.status_code, 200)
+
+        self.delete_user(master_token, "git-job-test-user")

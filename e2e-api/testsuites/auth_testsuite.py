@@ -1,6 +1,5 @@
 import json
 import requests
-import subprocess
 from unittest import TestCase
 from urllib.parse import urljoin
 
@@ -63,36 +62,47 @@ class AuthTestSuite(TestCase):
             })
         self.assertEquals(response.status_code, 204)
 
+    def delete_user(self, master_token, username):
+        response = requests.get(
+            urljoin(self.auth_api_url, "/auth/admin/realms/restfulci/users"),
+            headers={
+                "Content-Type": "application/json",
+                "Authorization": "Bearer {}".format(master_token)
+            },
+            json={
+                "username": username
+            })
+        response_body = json.loads(response.text)
+        user_id = response_body[0]["id"]
+
+        response = requests.delete(
+            urljoin(self.auth_api_url, "/auth/admin/realms/restfulci/users/{}".format(user_id)),
+            headers={
+                "Authorization": "Bearer {}".format(master_token)
+            })
+        self.assertEquals(response.status_code, 204)
+
     def get_user_token(self, username, password):
-        # TODO:
-        # Currently only works in local (not in docker).
-        # As in docker, JWT token can only be getting from
-        # `http://keycloak:8080` inside of docker,
-        # otherwise 401.
+        response = requests.post(
+            urljoin(self.auth_api_url, "/auth/realms/restfulci/protocol/openid-connect/token"),
+            headers={
+                "Content-Type": "application/x-www-form-urlencoded"
+            },
+            data={
+                "client_id": "job-microservice",
+                "client_secret": "78b7fcc7-e374-4a0d-993f-3821470cce30",
+                "username": username,
+                "password": password,
+                "grant_type": "password"
+            })
+        response_body = json.loads(response.text)
+        return response_body["access_token"]
 
-        # response = requests.post(
-        #     urljoin(self.auth_api_url, "/auth/realms/restfulci/protocol/openid-connect/token"),
-        #     headers={
-        #         "Content-Type": "application/x-www-form-urlencoded"
-        #     },
-        #     data={
-        #         "client_id": "job-microservice",
-        #         "client_secret": "28a7617f-3368-41bb-b161-ceac8047d9ea",
-        #         "username": username,
-        #         "password": password,
-        #         "grant_type": "password"
-        #     })
-        # response_body = json.loads(response.text)
-        # return response_body["access_token"]
-
-        #result = subprocess.run("cd ../job-microservice && docker-compose exec master-api-server curl --help")
-        # result = subprocess.run(["curl", "--help"])
-
-        process = subprocess.Popen("""
-        cd ../job-microservice &&
-        ls &&
-        echo "hello" &&
-        docker-compose exec master-api-server curl --help
-        """, stdin=subprocess.PIPE, stdout=subprocess.PIPE, shell=True)
-        out, err = process.communicate()
-        print(out)
+    def get_me_info(self, user_token):
+        response = requests.get(
+            urljoin(self.auth_api_url, "/auth/realms/restfulci/protocol/openid-connect/userinfo"),
+            headers={
+                "Authorization": "Bearer {}".format(user_token)
+            })
+        response_body = json.loads(response.text)
+        return response_body

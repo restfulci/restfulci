@@ -1,7 +1,6 @@
 import json
 import requests
 from time import sleep
-from unittest import TestCase
 from urllib.parse import urljoin
 
 from testsuites.auth_testsuite import AuthTestSuite
@@ -9,8 +8,8 @@ from testsuites.auth_testsuite import AuthTestSuite
 
 class TestFreestyleJob(AuthTestSuite):
 
-    # job_api_url = "http://localhost:8881"
-    job_api_url = "http://localhost:8080"
+    job_api_url = "http://localhost:8881"
+    # job_api_url = "http://localhost:8080"
     # job_api_url = "http://35.190.162.206"
 
     freestyle_job_name = "freestyle_job_name"
@@ -61,7 +60,6 @@ class TestFreestyleJob(AuthTestSuite):
         master_token = self.get_master_token()
         self.create_user(master_token, "freestyle-job-test-user", "password")
         user_token = self.get_user_token("freestyle-job-test-user", "password")
-        print(user_token)
 
         response = requests.post(
             urljoin(self.job_api_url, "/jobs"),
@@ -142,3 +140,5 @@ class TestFreestyleJob(AuthTestSuite):
             }
         )
         self.assertEqual(response.status_code, 200)
+
+        self.delete_user(master_token, "freestyle-job-test-user")

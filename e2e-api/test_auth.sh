@@ -39,6 +39,8 @@ TEST_USER_TOKEN=$(curl -X POST \
 --data-urlencode 'password=password' \
 --data-urlencode 'grant_type=password' | jq -r '.access_token')
 
+curl -v -H "Authorization: Bearer ${TEST_USER_TOKEN}" "$AUTH_HOST/auth/realms/restfulci/protocol/openid-connect/userinfo"
+
 curl -v -H "Authorization: Bearer ${TEST_USER_TOKEN}" http://localhost:8080/jobs
 
 curl -v -H "Authorization: Bearer ${TEST_USER_TOKEN}" http://localhost:8080/users/me
