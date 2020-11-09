@@ -46,6 +46,7 @@
 
 <script>
 export default {
+  middleware: 'authenticated',
   layout: 'auth',
 
   data() {
@@ -56,7 +57,13 @@ export default {
   },
 
   mounted() {
-    this.$axios.get('/jobs/'+this.jobId)
+    this.$axios.get(
+      '/jobs/'+this.jobId, {
+        headers: {
+          'Authorization': "Bearer " + this.$store.state.auth.accessToken
+        }
+      }
+    )
     .then(response => {
       this.job = response.data;
       if (!Object.prototype.hasOwnProperty.call(this.job, 'parameters')) {
@@ -79,12 +86,16 @@ export default {
           input[parameter['name']] = parameter['value'];
         }
       }
-      this.$axios.post('/jobs/'+this.job.id+'/runs', input,
-      {
-        headers: {
-          "Content-Type": "application/json"
+      this.$axios.post(
+        '/jobs/'+this.job.id+'/runs',
+        input,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            'Authorization': "Bearer " + this.$store.state.auth.accessToken
+          }
         }
-      }).then((response) => {
+      ).then((response) => {
           this.$router.push('/jobs/'+this.job.id+'/runs/'+response.data.id);
         });
     }

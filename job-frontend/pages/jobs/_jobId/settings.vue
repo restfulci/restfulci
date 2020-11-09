@@ -26,6 +26,7 @@
 
 <script>
 export default {
+  middleware: 'authenticated',
   layout: 'auth',
 
   data() {
@@ -41,13 +42,25 @@ export default {
 
   methods: {
     loadJob() {
-      this.$axios.get('/jobs/'+this.jobId)
+      this.$axios.get(
+        '/jobs/'+this.jobId, {
+          headers: {
+            'Authorization': "Bearer " + this.$store.state.auth.accessToken
+          }
+        }
+      )
       .then(response => {
         this.job = response.data;
       });
     },
     deleteJob() {
-      this.$axios.delete('/jobs/'+this.jobId)
+      this.$axios.delete(
+        '/jobs/'+this.jobId, {
+          headers: {
+            'Authorization': "Bearer " + this.$store.state.auth.accessToken
+          }
+        }
+      )
       .then(response => {
         this.$router.push('/jobs');
         return response;

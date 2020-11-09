@@ -12,8 +12,16 @@ In each microservice folder
 ```
 docker-compose -f docker-compose.dev.yml rm -v -f postgres
 docker-compose -f docker-compose.dev.yml up
-mvn verify
 ```
+
+Tests:
+
+* From STS: No special setup needed.
+* From command line: `mvn verify`
+
+Run server:
+
+* From STS: Need to setup environment variable `SPRING_PROFILES_ACTIVE=dev` in "Run configurations" of `*Application.java`. Then the service should be available from `localhost:8080`.
 
 ### `docker`
 

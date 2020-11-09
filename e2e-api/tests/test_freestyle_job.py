@@ -1,13 +1,15 @@
 import json
 import requests
 from time import sleep
-from unittest import TestCase
 from urllib.parse import urljoin
 
+from testsuites.auth_testsuite import AuthTestSuite
 
-class TestFreestyleJob(TestCase):
+
+class TestFreestyleJob(AuthTestSuite):
 
     job_api_url = "http://localhost:8881"
+    # job_api_url = "http://localhost:8080"
     # job_api_url = "http://35.190.162.206"
 
     freestyle_job_name = "freestyle_job_name"
@@ -55,10 +57,15 @@ class TestFreestyleJob(TestCase):
             inputs={},
             validate_console_log=None):
 
+        master_token = self.get_master_token()
+        self.create_user(master_token, "freestyle-job-test-user", "password")
+        user_token = self.get_user_token("freestyle-job-test-user", "password")
+
         response = requests.post(
             urljoin(self.job_api_url, "/jobs"),
             headers={
-                "Content-Type": "application/json"
+                "Content-Type": "application/json",
+                "Authorization": "Bearer {}".format(user_token)
             },
             json=job_defination_json)
         self.assertEqual(response.status_code, 200)
@@ -68,7 +75,10 @@ class TestFreestyleJob(TestCase):
         self.assertEqual(response_body["type"], "FREESTYLE")
 
         response = requests.get(
-            urljoin(self.job_api_url, "/jobs/{}".format(job_id)))
+            urljoin(self.job_api_url, "/jobs/{}".format(job_id)),
+            headers={
+                "Authorization": "Bearer {}".format(user_token)
+            })
         self.assertEqual(response.status_code, 200)
         response_body = json.loads(response.text)
         self.assertEqual(response_body["name"], "freestyle_job_name")
@@ -78,7 +88,8 @@ class TestFreestyleJob(TestCase):
             response = requests.post(
                 urljoin(self.job_api_url, "/jobs/{}/parameters".format(job_id)),
                 headers={
-                    "Content-Type": "application/json"
+                    "Content-Type": "application/json",
+                    "Authorization": "Bearer {}".format(user_token)
                 },
                 json={
                     "name": parameter_name
@@ -90,7 +101,8 @@ class TestFreestyleJob(TestCase):
         response = requests.post(
             urljoin(self.job_api_url, "/jobs/{}/runs".format(job_id)),
             headers={
-                "Content-Type": "application/json"
+                "Content-Type": "application/json",
+                "Authorization": "Bearer {}".format(user_token)
             },
             json=inputs)
         self.assertEqual(response.status_code, 200)
@@ -102,7 +114,10 @@ class TestFreestyleJob(TestCase):
 
         while response_body["status"] == "IN_PROGRESS":
             response = requests.get(
-                urljoin(self.job_api_url, "/jobs/{}/runs/{}".format(job_id, run_id)))
+                urljoin(self.job_api_url, "/jobs/{}/runs/{}".format(job_id, run_id)),
+                headers={
+                    "Authorization": "Bearer {}".format(user_token)
+                })
             self.assertEqual(response.status_code, 200)
             response_body = json.loads(response.text)
             sleep(1)
@@ -111,11 +126,19 @@ class TestFreestyleJob(TestCase):
 
         if validate_console_log:
             response = requests.get(
-                urljoin(self.job_api_url, "/jobs/{}/runs/{}/console".format(job_id, run_id)))
+                urljoin(self.job_api_url, "/jobs/{}/runs/{}/console".format(job_id, run_id)),
+                headers={
+                    "Authorization": "Bearer {}".format(user_token)
+                })
             self.assertEqual(response.status_code, 200)
             validate_console_log(response)
 
         requests.delete(
             urljoin(self.job_api_url, "/jobs/{}".format(job_id)),
+            headers={
+                "Authorization": "Bearer {}".format(user_token)
+            }
         )
         self.assertEqual(response.status_code, 200)
+
+        self.delete_user(master_token, "freestyle-job-test-user")

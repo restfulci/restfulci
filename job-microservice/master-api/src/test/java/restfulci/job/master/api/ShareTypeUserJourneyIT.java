@@ -15,6 +15,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -48,6 +49,7 @@ public class ShareTypeUserJourneyIT {
 	}
 	
 	@Test
+	@WithMockUser
 	public void testBlankJobDefinitionReturnsBadRequest() throws Exception {
 		
 		mockMvc.perform(post("/jobs")
@@ -57,6 +59,7 @@ public class ShareTypeUserJourneyIT {
 	}
 	
 	@Test
+	@WithMockUser
 	public void testJobDefinitionWithDoesnotFitExistingJobTypesReturnsBadRequest() throws Exception {
 		
 		Map<String, Object> jobData = new HashMap<String, Object>();
@@ -69,6 +72,7 @@ public class ShareTypeUserJourneyIT {
 	}
 	
 	@Test
+	@WithMockUser
 	public void testGetJobWithNonExistenceIdReturnsNotFound() throws Exception {
 		
 		mockMvc.perform(get("/jobs/123")

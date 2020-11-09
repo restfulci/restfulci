@@ -10,6 +10,10 @@ export default {
   ** See https://nuxtjs.org/api/configuration-target
   */
   target: 'server',
+  env: {
+    authServer: process.env.AUTH_SERVER || 'http://localhost:8880',
+    authClientSecret: process.env.AUTH_CLIENT_SECRET || '25c7ad47-b784-4c15-b2ed-4969f4ceb1a0'
+  },
   /*
   ** Headers of the page
   ** See https://nuxtjs.org/api/configuration-head
@@ -55,6 +59,16 @@ export default {
   ],
   axios: {
     baseURL: process.env.API_URL
+  },
+  publicRuntimeConfig: {
+    axios: {
+      browserBaseURL: process.env.BROWSER_BASE_URL
+    }
+  },
+  privateRuntimeConfig: {
+    axios: {
+      baseURL: process.env.BASE_URL
+    }
   },
   /*
   ** Build configuration

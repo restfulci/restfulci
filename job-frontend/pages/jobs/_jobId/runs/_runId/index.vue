@@ -41,6 +41,7 @@
 
 <script>
 export default {
+  middleware: 'authenticated',
   layout: 'auth',
 
   data() {
@@ -64,7 +65,13 @@ export default {
 
   methods: {
     loadRun() {
-      this.$axios.get('/jobs/'+this.jobId + '/runs/' + this.runId)
+      this.$axios.get(
+        '/jobs/'+this.jobId + '/runs/' + this.runId, {
+          headers: {
+            'Authorization': "Bearer " + this.$store.state.auth.accessToken
+          }
+        }
+      )
       .then(response => {
         this.run = response.data;
         this.job = this.run.job;

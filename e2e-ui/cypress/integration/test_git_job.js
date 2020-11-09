@@ -2,6 +2,13 @@ describe('Hello-world Git Job Test', () => {
   it('Create a job and a run and delete a job', () => {
     cy.visit('http://localhost:3000/jobs')
 
+    cy.url().should('match', /.*\/login$/)
+    cy.get('#username').type('test-user')
+    cy.get('#password').type('password')
+    cy.contains('Log in').click()
+
+    cy.url().should('match', /.*\/jobs$/)
+
     cy.contains('+').click()
     cy.url().should('match', /.*\/jobs\/add.*$/)
     cy.get('#name').type('cypress_git_job')

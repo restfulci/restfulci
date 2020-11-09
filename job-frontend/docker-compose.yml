@@ -2,7 +2,7 @@ version: "3"
 services:
 
   postgres:
-    image: restfulci/job-postgres:cfeba6e434fcc1a0432b6b6c51950339ede94ad4
+    image: restfulci/job-postgres:46b6a3bec93f7dfa44d99c95aa4cad76cc850051
     environment:
       # TODO: Change name from `restfulci` to `restfulci-job`
       - POSTGRES_DB=restfulci
@@ -23,7 +23,7 @@ services:
     command: server /data
 
   master-api-server:
-    image: restfulci/job-master-api-server:cfeba6e434fcc1a0432b6b6c51950339ede94ad4
+    image: restfulci/job-master-api-server:46b6a3bec93f7dfa44d99c95aa4cad76cc850051
     environment:
       - SPRING_PROFILES_ACTIVE=docker
     ports:
@@ -32,11 +32,12 @@ services:
       - postgres
       - rabbitmq
       - minio
+      - keycloak
     tty: true
     restart: always
 
   slave-executor:
-    image: restfulci/job-slave-executor:cfeba6e434fcc1a0432b6b6c51950339ede94ad4
+    image: restfulci/job-slave-executor:46b6a3bec93f7dfa44d99c95aa4cad76cc850051
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - $SSH_AUTH_SOCK:${SSH_AUTH_SOCK}
@@ -50,12 +51,47 @@ services:
     tty: true
     restart: always
 
+  keycloak:
+    image: quay.io/keycloak/keycloak:11.0.2
+    ports:
+      - "8880:8080"
+    environment:
+      KEYCLOAK_USER: restfulci
+      KEYCLOAK_PASSWORD: secretpassword
+      KEYCLOAK_IMPORT: "/tmp/realm.json -Dkeycloak.profile.feature.upload_scripts=enabled"
+      DB_VENDOR: POSTGRES
+      DB_ADDR: keycloak-postgres
+      DB_DATABASE: keycloak
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+    volumes:
+      - ../auth-microservice/realm.json:/tmp/realm.json
+    depends_on:
+      - keycloak-postgres
+
+  keycloak-postgres:
+    image: postgres:12.1
+    environment:
+      - POSTGRES_DB=keycloak
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    restart: always
+
   frontend:
     build:
       context: .
       dockerfile: ./Dockerfile
     ports:
-      - "5001:5000"
+      - "5111:5000"
+    environment:
+      # This needs to be the API path to be seen from the browser, rather
+      # than the API path seen from the docker container (more specifically,
+      # in docker-compose http://master-api-server:8080/ will not work).
+      # It is because this path is in `_nuxt/app.***.js` executed in inside of
+      # the browser.
+      BROWSER_BASE_URL: http://localhost:8881
+      AUTH_SERVER: http://localhost:8880
+      AUTH_CLIENT_SECRET: 25c7ad47-b784-4c15-b2ed-4969f4ceb1a0
     depends_on:
       - master-api-server
     tty: true
