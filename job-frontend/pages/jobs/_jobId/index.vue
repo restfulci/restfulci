@@ -50,6 +50,7 @@ export default {
   components: {
     RunList
   },
+  middleware: 'authenticated',
   layout: 'auth',
 
   data() {
@@ -60,7 +61,13 @@ export default {
   },
 
   mounted() {
-    this.$axios.get('/jobs/'+this.jobId)
+    this.$axios.get(
+      '/jobs/'+this.jobId, {
+        headers: {
+          'Authorization': "Bearer " + this.$store.state.auth.accessToken
+        }
+      }
+    )
     .then(response => {
       this.job = response.data;
     });

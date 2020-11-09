@@ -76,6 +76,7 @@
 
 <script>
 export default {
+  middleware: 'authenticated',
   layout: 'auth',
 
   data() {
@@ -96,12 +97,16 @@ export default {
   methods: {
     addGitJob() {
       console.log("Add git job!!");
-      this.$axios.post('/jobs', this.job,
-      {
-        headers: {
-          "Content-Type": "application/json"
+      this.$axios.post(
+        '/jobs',
+        this.job,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            'Authorization': "Bearer " + this.$store.state.auth.accessToken
+          }
         }
-      }).then((response) => {
+      ).then((response) => {
           this.$router.push('/jobs/'+response.data.id);
         })
         .catch((error) => {

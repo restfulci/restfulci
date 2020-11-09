@@ -24,26 +24,17 @@ public class KeycloakConfig {
 		KeycloakSource keycloakSource = new KeycloakSource();
 		
 		/*
-		 * TODO:
-		 * There's a problem that if we use `keycloak:8080` as the issuer,
-		 * we need to go into the master-api-server container and get the 
-		 * JWT using the same URL. Get it from the outside (`localhost:8880`)
-		 * gives a 
+		 * The issuer URI need to be the URL user access the Keycloak server.
+		 * In docker-compose world, user is accessing Keycloak server from port
+		 * forwarding (so it is localhost:<port>).
+		 * 
+		 * Resource server is decoding the JWT token, read the issuer URI,
+		 * and compare it to the one defines here (we can use e.g. 
+		 * https://www.jsonwebtoken.io/ to check the decoded issuer from JWT
+		 * token). If it doesn't match, it returns:
 		 * > WWW-Authenticate: Bearer error="invalid_token", error_description="An error occurred while attempting to decode the Jwt: Signed JWT rejected: Invalid signature", error_uri="https://tools.ietf.org/html/rfc6750#section-3.1"
-		 * 
-		 * It should be resolved by Keycloak `frontendUrl`:
-		 * https://www.keycloak.org/docs/latest/server_installation/#default-provider
-		 * This thread may also help:
-		 * https://github.com/louketo/louketo-proxy/issues/539
-		 * but a rough try seems just redirect whatever in browser URL window
-		 * to the setup one, but didn't resolve the problem.
-		 * > /opt/jboss/keycloak/bin/jboss-cli.sh --connect --command='/subsystem=keycloak-server/spi=hostname/provider=default:write-attribute(name=properties.frontendUrl,value="http://localhost:8880/auth")'
-		 * 
-		 * Another possible workaround should be setup a set of endpoints to 
-		 * proxy curl Keycloak to get the token, but I don't know if there
-		 * are other solutions which makes more sense.
 		 */
-		keycloakSource.setIssuerUri("http://keycloak:8080/auth/realms/restfulci");
+		keycloakSource.setIssuerUri("http://localhost:8880/auth/realms/restfulci");
 		keycloakSource.setJwtSetUri("http://keycloak:8080/auth/realms/restfulci/protocol/openid-connect/certs");
 				
 		return keycloakSource;

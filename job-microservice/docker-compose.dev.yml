@@ -58,7 +58,7 @@ services:
       DB_USER: postgres
       DB_PASSWORD: postgres
     volumes:
-      - ./keycloak/realm.json:/tmp/realm.json
+      - ../auth-microservice/realm.json:/tmp/realm.json
     depends_on:
       - keycloak-postgres
 
