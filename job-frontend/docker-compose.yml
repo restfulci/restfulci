@@ -2,7 +2,7 @@ version: "3"
 services:
 
   postgres:
-    image: restfulci/job-postgres:d2ed56765fe483958e4b156c003ae423353876f6
+    image: restfulci/job-postgres:46b6a3bec93f7dfa44d99c95aa4cad76cc850051
     environment:
       # TODO: Change name from `restfulci` to `restfulci-job`
       - POSTGRES_DB=restfulci
@@ -23,7 +23,7 @@ services:
     command: server /data
 
   master-api-server:
-    image: restfulci/job-master-api-server:d2ed56765fe483958e4b156c003ae423353876f6
+    image: restfulci/job-master-api-server:46b6a3bec93f7dfa44d99c95aa4cad76cc850051
     environment:
       - SPRING_PROFILES_ACTIVE=docker
     ports:
@@ -37,7 +37,7 @@ services:
     restart: always
 
   slave-executor:
-    image: restfulci/job-slave-executor:d2ed56765fe483958e4b156c003ae423353876f6
+    image: restfulci/job-slave-executor:46b6a3bec93f7dfa44d99c95aa4cad76cc850051
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - $SSH_AUTH_SOCK:${SSH_AUTH_SOCK}
@@ -90,6 +90,8 @@ services:
       # It is because this path is in `_nuxt/app.***.js` executed in inside of
       # the browser.
       BROWSER_BASE_URL: http://localhost:8881
+      AUTH_SERVER: http://localhost:8880
+      AUTH_CLIENT_SECRET: 25c7ad47-b784-4c15-b2ed-4969f4ceb1a0
     depends_on:
       - master-api-server
     tty: true
