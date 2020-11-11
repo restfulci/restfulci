@@ -4,6 +4,12 @@ CREATE TABLE application_user (
 	password text NOT NULL
 );
 
+CREATE TABLE auth_user (
+  id serial PRIMARY KEY,
+  auth_id text NOT NULL UNIQUE,
+  username text NOT NULL
+);
+
 CREATE TABLE job (
   id serial PRIMARY KEY,
   name text NOT NULL UNIQUE
@@ -32,6 +38,7 @@ CREATE TABLE parameter (
 CREATE TABLE run (
   id serial PRIMARY KEY,
   job_id serial REFERENCES job(id) ON DELETE CASCADE,
+  user_id serial REFERENCES auth_user(id) ON DELETE RESTRICT,
   -- user_id serial REFERENCES application_user (id) ON DELETE CASCADE,
   status_shortname char(1) NOT NULL CHECK (
     status_shortname='I' OR

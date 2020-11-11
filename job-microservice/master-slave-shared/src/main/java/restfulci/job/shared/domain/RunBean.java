@@ -44,6 +44,11 @@ public abstract class RunBean extends BaseEntity {
 	@JoinColumn(name="job_id")
 	private JobBean job;
 	
+	@NotNull
+	@ManyToOne(fetch=FetchType.EAGER)
+	@JoinColumn(name="user_id")
+	private UserBean user;
+	
 	/*
 	 * Use `Set` so there can be multiple `FetchType.EAGER`. If use `List`, we'll 
 	 * face error:

@@ -58,8 +58,8 @@ class TestFreestyleJob(AuthTestSuite):
             validate_console_log=None):
 
         master_token = self.get_master_token()
-        self.create_user(master_token, "freestyle-job-test-user", "password")
-        user_token = self.get_user_token("freestyle-job-test-user", "password")
+        self.create_user(master_token, "freestyle-job-user", "password")
+        user_token = self.get_user_token("freestyle-job-user", "password")
 
         response = requests.post(
             urljoin(self.job_api_url, "/jobs"),
@@ -141,4 +141,4 @@ class TestFreestyleJob(AuthTestSuite):
         )
         self.assertEqual(response.status_code, 200)
 
-        self.delete_user(master_token, "freestyle-job-test-user")
+        self.delete_user(master_token, "freestyle-job-user")

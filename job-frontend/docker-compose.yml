@@ -91,7 +91,7 @@ services:
       # the browser.
       BROWSER_BASE_URL: http://localhost:8881
       AUTH_SERVER: http://localhost:8880
-      AUTH_CLIENT_SECRET: 25c7ad47-b784-4c15-b2ed-4969f4ceb1a0
+      AUTH_CLIENT_SECRET: 78b7fcc7-e374-4a0d-993f-3821470cce30
     depends_on:
       - master-api-server
     tty: true

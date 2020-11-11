@@ -34,7 +34,7 @@ TEST_USER_TOKEN=$(curl -X POST \
 "$AUTH_HOST/auth/realms/restfulci/protocol/openid-connect/token" \
 --header 'Content-Type: application/x-www-form-urlencoded' \
 --data-urlencode 'client_id=job-microservice' \
---data-urlencode 'client_secret=25c7ad47-b784-4c15-b2ed-4969f4ceb1a0' \
+--data-urlencode 'client_secret=78b7fcc7-e374-4a0d-993f-3821470cce30' \
 --data-urlencode 'username=test-user' \
 --data-urlencode 'password=password' \
 --data-urlencode 'grant_type=password' | jq -r '.access_token')

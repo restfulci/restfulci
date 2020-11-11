@@ -87,8 +87,8 @@ class TestGitJob(AuthTestSuite):
             validate_results=None):
 
         master_token = self.get_master_token()
-        self.create_user(master_token, "git-job-test-user", "password")
-        user_token = self.get_user_token("git-job-test-user", "password")
+        self.create_user(master_token, "git-job-user", "password")
+        user_token = self.get_user_token("git-job-user", "password")
 
         response = requests.post(
             urljoin(self.job_api_url, "/jobs"),
@@ -213,4 +213,4 @@ class TestGitJob(AuthTestSuite):
         )
         self.assertEqual(response.status_code, 200)
 
-        self.delete_user(master_token, "git-job-test-user")
+        self.delete_user(master_token, "git-job-user")
