@@ -27,6 +27,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
+import com.google.common.net.HttpHeaders;
 
 import restfulci.job.master.MasterApplication;
 import restfulci.job.master.config.KeycloakConfig;
@@ -34,7 +35,9 @@ import restfulci.job.master.config.OAuth2LoginConfig;
 import restfulci.job.master.dto.RunDTO;
 import restfulci.job.master.service.JobService;
 import restfulci.job.master.service.RunService;
+import restfulci.job.master.service.UserService;
 import restfulci.job.shared.domain.FreestyleJobBean;
+import restfulci.job.shared.domain.UserBean;
 
 @WebMvcTest(RunsController.class)
 @ContextConfiguration(classes={
@@ -47,6 +50,7 @@ public class RunsControllerTest {
 
 	@MockBean private JobService jobService;
 	@MockBean private RunService runService;
+	@MockBean private UserService userService;
 	
 	private ObjectMapper objectMapper;
 	private ObjectWriter objectWriter;
@@ -66,13 +70,15 @@ public class RunsControllerTest {
 		runData.put("ENV", "staging");
 		
 		when(jobService.getJob(any(Integer.class))).thenReturn(new FreestyleJobBean());
+		when(userService.getUserByAuthId(any(String.class), any(String.class))).thenReturn(new UserBean());
 		this.mockMvc.perform(post("/jobs/1/runs")
 				.contentType(MediaType.APPLICATION_JSON)
+				.header(HttpHeaders.AUTHORIZATION, "foo")
 				.content(objectWriter.writeValueAsString(runData)))	
 				.andExpect(status().isOk());
 		
 		ArgumentCaptor<RunDTO> runCaptor = ArgumentCaptor.forClass(RunDTO.class);
-		verify(runService, times(1)).triggerRun(any(Integer.class), runCaptor.capture());
+		verify(runService, times(1)).triggerRun(any(Integer.class), runCaptor.capture(), any(UserBean.class));
 		assertEquals(runCaptor.getValue().get("branchName"), "master");
 		assertEquals(runCaptor.getValue().get("ENV"), "staging");
 	}

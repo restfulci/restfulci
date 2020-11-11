@@ -29,6 +29,7 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com.google.common.net.HttpHeaders;
 
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
@@ -130,6 +131,7 @@ public class GitJobUserJourneyIT {
 		Map<?, ?> triggeredRun = objectMapper.readValue(
 				mockMvc.perform(post("/jobs/"+jobId+"/runs")
 						.contentType(MediaType.APPLICATION_JSON)
+						.header(HttpHeaders.AUTHORIZATION, "foo")
 						.content(objectWriter.writeValueAsString(runData)))
 						.andExpect(status().isOk())
 						.andReturn().getResponse().getContentAsString(),

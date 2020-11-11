@@ -41,7 +41,11 @@ TEST_USER_TOKEN=$(curl -X POST \
 
 curl -v -H "Authorization: Bearer ${TEST_USER_TOKEN}" "$AUTH_HOST/auth/realms/restfulci/protocol/openid-connect/userinfo"
 
-curl -v -H "Authorization: Bearer ${TEST_USER_TOKEN}" http://localhost:8080/jobs
+JOB_HOST=http://localhost:8080
+curl -v -H "Authorization: Bearer ${TEST_USER_TOKEN}" $JOB_HOST/jobs
+curl -X POST -H "Content-Type: application/json" -H "Authorization: Bearer ${TEST_USER_TOKEN}" --data '{"name": "manual_freestyle_job_name", "dockerImage": "busybox:1.31", "command": ["sh", "-c", "echo \"Hello world\""]}' $JOB_HOST/jobs
+curl -X POST -H "Content-Type: application/json" -H "Authorization: Bearer ${TEST_USER_TOKEN}" --data '{}' $JOB_HOST/jobs/1/runs
+curl -v -X DELETE -H "Authorization: Bearer ${TEST_USER_TOKEN}" $JOB_HOST/jobs/2
 
 curl -v -H "Authorization: Bearer ${TEST_USER_TOKEN}" http://localhost:8080/users/me
 

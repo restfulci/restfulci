@@ -1,4 +1,4 @@
-package restfulci.pipeline.config;
+package restfulci.job.master.config;
 
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.context.annotation.Bean;
@@ -8,8 +8,7 @@ import org.springframework.web.client.RestTemplate;
 
 /*
  * TODO:
- * Multiple RestTemplate for different APIs.
- * E.g. `JobMicroserviceRestTemplate` and `AuthMicroserviceRestTemplate`.
+ * More specific `AuthMicroserviceRestTemplate`.
  */
 @Configuration
 public class RestTemplateConfig {
@@ -17,24 +16,18 @@ public class RestTemplateConfig {
 	@Profile("dev")
 	@Bean 
 	RestTemplate devRestTemplate(RestTemplateBuilder builder) {
-		return builder.rootUri("http://localhost:5000").build();
+		return builder.rootUri("http://localhost:8880").build();
 	}
 	
 	@Profile("docker")
 	@Bean 
 	RestTemplate dockerRestTemplate(RestTemplateBuilder builder) {
-		return builder.rootUri("http://job-microservice-mock:5000").build();
-	}
-	
-	@Profile("kubernetes")
-	@Bean 
-	RestTemplate kubernetesRestTemplate(RestTemplateBuilder builder) {
-		return builder.rootUri("http://restfulci-job-master-api-server.job:80").build();
+		return builder.rootUri("http://keycloak:8080").build();
 	}
 	
 	@Profile("circleci")
 	@Bean 
 	RestTemplate circleciRestTemplate(RestTemplateBuilder builder) {
-		return builder.rootUri("http://localhost:5000").build();
+		return builder.rootUri("http://foo").build();
 	}
 }

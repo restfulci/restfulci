@@ -2,6 +2,8 @@ package restfulci.job.master.api;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -19,16 +21,23 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.web.client.RestTemplate;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com.google.common.net.HttpHeaders;
+
+import restfulci.job.shared.domain.UserBean;
 
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
@@ -36,6 +45,7 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 public class FreestyleJobUserJourneyIT {
 	
 	@Autowired private MockMvc mockMvc;
+//	@Autowired private RestTemplate restTemplate;
 	
 	private ObjectMapper objectMapper;
 	private ObjectWriter objectWriter;
@@ -51,6 +61,15 @@ public class FreestyleJobUserJourneyIT {
 		objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 		
 		objectWriter = objectMapper.writer().withDefaultPrettyPrinter();
+		
+		/*
+		 * https://www.baeldung.com/spring-mock-rest-template
+		 */
+//		when(restTemplate.exchange(
+//				any(String.class), 
+//				any(HttpMethod.class),
+//				any(HttpEntity.class),
+//				(Class<T>) any(Object.class))).thenReturn(new UserBean());
 	}
 
 	@Test
@@ -138,6 +157,7 @@ public class FreestyleJobUserJourneyIT {
 		Map<?, ?> triggeredRun = objectMapper.readValue(
 				mockMvc.perform(post("/jobs/"+jobId+"/runs")
 						.contentType(MediaType.APPLICATION_JSON)
+						.header(HttpHeaders.AUTHORIZATION, "foo")
 						.content(objectWriter.writeValueAsString(runData)))
 						.andExpect(status().isOk())
 						.andReturn().getResponse().getContentAsString(),
@@ -262,11 +282,13 @@ public class FreestyleJobUserJourneyIT {
 		
 		mockMvc.perform(post("/jobs/"+jobId+"/runs")
 				.contentType(MediaType.APPLICATION_JSON)
+				.header(HttpHeaders.AUTHORIZATION, "foo")
 				.content(objectWriter.writeValueAsString(runData)))
 				.andExpect(status().isOk());
 		
 		mockMvc.perform(post("/jobs/"+jobId+"/runs")
 				.contentType(MediaType.APPLICATION_JSON)
+				.header(HttpHeaders.AUTHORIZATION, "foo")
 				.content(objectWriter.writeValueAsString(new HashMap<String, Object>())))
 				.andExpect(status().isBadRequest());
 		
