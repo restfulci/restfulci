@@ -60,7 +60,7 @@ class AuthTestSuite(TestCase):
                 "temporary": False,
                 "value": password
             })
-        self.assertEquals(response.status_code, 204)
+        self.assertEqual(response.status_code, 204)
 
     def delete_user(self, master_token, username):
         response = requests.get(
@@ -80,7 +80,7 @@ class AuthTestSuite(TestCase):
             headers={
                 "Authorization": "Bearer {}".format(master_token)
             })
-        self.assertEquals(response.status_code, 204)
+        self.assertEqual(response.status_code, 204)
 
     def get_user_token(self, username, password):
         response = requests.post(
@@ -90,7 +90,7 @@ class AuthTestSuite(TestCase):
             },
             data={
                 "client_id": "job-microservice",
-                "client_secret": "78b7fcc7-e374-4a0d-993f-3821470cce30",
+                "client_secret": "f11336d8-4850-477b-94c6-6cc8d3162e60",
                 "username": username,
                 "password": password,
                 "grant_type": "password"
