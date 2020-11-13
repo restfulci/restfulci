@@ -2,6 +2,9 @@ package restfulci.job.master.api;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.springframework.test.web.client.match.MockRestRequestMatchers.method;
+import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo;
+import static org.springframework.test.web.client.response.MockRestResponseCreators.withStatus;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -12,6 +15,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -19,10 +23,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
+import org.springframework.test.web.client.ExpectedCount;
+import org.springframework.test.web.client.MockRestServiceServer;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.web.client.RestTemplate;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
@@ -31,13 +40,19 @@ import com.fasterxml.jackson.databind.ObjectWriter;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.google.common.net.HttpHeaders;
 
+import restfulci.job.shared.dao.UserRepository;
+import restfulci.job.shared.domain.UserBean;
+
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
 @AutoConfigureMockMvc
 public class GitJobUserJourneyIT {
 	
 	@Autowired private MockMvc mockMvc;
+	@Autowired private RestTemplate restTemplate;
+	@Autowired UserRepository userRepository;
 	
+	private MockRestServiceServer mockServer;
 	private ObjectMapper objectMapper;
 	private ObjectWriter objectWriter;
 	
@@ -52,6 +67,29 @@ public class GitJobUserJourneyIT {
 		objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false); 
 		
 		objectWriter = objectMapper.writer().withDefaultPrettyPrinter();
+		
+		mockServer = MockRestServiceServer.createServer(restTemplate);
+		
+		Map<String, Object> keyCloakUserinfo = new HashMap<String, Object>();
+		keyCloakUserinfo.put("sub", "0000-0000");
+		keyCloakUserinfo.put("email_verified", false);
+		keyCloakUserinfo.put("preferred_username", "bar-user");
+		
+		mockServer.expect(ExpectedCount.once(), 
+				requestTo("http://localhost:8880/auth/realms/restfulci/protocol/openid-connect/userinfo"))
+				.andExpect(method(HttpMethod.GET))
+				.andRespond(withStatus(HttpStatus.OK)
+				.contentType(MediaType.APPLICATION_JSON)
+				.body(objectMapper.writeValueAsString(keyCloakUserinfo))
+			);
+	}
+	
+	@AfterEach
+	public void tearDown() {
+	
+		for (UserBean user : userRepository.findByAuthId("0000-0000")) {
+			userRepository.delete(user);
+		}
 	}
 
 	@Test
@@ -142,6 +180,9 @@ public class GitJobUserJourneyIT {
 		assertEquals(
 				objectMapper.convertValue(triggeredRun.get("job"), Map.class).get("type"), 
 				"GIT");
+		assertEquals(
+				objectMapper.convertValue(triggeredRun.get("user"), Map.class).get("username"),
+				"bar-user");
 		assertEquals(objectMapper.convertValue(triggeredRun.get("inputs"), List.class).size(), 2);
 		assertThat(
 				Arrays.asList(new String[] {"ENV", "ANOTHER"}).contains(

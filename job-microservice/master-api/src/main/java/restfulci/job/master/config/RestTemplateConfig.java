@@ -28,6 +28,6 @@ public class RestTemplateConfig {
 	@Profile("circleci")
 	@Bean 
 	RestTemplate circleciRestTemplate(RestTemplateBuilder builder) {
-		return builder.rootUri("http://foo").build();
+		return builder.rootUri("http://localhost:8880").build();
 	}
 }

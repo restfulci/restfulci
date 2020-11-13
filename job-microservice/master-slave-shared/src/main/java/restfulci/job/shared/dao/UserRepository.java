@@ -10,4 +10,5 @@ public interface UserRepository extends PagingAndSortingRepository<UserBean, Int
 
 	public List<UserBean> findByAuthId(String authId);
 	public UserBean saveAndFlush(UserBean job);
+	public void delete(UserBean user);
 }

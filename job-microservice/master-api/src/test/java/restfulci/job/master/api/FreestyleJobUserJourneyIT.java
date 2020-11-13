@@ -2,8 +2,9 @@ package restfulci.job.master.api;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
+import static org.springframework.test.web.client.match.MockRestRequestMatchers.method;
+import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo;
+import static org.springframework.test.web.client.response.MockRestResponseCreators.withStatus;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -14,6 +15,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -21,12 +23,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
+import org.springframework.test.web.client.ExpectedCount;
+import org.springframework.test.web.client.MockRestServiceServer;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.web.client.RestTemplate;
 
@@ -37,6 +40,7 @@ import com.fasterxml.jackson.databind.ObjectWriter;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.google.common.net.HttpHeaders;
 
+import restfulci.job.shared.dao.UserRepository;
 import restfulci.job.shared.domain.UserBean;
 
 @ExtendWith(SpringExtension.class)
@@ -45,9 +49,11 @@ import restfulci.job.shared.domain.UserBean;
 public class FreestyleJobUserJourneyIT {
 	
 	@Autowired private MockMvc mockMvc;
-//	@Autowired private RestTemplate restTemplate;
+	@Autowired private RestTemplate restTemplate;
+	@Autowired UserRepository userRepository;
 	
-	private ObjectMapper objectMapper;
+	private MockRestServiceServer mockServer;
+	private ObjectMapper objectMapper = new ObjectMapper();
 	private ObjectWriter objectWriter;
 	
 	@BeforeEach
@@ -62,14 +68,28 @@ public class FreestyleJobUserJourneyIT {
 		
 		objectWriter = objectMapper.writer().withDefaultPrettyPrinter();
 		
-		/*
-		 * https://www.baeldung.com/spring-mock-rest-template
-		 */
-//		when(restTemplate.exchange(
-//				any(String.class), 
-//				any(HttpMethod.class),
-//				any(HttpEntity.class),
-//				(Class<T>) any(Object.class))).thenReturn(new UserBean());
+		mockServer = MockRestServiceServer.createServer(restTemplate);
+		
+		Map<String, Object> keyCloakUserinfo = new HashMap<String, Object>();
+		keyCloakUserinfo.put("sub", "0000-0000");
+		keyCloakUserinfo.put("email_verified", false);
+		keyCloakUserinfo.put("preferred_username", "bar-user");
+		
+		mockServer.expect(ExpectedCount.once(), 
+				requestTo("http://localhost:8880/auth/realms/restfulci/protocol/openid-connect/userinfo"))
+				.andExpect(method(HttpMethod.GET))
+				.andRespond(withStatus(HttpStatus.OK)
+				.contentType(MediaType.APPLICATION_JSON)
+				.body(objectMapper.writeValueAsString(keyCloakUserinfo))
+			);
+	}
+	
+	@AfterEach
+	public void tearDown() {
+	
+		for (UserBean user : userRepository.findByAuthId("0000-0000")) {
+			userRepository.delete(user);
+		}
 	}
 
 	@Test
@@ -167,6 +187,9 @@ public class FreestyleJobUserJourneyIT {
 		assertEquals(
 				objectMapper.convertValue(triggeredRun.get("job"), Map.class).get("type"),
 				"FREESTYLE");
+		assertEquals(
+				objectMapper.convertValue(triggeredRun.get("user"), Map.class).get("username"),
+				"bar-user");
 		assertEquals(objectMapper.convertValue(triggeredRun.get("inputs"), List.class).size(), 2);
 		assertThat(
 				Arrays.asList(new String[] {"ENV", "ANOTHER"}).contains(
@@ -231,6 +254,7 @@ public class FreestyleJobUserJourneyIT {
 		
 		mockMvc.perform(post("/jobs/"+jobId+"/runs")
 				.contentType(MediaType.APPLICATION_JSON)
+				.header(HttpHeaders.AUTHORIZATION, "foo")
 				.content(objectWriter.writeValueAsString(runData)))
 				.andExpect(status().isBadRequest());
 		
@@ -240,7 +264,39 @@ public class FreestyleJobUserJourneyIT {
 	
 	@Test
 	@WithMockUser
-	public void testParameteredRunReturnOkWithValidInputAndReturnBadRequestWithInvalidInput() throws Exception {
+	public void testParameteredRunReturnOkWithValidInput() throws Exception {
+		
+		Integer jobId = setupJobAndReturnJobId();
+		
+		Map<String, Object> runData = new HashMap<String, Object>();
+		runData.put("MINUEND", 5);
+		runData.put("SUBTRAHEND", 3);
+		
+		mockMvc.perform(post("/jobs/"+jobId+"/runs")
+				.contentType(MediaType.APPLICATION_JSON)
+				.header(HttpHeaders.AUTHORIZATION, "foo")
+				.content(objectWriter.writeValueAsString(runData)))
+				.andExpect(status().isOk());
+		
+		tearDownJob(jobId);
+	}
+	
+	@Test
+	@WithMockUser
+	public void testParameteredReturnBadRequestWithInvalidInput() throws Exception {
+		
+		Integer jobId = setupJobAndReturnJobId();
+		
+		mockMvc.perform(post("/jobs/"+jobId+"/runs")
+				.contentType(MediaType.APPLICATION_JSON)
+				.header(HttpHeaders.AUTHORIZATION, "foo")
+				.content(objectWriter.writeValueAsString(new HashMap<String, Object>())))
+				.andExpect(status().isBadRequest());
+		
+		tearDownJob(jobId);
+	}
+	
+	private Integer setupJobAndReturnJobId() throws Exception {
 		
 		final String jobName = "it_freestyle_job_name";
 		Map<String, Object> jobData = new HashMap<String, Object>();
@@ -275,22 +331,11 @@ public class FreestyleJobUserJourneyIT {
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(objectWriter.writeValueAsString(subtraheadParameterData)))
 				.andExpect(status().isOk());
-		
-		Map<String, Object> runData = new HashMap<String, Object>();
-		runData.put("MINUEND", 5);
-		runData.put("SUBTRAHEND", 3);
-		
-		mockMvc.perform(post("/jobs/"+jobId+"/runs")
-				.contentType(MediaType.APPLICATION_JSON)
-				.header(HttpHeaders.AUTHORIZATION, "foo")
-				.content(objectWriter.writeValueAsString(runData)))
-				.andExpect(status().isOk());
-		
-		mockMvc.perform(post("/jobs/"+jobId+"/runs")
-				.contentType(MediaType.APPLICATION_JSON)
-				.header(HttpHeaders.AUTHORIZATION, "foo")
-				.content(objectWriter.writeValueAsString(new HashMap<String, Object>())))
-				.andExpect(status().isBadRequest());
+
+		return jobId;
+	}
+	
+	private void tearDownJob(Integer jobId) throws Exception {
 		
 		mockMvc.perform(delete("/jobs/"+jobId))
 				.andExpect(status().isOk());
