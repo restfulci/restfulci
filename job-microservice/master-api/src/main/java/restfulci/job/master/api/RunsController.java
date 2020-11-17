@@ -11,23 +11,28 @@ import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import restfulci.job.master.dto.RunDTO;
 import restfulci.job.master.service.RunService;
+import restfulci.job.master.service.UserService;
 import restfulci.job.shared.domain.RunBean;
+import restfulci.job.shared.domain.UserBean;
 
 @RestController
 @RequestMapping(value="/jobs/{jobId}/runs")
 public class RunsController {
 
 	@Autowired private RunService runService;
+	@Autowired private UserService userService;
 	
 	@GetMapping
 	public List<RunBean> listRuns(
@@ -55,9 +60,14 @@ public class RunsController {
 	@PostMapping
 	public RunBean triggerRun(
 			@PathVariable @Min(1) Integer jobId,
-			@RequestBody @Valid RunDTO runDTO) throws Exception {
+			@RequestBody @Valid RunDTO runDTO,
+			Authentication authentication,
+			@RequestHeader(name="Authorization") String token) throws Exception {
 		
-		return runService.triggerRun(jobId, runDTO);
+		UserBean user = userService.getUserByAuthId(
+				authentication.getName(),
+				token);
+		return runService.triggerRun(jobId, runDTO, user);
 	}
 	
 	@GetMapping("/{runId}")

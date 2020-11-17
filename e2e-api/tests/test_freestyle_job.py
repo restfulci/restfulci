@@ -13,6 +13,7 @@ class TestFreestyleJob(AuthTestSuite):
     # job_api_url = "http://35.190.162.206"
 
     freestyle_job_name = "freestyle_job_name"
+    test_username = "freestyle-job-user"
 
     def test_hello_world(self):
         job_defination_json = {
@@ -58,8 +59,8 @@ class TestFreestyleJob(AuthTestSuite):
             validate_console_log=None):
 
         master_token = self.get_master_token()
-        self.create_user(master_token, "freestyle-job-test-user", "password")
-        user_token = self.get_user_token("freestyle-job-test-user", "password")
+        self.create_user(master_token, self.test_username, "password")
+        user_token = self.get_user_token(self.test_username, "password")
 
         response = requests.post(
             urljoin(self.job_api_url, "/jobs"),
@@ -111,6 +112,7 @@ class TestFreestyleJob(AuthTestSuite):
         self.assertEqual(response_body["status"], "IN_PROGRESS")
         self.assertEqual(response_body["type"], "FREESTYLE")
         self.assertEqual(response_body["job"]["type"], "FREESTYLE")
+        self.assertEqual(response_body["user"]["username"], self.test_username)
 
         while response_body["status"] == "IN_PROGRESS":
             response = requests.get(
@@ -141,4 +143,4 @@ class TestFreestyleJob(AuthTestSuite):
         )
         self.assertEqual(response.status_code, 200)
 
-        self.delete_user(master_token, "freestyle-job-test-user")
+        self.delete_user(master_token, self.test_username)

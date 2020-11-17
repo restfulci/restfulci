@@ -31,6 +31,7 @@ import restfulci.job.shared.domain.JobBean;
 import restfulci.job.shared.domain.ParameterBean;
 import restfulci.job.shared.domain.RunBean;
 import restfulci.job.shared.exception.RunDataException;
+import restfulci.job.shared.domain.UserBean;
 
 @ExtendWith(SpringExtension.class)
 @SpringBootTest
@@ -60,7 +61,7 @@ public class RunServiceTest {
 		runDTO.put("branchName", "master");
 		
 		Assertions.assertThrows(RunDataException.class, () -> {
-			runService.triggerRun(456, runDTO);
+			runService.triggerRun(456, runDTO, new UserBean());
 		});
 	}
 	
@@ -73,7 +74,7 @@ public class RunServiceTest {
 		RunDTO runDTO = new RunDTO();
 		
 		Assertions.assertThrows(RunDataException.class, () -> {
-			runService.triggerRun(456, runDTO);
+			runService.triggerRun(456, runDTO, new UserBean());
 		});
 	}
 	
@@ -89,7 +90,7 @@ public class RunServiceTest {
 		RunDTO runDTO = new RunDTO();
 		runDTO.put("ENV", "staging");
 		
-		runService.triggerRun(456, runDTO);
+		runService.triggerRun(456, runDTO, new UserBean());
 		
 		ArgumentCaptor<RunBean> runCaptor = ArgumentCaptor.forClass(RunBean.class);
 		verify(runRepository, times(1)).saveAndFlush(runCaptor.capture());
@@ -112,7 +113,7 @@ public class RunServiceTest {
 		runDTO.put("branchName", "master");
 		runDTO.put("ENV", "staging");
 		
-		runService.triggerRun(456, runDTO);
+		runService.triggerRun(456, runDTO, new UserBean());
 		
 		ArgumentCaptor<RunBean> runCaptor = ArgumentCaptor.forClass(RunBean.class);
 		verify(runRepository, times(1)).saveAndFlush(runCaptor.capture());
@@ -135,7 +136,7 @@ public class RunServiceTest {
 		runDTO.put("commitSha", "0000000000000000000000000000000000000000");
 		runDTO.put("ENV", "staging");
 		
-		runService.triggerRun(456, runDTO);
+		runService.triggerRun(456, runDTO, new UserBean());
 		
 		ArgumentCaptor<RunBean> runCaptor = ArgumentCaptor.forClass(RunBean.class);
 		verify(runRepository, times(1)).saveAndFlush(runCaptor.capture());
@@ -157,7 +158,7 @@ public class RunServiceTest {
 		
 		RunDTO runDTO = new RunDTO();
 		
-		runService.triggerRun(456, runDTO);
+		runService.triggerRun(456, runDTO, new UserBean());
 		
 		ArgumentCaptor<RunBean> runCaptor = ArgumentCaptor.forClass(RunBean.class);
 		verify(runRepository, times(1)).saveAndFlush(runCaptor.capture());
@@ -179,7 +180,7 @@ public class RunServiceTest {
 		RunDTO runDTO = new RunDTO();
 		
 		Assertions.assertThrows(RunDataException.class, () -> {
-			runService.triggerRun(456, runDTO);
+			runService.triggerRun(456, runDTO, new UserBean());
 		});
 	}
 	
@@ -193,7 +194,7 @@ public class RunServiceTest {
 		runDTO.put("EXCLUDE", "staging");
 		
 		Assertions.assertThrows(RunDataException.class, () -> {
-			runService.triggerRun(456, runDTO);
+			runService.triggerRun(456, runDTO, new UserBean());
 		});
 	}
 	
@@ -211,7 +212,7 @@ public class RunServiceTest {
 		runDTO.put("ENV", "development");
 		
 		Assertions.assertThrows(RunDataException.class, () -> {
-			runService.triggerRun(456, runDTO);
+			runService.triggerRun(456, runDTO, new UserBean());
 		});
 	}
 }

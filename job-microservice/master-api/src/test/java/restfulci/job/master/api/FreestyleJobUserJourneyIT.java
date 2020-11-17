@@ -12,6 +12,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -29,6 +30,10 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com.google.common.net.HttpHeaders;
+
+import restfulci.job.shared.dao.UserRepository;
+import restfulci.job.shared.domain.UserBean;
 
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
@@ -36,9 +41,47 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 public class FreestyleJobUserJourneyIT {
 	
 	@Autowired private MockMvc mockMvc;
+	@Autowired private UserRepository userRepository;
 	
 	private ObjectMapper objectMapper;
 	private ObjectWriter objectWriter;
+	
+	/*
+{
+ "exp": 2037590243,
+ "iat": 1605590243,
+ "jti": "a1f2daa3-1b7b-472d-a2b9-68043959f5f6",
+ "iss": "http://localhost:8880/auth/realms/restfulci",
+ "aud": "account",
+ "sub": "a8321a8b-5fe6-4aa9-8612-d3ed29af2853",
+ "typ": "Bearer",
+ "azp": "job-microservice",
+ "session_state": "ee47f162-58d5-4721-be46-1fc8f0f1cbe5",
+ "acr": "1",
+ "allowed-origins": [
+  "*"
+ ],
+ "realm_access": {
+  "roles": [
+   "offline_access",
+   "uma_authorization"
+  ]
+ },
+ "resource_access": {
+  "account": {
+   "roles": [
+    "manage-account",
+    "manage-account-links",
+    "view-profile"
+   ]
+  }
+ },
+ "scope": "profile email",
+ "email_verified": false,
+ "preferred_username": "test-user"
+}
+	 */
+	private final String thirteenYearsExpToken = "eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICIxV0UwbXBwcEdMeDZUYzVGMXRFVW1KS0UzdGtIX2NnNmRvSGhMRzdUVkVzIn0.eyJleHAiOjIwMzc1OTAyNDMsImlhdCI6MTYwNTU5MDI0MywianRpIjoiYTFmMmRhYTMtMWI3Yi00NzJkLWEyYjktNjgwNDM5NTlmNWY2IiwiaXNzIjoiaHR0cDovL2xvY2FsaG9zdDo4ODgwL2F1dGgvcmVhbG1zL3Jlc3RmdWxjaSIsImF1ZCI6ImFjY291bnQiLCJzdWIiOiJhODMyMWE4Yi01ZmU2LTRhYTktODYxMi1kM2VkMjlhZjI4NTMiLCJ0eXAiOiJCZWFyZXIiLCJhenAiOiJqb2ItbWljcm9zZXJ2aWNlIiwic2Vzc2lvbl9zdGF0ZSI6ImVlNDdmMTYyLTU4ZDUtNDcyMS1iZTQ2LTFmYzhmMGYxY2JlNSIsImFjciI6IjEiLCJhbGxvd2VkLW9yaWdpbnMiOlsiKiJdLCJyZWFsbV9hY2Nlc3MiOnsicm9sZXMiOlsib2ZmbGluZV9hY2Nlc3MiLCJ1bWFfYXV0aG9yaXphdGlvbiJdfSwicmVzb3VyY2VfYWNjZXNzIjp7ImFjY291bnQiOnsicm9sZXMiOlsibWFuYWdlLWFjY291bnQiLCJtYW5hZ2UtYWNjb3VudC1saW5rcyIsInZpZXctcHJvZmlsZSJdfX0sInNjb3BlIjoicHJvZmlsZSBlbWFpbCIsImVtYWlsX3ZlcmlmaWVkIjpmYWxzZSwicHJlZmVycmVkX3VzZXJuYW1lIjoidGVzdC11c2VyIn0.GWzpeybEiFxXVQcSy-mqUdS1PmpvjKGcMEm77tUg0v_N56z5qOV3I0__8-bSvohOIlkcIXnwuXRkIuDFI6kKC0NHJzbFewoCoPPfrd6hEyQ9urnmEjqpe70Z6Gg2y24Z9WEk9NFXPWpRvXVnBOHtOBzxHGdIB0wqjlBlepXmLFxnm9BK1vkWQI3QDUKPt6HaNNtLbVEcY7jbAWutIHNLBdu66clEXxAwq7uSPeG_bzH0zL2qwzlzxFipPx6rRQwmaqzjU9Jzr6Qm47Et1UCS_xWfG5cjhMunenbCsoK0rdKOCUxD_lAVz1HCksxaXkoOc-L0_KjDBFZHVANoKKDdaA";
 	
 	@BeforeEach
 	public void setUp() throws JsonProcessingException {
@@ -51,6 +94,13 @@ public class FreestyleJobUserJourneyIT {
 		objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 		
 		objectWriter = objectMapper.writer().withDefaultPrettyPrinter();
+	}
+	
+	@AfterEach
+	public void tearDown() {
+		for (UserBean user : userRepository.findByAuthId("a8321a8b-5fe6-4aa9-8612-d3ed29af2853")) {
+			userRepository.delete(user);
+		}
 	}
 
 	@Test
@@ -138,6 +188,7 @@ public class FreestyleJobUserJourneyIT {
 		Map<?, ?> triggeredRun = objectMapper.readValue(
 				mockMvc.perform(post("/jobs/"+jobId+"/runs")
 						.contentType(MediaType.APPLICATION_JSON)
+						.header(HttpHeaders.AUTHORIZATION, thirteenYearsExpToken)
 						.content(objectWriter.writeValueAsString(runData)))
 						.andExpect(status().isOk())
 						.andReturn().getResponse().getContentAsString(),
@@ -211,6 +262,7 @@ public class FreestyleJobUserJourneyIT {
 		
 		mockMvc.perform(post("/jobs/"+jobId+"/runs")
 				.contentType(MediaType.APPLICATION_JSON)
+				.header(HttpHeaders.AUTHORIZATION, thirteenYearsExpToken)
 				.content(objectWriter.writeValueAsString(runData)))
 				.andExpect(status().isBadRequest());
 		
@@ -220,7 +272,7 @@ public class FreestyleJobUserJourneyIT {
 	
 	@Test
 	@WithMockUser
-	public void testParameteredRunReturnOkWithValidInputAndReturnBadRequestWithInvalidInput() throws Exception {
+	public void testParameteredRunReturnOkWithValidInput() throws Exception {
 		
 		final String jobName = "it_freestyle_job_name";
 		Map<String, Object> jobData = new HashMap<String, Object>();
@@ -262,11 +314,47 @@ public class FreestyleJobUserJourneyIT {
 		
 		mockMvc.perform(post("/jobs/"+jobId+"/runs")
 				.contentType(MediaType.APPLICATION_JSON)
+				.header(HttpHeaders.AUTHORIZATION, thirteenYearsExpToken)
 				.content(objectWriter.writeValueAsString(runData)))
+				.andExpect(status().isOk());
+		
+		mockMvc.perform(delete("/jobs/"+jobId))
+				.andExpect(status().isOk());
+	}
+	
+	@Test
+	@WithMockUser
+	public void testParameteredRunReturnBadRequestWithInvalidInput() throws Exception {
+		
+		final String jobName = "it_freestyle_job_name";
+		Map<String, Object> jobData = new HashMap<String, Object>();
+		jobData.put("name", jobName);
+		jobData.put("dockerImage", "busybox:1.31");
+		jobData.put("command", new String[] {"sh", "-c", "echo $NOT_EXIST"});
+		
+		Map<?, ?> createdJob = objectMapper.readValue(
+				mockMvc.perform(post("/jobs")
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(objectWriter.writeValueAsString(jobData)))
+						.andExpect(status().isOk())
+						.andReturn().getResponse().getContentAsString(),
+				Map.class);
+		assertEquals(createdJob.get("name"), jobName);
+		assertEquals(createdJob.get("type"), "FREESTYLE");
+		
+		Integer jobId = (Integer)createdJob.get("id");
+		
+		Map<String, Object> notExistParameterData = new HashMap<String, Object>();
+		notExistParameterData.put("name", "NOT_EXIST");
+		
+		mockMvc.perform(post("/jobs/"+jobId+"/parameters")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(objectWriter.writeValueAsString(notExistParameterData)))
 				.andExpect(status().isOk());
 		
 		mockMvc.perform(post("/jobs/"+jobId+"/runs")
 				.contentType(MediaType.APPLICATION_JSON)
+				.header(HttpHeaders.AUTHORIZATION, thirteenYearsExpToken)
 				.content(objectWriter.writeValueAsString(new HashMap<String, Object>())))
 				.andExpect(status().isBadRequest());
 		

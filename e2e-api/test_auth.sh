@@ -34,14 +34,18 @@ TEST_USER_TOKEN=$(curl -X POST \
 "$AUTH_HOST/auth/realms/restfulci/protocol/openid-connect/token" \
 --header 'Content-Type: application/x-www-form-urlencoded' \
 --data-urlencode 'client_id=job-microservice' \
---data-urlencode 'client_secret=25c7ad47-b784-4c15-b2ed-4969f4ceb1a0' \
+--data-urlencode 'client_secret=f976ea4a-5d36-4563-80e4-33bb5e20e59c' \
 --data-urlencode 'username=test-user' \
 --data-urlencode 'password=password' \
 --data-urlencode 'grant_type=password' | jq -r '.access_token')
 
 curl -v -H "Authorization: Bearer ${TEST_USER_TOKEN}" "$AUTH_HOST/auth/realms/restfulci/protocol/openid-connect/userinfo"
 
-curl -v -H "Authorization: Bearer ${TEST_USER_TOKEN}" http://localhost:8080/jobs
+JOB_HOST=http://localhost:8080
+curl -v -H "Authorization: Bearer ${TEST_USER_TOKEN}" $JOB_HOST/jobs
+curl -X POST -H "Content-Type: application/json" -H "Authorization: Bearer ${TEST_USER_TOKEN}" --data '{"name": "manual_freestyle_job_name", "dockerImage": "busybox:1.31", "command": ["sh", "-c", "echo \"Hello world\""]}' $JOB_HOST/jobs
+curl -X POST -H "Content-Type: application/json" -H "Authorization: Bearer ${TEST_USER_TOKEN}" --data '{}' $JOB_HOST/jobs/1/runs
+curl -v -X DELETE -H "Authorization: Bearer ${TEST_USER_TOKEN}" $JOB_HOST/jobs/2
 
 curl -v -H "Authorization: Bearer ${TEST_USER_TOKEN}" http://localhost:8080/users/me
 

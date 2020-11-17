@@ -28,6 +28,7 @@ import restfulci.job.shared.domain.JobBean;
 import restfulci.job.shared.domain.JobType;
 import restfulci.job.shared.domain.RunBean;
 import restfulci.job.shared.domain.RunResultBean;
+import restfulci.job.shared.domain.UserBean;
 import restfulci.job.shared.exception.IdNonExistenceException;
 import restfulci.job.shared.exception.RunDataException;
 
@@ -95,7 +96,7 @@ public class RunServiceImpl implements RunService {
 	}
 	
 	@Override
-	public RunBean triggerRun(Integer jobId, RunDTO runDTO) throws IOException, InterruptedException {
+	public RunBean triggerRun(Integer jobId, RunDTO runDTO, UserBean user) throws IOException, InterruptedException {
 		
 		JobBean job = jobService.getJob(jobId);
 		RunBean run = runDTO.toRunBean();
@@ -110,6 +111,7 @@ public class RunServiceImpl implements RunService {
 		}
 		
 		run.setJob(job);
+		run.setUser(user);
 		
 		/*
 		 * Right now `fillInDefaultInput()` goes before `validateInput()`, 
