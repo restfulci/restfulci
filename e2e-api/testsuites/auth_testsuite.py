@@ -60,7 +60,7 @@ class AuthTestSuite(TestCase):
                 "temporary": False,
                 "value": password
             })
-        self.assertEquals(response.status_code, 204)
+        self.assertEqual(response.status_code, 204)
 
     def delete_user(self, master_token, username):
         response = requests.get(
@@ -80,7 +80,7 @@ class AuthTestSuite(TestCase):
             headers={
                 "Authorization": "Bearer {}".format(master_token)
             })
-        self.assertEquals(response.status_code, 204)
+        self.assertEqual(response.status_code, 204)
 
     def get_user_token(self, username, password):
         response = requests.post(

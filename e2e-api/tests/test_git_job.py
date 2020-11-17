@@ -14,6 +14,8 @@ class TestGitJob(AuthTestSuite):
     job_api_url = "http://localhost:8881"
     # job_api_url = "http://34.73.0.219"
 
+    test_username = "git-job-user"
+
     def test_hello_world(self):
 
         def validate_console_log(response):
@@ -87,8 +89,8 @@ class TestGitJob(AuthTestSuite):
             validate_results=None):
 
         master_token = self.get_master_token()
-        self.create_user(master_token, "git-job-user", "password")
-        user_token = self.get_user_token("git-job-user", "password")
+        self.create_user(master_token, self.test_username, "password")
+        user_token = self.get_user_token(self.test_username, "password")
 
         response = requests.post(
             urljoin(self.job_api_url, "/jobs"),
@@ -145,6 +147,7 @@ class TestGitJob(AuthTestSuite):
         self.assertEqual(response_body["branchName"], "master")
         self.assertEqual(response_body["type"], "GIT")
         self.assertEqual(response_body["job"]["type"], "GIT")
+        self.assertEqual(response_body["user"]["username"], self.test_username)
 
         while response_body["status"] == "IN_PROGRESS":
             response = requests.get(
@@ -213,4 +216,4 @@ class TestGitJob(AuthTestSuite):
         )
         self.assertEqual(response.status_code, 200)
 
-        self.delete_user(master_token, "git-job-user")
+        self.delete_user(master_token, self.test_username)

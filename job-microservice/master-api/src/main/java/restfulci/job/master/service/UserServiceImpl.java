@@ -41,6 +41,11 @@ public class UserServiceImpl implements UserService {
 	
 	private UserBean getUserFromToken(String token) throws IOException {
 		
+		/*
+		 * TODO:
+		 * Validate token.
+		 * Raise exception.
+		 */
 		token = token.replaceFirst("^Bearer ", "");
 		String withoutSignature = token.substring(0, token.lastIndexOf('.') + 1);
 		Jwt<Header, Claims> untrusted = Jwts.parser().parseClaimsJwt(withoutSignature);
