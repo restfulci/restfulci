@@ -8,6 +8,7 @@ import io.minio.errors.MinioException;
 import restfulci.job.master.dto.RunDTO;
 import restfulci.job.shared.domain.RunBean;
 import restfulci.job.shared.domain.RunResultBean;
+import restfulci.job.shared.domain.UserBean;
 
 public interface RunService {
 	
@@ -20,5 +21,5 @@ public interface RunService {
 	public RunResultBean getRunResult(Integer runResultId) throws IOException;
 	public InputStream getRunResultStream(Integer runResultId) throws IOException, MinioException;
 	
-	public RunBean triggerRun(Integer jobId, RunDTO runDTO) throws IOException, InterruptedException;
+	public RunBean triggerRun(Integer jobId, RunDTO runDTO, UserBean user) throws IOException, InterruptedException;
 }

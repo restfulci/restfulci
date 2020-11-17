@@ -4,7 +4,6 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Size;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
@@ -21,7 +20,6 @@ import lombok.ToString;
 public class UserBean extends BaseEntity {
 
 	@NotNull
-	@Size(min=2, max=32)
 	@Column(name="auth_id", updatable=false)
 	private String authId;
 

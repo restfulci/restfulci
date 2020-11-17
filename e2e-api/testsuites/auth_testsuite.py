@@ -90,7 +90,7 @@ class AuthTestSuite(TestCase):
             },
             data={
                 "client_id": "job-microservice",
-                "client_secret": "78b7fcc7-e374-4a0d-993f-3821470cce30",
+                "client_secret": "f976ea4a-5d36-4563-80e4-33bb5e20e59c",
                 "username": username,
                 "password": password,
                 "grant_type": "password"

@@ -6,6 +6,11 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 import org.springframework.web.client.RestTemplate;
 
+/*
+ * TODO:
+ * Multiple RestTemplate for different APIs.
+ * E.g. `JobMicroserviceRestTemplate` and `AuthMicroserviceRestTemplate`.
+ */
 @Configuration
 public class RestTemplateConfig {
 
