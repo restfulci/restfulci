@@ -42,6 +42,8 @@ describe('Hello-world Git Job Test', () => {
 
     cy.then(reloadReq)
     cy.contains('✅')
+    cy.contains('Triggered by')
+    cy.contains('test-user')
     cy.contains('Completed at')
     cy.contains('Exit code')
 
