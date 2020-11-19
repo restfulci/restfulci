@@ -12,7 +12,7 @@ export default {
   target: 'server',
   env: {
     authServer: process.env.AUTH_SERVER || 'http://localhost:8880',
-    authClientSecret: process.env.AUTH_CLIENT_SECRET || 'f976ea4a-5d36-4563-80e4-33bb5e20e59c'
+    authClientSecret: process.env.AUTH_CLIENT_SECRET || 'dc80857e-b4b7-45ec-ab56-1242ba7600ff'
   },
   /*
   ** Headers of the page

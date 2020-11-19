@@ -28,6 +28,7 @@
       <h1 v-if="run.status == 'ABORT'">
         󠁿⚪
       </h1>
+      <p>Triggered by: {{ user.username }}</p>
       <p>Triggered at: {{ run.triggerAt }}</p>
       <p v-if="run.completeAt !== null">
         Completed at: {{ run.completeAt }}
@@ -50,6 +51,7 @@ export default {
       runId: this.$route.params.runId,
       run: '',
       job: '',
+      user: '',
     };
   },
 
@@ -75,6 +77,7 @@ export default {
       .then(response => {
         this.run = response.data;
         this.job = this.run.job;
+        this.user = this.run.user;
         console.log(this.run);
       });
     },
