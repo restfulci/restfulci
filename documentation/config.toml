@@ -5,20 +5,28 @@ description = "Kube is a professional  and a responsive Hugo theme for developer
 Paginate = 4
 [Params]
   RSSLink = "/index.xml"
-  author = "newpixcom" # add your company name
+  author = "RestfulCI" # add your company name
   github = "" # add your github profile name
   twitter = "" # add your twitter profile
   email = "myemail@myaddress.xxx"
 
 [[menu.main]]
-    name = "Docs"
+    name = "Install"
     weight = -100
+    url = "/docs/quick-start/"
+[[menu.main]]
+    name = "Documentation"
+    weight = -99
     url = "/docs/"
 [[menu.main]]
+    name = "Use cases"
+    weight = -99
+    url = "/use-cases/"
+[[menu.main]]
     name = "Blog"
-    weight = -100
+    weight = -98
     url = "/blog/"
 [[menu.main]]
     name = "Faq"
-    weight = -100
+    weight = -97
     url = "/faq/"
