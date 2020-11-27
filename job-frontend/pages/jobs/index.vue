@@ -37,7 +37,6 @@ export default {
   components: {
     JobList
   },
-  middleware: 'authenticated',
   layout: 'auth',
 };
 </script>

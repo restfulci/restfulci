@@ -25,7 +25,7 @@
     <nuxt />
 
     <footer>
-      Copyright &copy; 2020 RestfulCI
+      Copyright &copy; 2020 RestfulCI {{ token }}
     </footer>
   </div>
 </template>
@@ -35,14 +35,13 @@ const Cookie = process.client ? require('js-cookie') : undefined;
 export default {
   data() {
     return {
-      username: this.$store.state.auth.username
+      username: this.$auth.user,
+      token: this.$auth.getToken('keycloak')
     };
   },
   methods: {
     logout() {
-      Cookie.remove('auth');
-      this.$store.commit('setAuth', null);
-      this.$router.push('/login');
+      this.$auth.logout(/* .... */);
     }
   }
 };

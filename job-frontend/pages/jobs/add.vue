@@ -76,7 +76,6 @@
 
 <script>
 export default {
-  middleware: 'authenticated',
   layout: 'auth',
 
   data() {
@@ -103,7 +102,7 @@ export default {
         {
           headers: {
             "Content-Type": "application/json",
-            'Authorization': "Bearer " + this.$store.state.auth.accessToken
+            'Authorization': "Bearer " + this.$auth.getToken('keycloak')
           }
         }
       ).then((response) => {

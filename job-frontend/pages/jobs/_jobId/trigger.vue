@@ -46,7 +46,6 @@
 
 <script>
 export default {
-  middleware: 'authenticated',
   layout: 'auth',
 
   data() {
