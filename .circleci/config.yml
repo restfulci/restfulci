@@ -71,6 +71,8 @@ orbs:
                 MINIO_ACCESS_KEY: restfulci
                 MINIO_SECRET_KEY: secretpassword
 
+  hugo: circleci/hugo@1.0.0
+
 jobs:
   java-job-unittest:
     executor: java-with-sidecar-executor
@@ -250,3 +252,8 @@ workflows:
 
       - python-linter
       - js-vue-linter
+
+      - hugo/build:
+          html-proofer: true
+          source: documentation/
+          version: '0.74.3'

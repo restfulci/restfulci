@@ -1,0 +1,54 @@
+{{ define "title"}} {{ .Site.Title}} {{end}}
+{{ define "header"}} {{ partial "header" .}} {{end}}
+{{ define "main"}}
+
+<div id="main">
+  <div id="hero">
+    <h1>{{.Title}}</h1>
+    <p>{{.Description}}</p>
+  </div>
+  <div id="action-buttons">
+    <a class="button primary big" href="/docs/quick-start/" onclick="_gaq.push(['_trackEvent', 'kube', 'Install']);">Install</a> <a class="button outline big" href="https://github.com/restfulci/restfulci" onclick="_gaq.push(['_trackEvent', 'kube', 'github']);">View on Github</a>
+  </div>
+  <div id="kube-features">
+    <div class="row gutters">
+      <div class="col col-4 item">
+        <figure>
+          <img alt="Baseline" height="48" src="{{ "/img/kube/icon-baseline.png" | relURL }}" width="48">
+        </figure>
+        <h3>Restful API</h3>
+        <p>CI/CD calls are triggered by API calls.</p>
+      </div>
+      <div class="col col-4 item">
+        <figure>
+          <img alt="Typography" height="48" src="{{ "/img/kube/icon-typo.png" | relURL }}" width="48">
+        </figure>
+        <h3>Dockerization</h3>
+        <p>Jobs are running in containerized environments with your defined Dockerfile.</p>
+      </div>
+      <div class="col col-4 item">
+        <figure>
+          <img alt="Minimalism" height="48" src="{{ "/img/kube/icon-minimalism.png" | relURL }}" width="48">
+        </figure>
+        <h3>Git Native</h3>
+        <p>Job defination stays side by side with code inside of a Git repository.</p>
+      </div>
+    </div>
+    <div class="row gutters">
+      <div class="col col-4 item">
+        <h4>Interactive UI</h4>
+        <p>Beside the restful API, interactive UIs are built on top of it.</p>
+      </div>
+      <div class="col col-4 item">
+        <h4>Microservice Architecture</h4>
+        <p>Built with a microservice mindset, user can choose to only install the parts which are relevant to them, and forget about the others.</p>
+      </div>
+      <div class="col col-4 item">
+        <h4>License</h4>
+        <p>RestfulCI licensed under <a href="https://opensource.org/licenses/BSD-3-Clause">BSD-3-Clause License</a>. RestfulCI is absolutely free for personal or commercial use.</p>
+    </div>
+  </div>
+</div>
+</div>
+{{ end }}
+{{ define "footer"}} {{ partial "footer" .}} {{end}}
