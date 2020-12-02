@@ -1,0 +1,43 @@
+version: "3"
+services:
+
+  # Keycloak scripts are in path of `/opt/jboss/keycloak/bin` of the container.
+  # Detail usage can be seem from https://hub.docker.com/r/jboss/keycloak
+  #
+  # `realm.json` can be saved from keycloak UI. Command line seems doesn't work:
+  # docker-compose -f docker-compose.dev.yml exec keycloak /opt/jboss/keycloak/bin/standalone.sh -Djboss.socket.binding.port-offset=100 -Dkeycloak.migration.action=export -Dkeycloak.migration.provider=singleFile -Dkeycloak.migration.realmName=restfulci -Dkeycloak.migration.usersExportStrategy=REALM_FILE -Dkeycloak.migration.file=keycloak/realm.json
+  #
+  # TODO:
+  # Move keycloak logic to a standalone auth microservice.
+  # Bake realm.json into the image.
+  # But it is kind of hard, because client (master-api-server) URL
+  # need to be included in Keycloak setup.
+  keycloak:
+    image: quay.io/keycloak/keycloak:11.0.2
+    ports:
+      # TODO:
+      # Use 8443 instand for SSL.
+      - "8880:8080"
+    environment:
+      KEYCLOAK_USER: restfulci
+      KEYCLOAK_PASSWORD: secretpassword
+      # https://keycloak.discourse.group/t/cant-import-realm-using-docker-image/259/8
+      # otherwise see error "Script upload is disabled"
+      KEYCLOAK_IMPORT: "/config/realm.json -Dkeycloak.profile.feature.upload_scripts=enabled"
+      DB_VENDOR: POSTGRES
+      DB_ADDR: keycloak-postgres
+      DB_DATABASE: keycloak
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+    volumes:
+      - ./realm.json:/config/realm.json
+    depends_on:
+      - keycloak-postgres
+
+  keycloak-postgres:
+    image: postgres:12.1
+    environment:
+      - POSTGRES_DB=keycloak
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    restart: always
