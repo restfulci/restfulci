@@ -1,8 +1,10 @@
 #!/bin/bash
-set -euxo pipefail
+
+# Can't have `set -euxo pipefail`.
+# Otherwise CircleCI cannot use this script.
 
 # pip3 install jsonpatch
 
+jsonpatch realm.json patch-local.json --indent=2 > realm-local.json
 jsonpatch realm.json patch-docker.json --indent=2 > realm-docker.json
-
-jq -s '.' realm.json realm-docker.json > realm-all.json
+jsonpatch realm.json patch-kubernetes.json --indent=2 > realm-kubernetes.json

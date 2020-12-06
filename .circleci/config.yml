@@ -226,6 +226,40 @@ jobs:
           name: linter
           command: cd job-frontend && node_modules/.bin/eslint --ext .js,.vue .
 
+  keycloak-build-docker-push:
+    executor: python-executor
+    steps:
+      - checkout
+
+      - setup_remote_docker:
+          docker_layer_caching: false
+
+      - run: sudo pip3 install jsonpatch
+      - run: cd auth-microservice && sh patch.sh
+
+      # Alternatively we can define multiple realms in a single image.
+      #
+      # None of the below suggestion works:
+      # https://www.codetd.com/en/article/7462535
+      # https://stackoverflow.com/a/61236608/2467072
+      #
+      # And probably it is better/safer the container only include
+      # one realm.
+      - run:
+          name: Build and push auth-microservice docker images
+          command: |
+            echo $DOCKER_PWD | docker login -u $DOCKER_ID --password-stdin
+            cd auth-microservice
+
+            docker build -f Dockerfile.local -t restfulci/auth-microservice-local:$CIRCLE_SHA1 .
+            docker push restfulci/auth-microservice-local:$CIRCLE_SHA1
+
+            docker build -f Dockerfile.docker -t restfulci/auth-microservice-docker:$CIRCLE_SHA1 .
+            docker push restfulci/auth-microservice-docker:$CIRCLE_SHA1
+
+            docker build -f Dockerfile.kubernetes -t restfulci/auth-microservice-kubernetes:$CIRCLE_SHA1 .
+            docker push restfulci/auth-microservice-kubernetes:$CIRCLE_SHA1
+
 workflows:
   version: 2
   build-test-and-deploy:
@@ -252,6 +286,11 @@ workflows:
 
       - python-linter
       - js-vue-linter
+
+      - keycloak-build-docker-push:
+          filters:
+            branches:
+              only: master
 
       - hugo/build:
           html-proofer: true

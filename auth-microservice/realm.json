@@ -684,7 +684,7 @@
       "clientAuthenticatorType": "client-secret",
       "secret": "**********",
       "redirectUris": [
-        "http://localhost:8080/*"
+        "http://localhost:3000/*"
       ],
       "webOrigins": [
         "*"

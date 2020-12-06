@@ -1,2 +1,3 @@
+realm-local.json
 realm-docker.json
-realm-all.json
+realm-kubernetes.json
