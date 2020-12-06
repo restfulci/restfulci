@@ -1,0 +1,22 @@
+[
+  {
+    "op": "replace",
+    "path": "/clients/4/redirectUris/0",
+    "value": "http://job-frontend/*"
+  },
+  {
+    "op": "replace",
+    "path": "/clients/5/rootUrl",
+    "value": "http://job-microservice/*"
+  },
+  {
+    "op": "replace",
+    "path": "/clients/5/adminUrl",
+    "value": "http://job-microservice/*"
+  },
+  {
+    "op": "replace",
+    "path": "/clients/5/redirectUris/0",
+    "value": "http://job-microservice/*"
+  }
+]

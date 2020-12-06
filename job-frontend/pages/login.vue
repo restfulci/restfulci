@@ -75,8 +75,7 @@ export default {
       setTimeout(() => { // we simulate the async request with timeout.
         this.$axios.post(
           process.env.authServer + "/auth/realms/restfulci/protocol/openid-connect/token",
-          "client_id=job-microservice"
-          + "&client_secret=" + process.env.authClientSecret
+          "client_id=job-frontend"
           + "&username="+self.username.value
           + "&password="+self.password.value
           + "&grant_type=password",

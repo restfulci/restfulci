@@ -1,0 +1,22 @@
+[
+  {
+    "op": "replace",
+    "path": "/clients/4/redirectUris/0",
+    "value": "http://localhost:5111/*"
+  },
+  {
+    "op": "replace",
+    "path": "/clients/5/rootUrl",
+    "value": "http://localhost:8881/*"
+  },
+  {
+    "op": "replace",
+    "path": "/clients/5/adminUrl",
+    "value": "http://localhost:8881/*"
+  },
+  {
+    "op": "replace",
+    "path": "/clients/5/redirectUris/0",
+    "value": "http://localhost:8881/*"
+  }
+]
