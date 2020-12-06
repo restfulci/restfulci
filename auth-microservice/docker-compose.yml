@@ -30,7 +30,7 @@ services:
       DB_USER: postgres
       DB_PASSWORD: postgres
     volumes:
-      - ./realm.json:/config/realm.json
+      - ./realm-docker.json:/config/realm.json
     depends_on:
       - keycloak-postgres
 

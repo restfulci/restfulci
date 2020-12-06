@@ -1,5 +1,13 @@
 [
-  { "op": "replace", "path": "/baz", "value": "boo" },
-  { "op": "add", "path": "/hello", "value": ["world"] },
-  { "op": "remove", "path": "/foo" }
+  { "op": "replace", "path": "/id", "value": "restfulci-docker" },
+  { "op": "replace", "path": "/realm", "value": "restfulci-docker" },
+  { "op": "replace", "path": "/roles/realm/0/containerId", "value": "restfulci-docker" },
+  { "op": "replace", "path": "/roles/realm/1/containerId", "value": "restfulci-docker" },
+  { "op": "replace", "path": "/roles/realm/2/containerId", "value": "restfulci-docker" },
+  { "op": "replace", "path": "/clients/0/baseUrl", "value": "/realms/restfulci-docker/account/" },
+  { "op": "replace", "path": "/clients/0/redirectUris/0", "value": "/realms/restfulci-docker/account/*" },
+  { "op": "replace", "path": "/clients/1/baseUrl", "value": "/realms/restfulci-docker/account/" },
+  { "op": "replace", "path": "/clients/1/redirectUris/0", "value": "/realms/restfulci-docker/account/*" },
+  { "op": "replace", "path": "/clients/7/baseUrl", "value": "/realms/restfulci-docker/account/" },
+  { "op": "replace", "path": "/clients/7/redirectUris/0", "value": "/realms/restfulci-docker/account/*" }
 ]
