@@ -1,4 +1,0 @@
-FROM quay.io/keycloak/keycloak:11.0.2
-
-COPY realm-local.json /config/realm.json
-ENV KEYCLOAK_IMPORT="/config/realm.json -Dkeycloak.profile.feature.upload_scripts=enabled"

@@ -251,13 +251,13 @@ jobs:
             echo $DOCKER_PWD | docker login -u $DOCKER_ID --password-stdin
             cd auth-microservice
 
-            docker build -f Dockerfile.local -t restfulci/auth-microservice-local:$CIRCLE_SHA1 .
+            docker build --build-arg AUTH_ENV=local -t restfulci/auth-microservice-local:$CIRCLE_SHA1 .
             docker push restfulci/auth-microservice-local:$CIRCLE_SHA1
 
-            docker build -f Dockerfile.docker -t restfulci/auth-microservice-docker:$CIRCLE_SHA1 .
+            docker build --build-arg AUTH_ENV=docker -t restfulci/auth-microservice-docker:$CIRCLE_SHA1 .
             docker push restfulci/auth-microservice-docker:$CIRCLE_SHA1
 
-            docker build -f Dockerfile.kubernetes -t restfulci/auth-microservice-kubernetes:$CIRCLE_SHA1 .
+            docker build --build-arg AUTH_ENV=kubernetes -t restfulci/auth-microservice-kubernetes:$CIRCLE_SHA1 .
             docker push restfulci/auth-microservice-kubernetes:$CIRCLE_SHA1
 
 workflows:
@@ -288,9 +288,9 @@ workflows:
       - js-vue-linter
 
       - keycloak-build-docker-push:
-          filters:
-            branches:
-              only: master
+          # filters:
+          #   branches:
+          #     only: master
 
       - hugo/build:
           html-proofer: true

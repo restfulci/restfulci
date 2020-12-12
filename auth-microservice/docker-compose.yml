@@ -6,14 +6,12 @@ services:
   #
   # `realm.json` can be saved from keycloak UI. Command line seems doesn't work:
   # docker-compose -f docker-compose.dev.yml exec keycloak /opt/jboss/keycloak/bin/standalone.sh -Djboss.socket.binding.port-offset=100 -Dkeycloak.migration.action=export -Dkeycloak.migration.provider=singleFile -Dkeycloak.migration.realmName=restfulci -Dkeycloak.migration.usersExportStrategy=REALM_FILE -Dkeycloak.migration.file=keycloak/realm.json
-  #
-  # TODO:
-  # Move keycloak logic to a standalone auth microservice.
-  # Bake realm.json into the image.
-  # But it is kind of hard, because client (master-api-server) URL
-  # need to be included in Keycloak setup.
   keycloak:
-    image: quay.io/keycloak/keycloak:11.0.2
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+      args:
+        AUTH_ENV: local
     ports:
       # TODO:
       # Use 8443 instand for SSL.
@@ -21,9 +19,6 @@ services:
     environment:
       KEYCLOAK_USER: restfulci
       KEYCLOAK_PASSWORD: secretpassword
-      # https://keycloak.discourse.group/t/cant-import-realm-using-docker-image/259/8
-      # otherwise see error "Script upload is disabled"
-      KEYCLOAK_IMPORT: "/config/realm.json -Dkeycloak.profile.feature.upload_scripts=enabled"
       DB_VENDOR: POSTGRES
       DB_ADDR: keycloak-postgres
       DB_DATABASE: keycloak
