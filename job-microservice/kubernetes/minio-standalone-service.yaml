@@ -6,7 +6,7 @@ kind: Service
 metadata:
   # This name uniquely identifies the service
   name: restfulci-job-minio
-  namespace: job
+  namespace: job-api
 spec:
   type: LoadBalancer
   ports:

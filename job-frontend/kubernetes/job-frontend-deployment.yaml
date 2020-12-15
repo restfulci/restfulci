@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+
+kind: Deployment
+metadata:
+  name: restfulci-job-frontend
+  namespace: job-frontend
+spec:
+  replicas: 1
+  revisionHistoryLimit: 3
+  selector:
+    matchLabels:
+      app: job-frontend
+  template:
+    metadata:
+      labels:
+        app: job-frontend
+    spec:
+      containers:
+      - name: job-frontend
+        image: restfulci/job-frontend:8a6d94fd40bc1498078d91d81ae8baa76e461afb
+        ports:
+        - containerPort: 5000
+        env:
+        - name: BROWSER_BASE_URL
+          value: http://job-api-url-from-outside
+        - name: AUTH_SERVER
+          value: http://auth-api-url-from-outside
+        resources:
+          requests:
+            cpu: 50m

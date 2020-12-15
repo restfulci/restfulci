@@ -3,7 +3,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: restfulci-pipeline-api-cron-server
-  namespace: pipeline
+  namespace: pipeline-api
 spec:
   replicas: 1
   revisionHistoryLimit: 3

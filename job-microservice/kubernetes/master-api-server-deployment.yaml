@@ -3,7 +3,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: restfulci-job-master-api-server
-  namespace: job
+  namespace: job-api
 spec:
   replicas: 1
   revisionHistoryLimit: 3
