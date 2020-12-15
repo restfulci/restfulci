@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
       - name: keycloak
-        image: restfulci/auth-server-kubernetes:32391688cb89676ffdc88dd43ddf35add6f391ea
+        image: restfulci/auth-server-kubernetes:f7517e2a93b770691458d186ceac387f4d8874ac
         ports:
         - containerPort: 8080
         env:
@@ -37,4 +37,4 @@ spec:
           value: postgres
         resources:
           requests:
-            cpu: 50m
+            cpu: 500m

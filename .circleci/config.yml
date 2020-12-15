@@ -313,10 +313,10 @@ workflows:
             branches:
               only: master
 
-      - keycloak-build-docker-push #:
-          # filters:
-          #   branches:
-          #     only: master
+      - keycloak-build-docker-push:
+          filters:
+            branches:
+              only: master
 
       - hugo/build:
           html-proofer: true

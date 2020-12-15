@@ -14,7 +14,7 @@ spec:
         app: postgres
     spec:
       containers:
-        - name: name: postgres
+        - name: postgres
           image: postgres:12.1
           imagePullPolicy: "IfNotPresent"
           ports:

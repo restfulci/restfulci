@@ -1,5 +1,5 @@
 # JOB_HOST=localhost:8881
-JOB_HOST=http://35.237.33.233
+JOB_HOST=http://35.227.37.213
 
 curl -X POST -H "Authorization: Bearer ${TEST_USER_TOKEN}" -H "Content-Type: application/json" --data '{"name": "manual_freestyle_job_name", "dockerImage": "busybox:1.31", "command": ["sh", "-c", "echo \"Hello world\""]}' $JOB_HOST/jobs
 curl -X GET -H "Authorization: Bearer ${TEST_USER_TOKEN}" $JOB_HOST/jobs/1

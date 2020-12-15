@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
       - name: slave-executor
-        image: restfulci/job-slave-executor:c72dcd06192aeaf7ec45546cbd3da4caf5cc61eb
+        image: restfulci/job-slave-executor:32391688cb89676ffdc88dd43ddf35add6f391ea
         resources:
           requests:
             cpu: 400m

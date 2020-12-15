@@ -46,7 +46,7 @@ Then you can access pipeline microservice API by `localhost:8882` (with mocked j
 ### GKE/Skaffold
 
 ```
-gcloud container clusters create restfulci --num-nodes=5
+gcloud container clusters create restfulci --num-nodes=6
 gcloud container clusters get-credentials restfulci
 
 gcloud container clusters delete restfulci
