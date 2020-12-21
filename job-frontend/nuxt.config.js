@@ -10,8 +10,11 @@ export default {
   ** See https://nuxtjs.org/api/configuration-target
   */
   target: 'server',
+  /*
+   * This is for build time (instead of runtime) variables.
+   * https://nuxtjs.org/docs/2.x/directory-structure/nuxt-config#env
+   */
   env: {
-    authServer: process.env.AUTH_SERVER || 'http://localhost:8880'
   },
   /*
   ** Headers of the page
@@ -56,12 +59,25 @@ export default {
   modules: [
     '@nuxtjs/axios',
   ],
+  /*
+   * https://axios.nuxtjs.org/options/
+   */
   axios: {
-    baseURL: process.env.API_URL
+    /*
+     * Used as fallback if no runtime config is provided.
+     * Environment variable API_URL can be used to override baseURL.
+     */
+    // baseURL: process.env.API_URL || 'http://localhost:8080'
+    baseURL: 'http://localhost:8080'
   },
+  /*
+   * https://nuxtjs.org/docs/2.x/directory-structure/nuxt-config#runtimeconfig
+   */
   publicRuntimeConfig: {
+    authServer: process.env.AUTH_SERVER || 'http://localhost:8880',
     axios: {
-      browserBaseURL: process.env.BROWSER_BASE_URL
+      baseURL: process.env.BASE_URL
+      // browserBaseURL: process.env.BROWSER_BASE_URL
     }
   },
   privateRuntimeConfig: {

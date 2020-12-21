@@ -71,21 +71,37 @@ export default {
 
   methods: {
     login() {
+      this.$axios.get('/foo');
       console.log("Login user "+this.username+"!!");
+      console.log(this.$config.authServer);
+      console.log(process.env.FOO)
+      /*
+       * TODO:
+       * Can't see `"Content-Type": "application/x-www-form-urlencoded"` in the actual
+       * cURL header. Seems a known bug: https://github.com/axios/axios/issues/466
+       */
       setTimeout(() => { // we simulate the async request with timeout.
-        this.$axios.post(
-          process.env.authServer + "/auth/realms/restfulci/protocol/openid-connect/token",
-          "client_id=job-frontend"
-          + "&username="+self.username.value
-          + "&password="+self.password.value
-          + "&grant_type=password",
-          {
+        this.$axios({
+            method: 'post',
+            baseURL: this.$config.authServer,
+            url: "/auth/realms/restfulci/protocol/openid-connect/token",
+            // + "?client_id=job-frontend"
+            // + "&username="+self.username.value
+            // + "&password="+self.password.value
+            // + "&grant_type=password",
             headers: {
               "Content-Type": "application/x-www-form-urlencoded",
             },
+            params: {
+              "client_id": "job-frontend",
+              "username": self.username.value,
+              "password": self.password.value,
+              "grant_type": "password"
+            },
             // withCredentials: true,
             // crossDomain: true,
-          }
+          },
+
         ).then((response) => {
             console.log(response);
             const auth = {
