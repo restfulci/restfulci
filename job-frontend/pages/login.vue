@@ -74,7 +74,7 @@ export default {
       console.log("Login user "+this.username+"!!");
       setTimeout(() => { // we simulate the async request with timeout.
         this.$axios.post(
-          process.env.authServer + "/auth/realms/restfulci/protocol/openid-connect/token",
+          this.$config.authServer + "/auth/realms/restfulci/protocol/openid-connect/token",
           "client_id=job-frontend"
           + "&username="+self.username.value
           + "&password="+self.password.value

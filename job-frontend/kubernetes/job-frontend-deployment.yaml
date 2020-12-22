@@ -21,11 +21,10 @@ spec:
         ports:
         - containerPort: 5000
         env:
-        - name: BROWSER_BASE_URL
+        - name: API_SERVER
           value: http://job-api-url-from-outside
         - name: AUTH_SERVER
-          value: http://34.75.211.105
-          # value: http://auth-api-url-from-outside
+          value: http://auth-api-url-from-outside
         resources:
           requests:
             cpu: 50m
