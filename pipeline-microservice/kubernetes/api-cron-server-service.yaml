@@ -3,7 +3,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: restfulci-pipeline-api-cron-server
-  namespace: pipeline
+  namespace: pipeline-api
   labels:
     app: api-cron-server
 spec:

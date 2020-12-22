@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: restfulci-job-postgres
-  namespace: job
+  namespace: job-api
 spec:
   replicas: 1
   selector:
@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: postgres
-          image: restfulci/job-postgres:c72dcd06192aeaf7ec45546cbd3da4caf5cc61eb
+          image: restfulci/job-postgres:387913650d3bda25ab2ac5d087f843ebc6f60c73
           imagePullPolicy: "IfNotPresent"
           ports:
           - containerPort: 5432

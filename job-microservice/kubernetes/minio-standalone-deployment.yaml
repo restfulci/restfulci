@@ -6,7 +6,7 @@ kind: Deployment
 metadata:
   # This name uniquely identifies the Deployment
   name: restfulci-job-minio
-  namespace: job
+  namespace: job-api
 spec:
   selector:
     matchLabels:

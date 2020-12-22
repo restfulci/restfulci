@@ -3,7 +3,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: restfulci-job-master-api-server
-  namespace: job
+  namespace: job-api
 spec:
   replicas: 1
   revisionHistoryLimit: 3
@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
       - name: master-api-server
-        image: restfulci/job-master-api-server:c72dcd06192aeaf7ec45546cbd3da4caf5cc61eb
+        image: restfulci/job-master-api-server:32391688cb89676ffdc88dd43ddf35add6f391ea
         ports:
         - containerPort: 8080
         env:
@@ -25,4 +25,4 @@ spec:
           value: kubernetes
         resources:
           requests:
-            cpu: 50m
+            cpu: 300m

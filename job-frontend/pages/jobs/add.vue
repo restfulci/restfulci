@@ -98,7 +98,7 @@ export default {
     addGitJob() {
       console.log("Add git job!!");
       this.$axios.post(
-        '/jobs',
+        this.$config.apiServer + '/jobs',
         this.job,
         {
           headers: {

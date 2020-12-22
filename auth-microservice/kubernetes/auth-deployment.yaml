@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+
+kind: Deployment
+metadata:
+  name: restfulci-auth-server
+  namespace: auth
+spec:
+  replicas: 1
+  revisionHistoryLimit: 3
+  selector:
+    matchLabels:
+      app: keycloak
+  template:
+    metadata:
+      labels:
+        app: keycloak
+    spec:
+      containers:
+      - name: keycloak
+        image: restfulci/auth-server-kubernetes:f7517e2a93b770691458d186ceac387f4d8874ac
+        ports:
+        - containerPort: 8080
+        env:
+        - name: KEYCLOAK_USER
+          value: restfulci
+        - name: KEYCLOAK_PASSWORD
+          value: secretpassword
+        - name: DB_VENDOR
+          value: POSTGRES
+        - name: DB_ADDR
+          value: restfulci-auth-postgres
+        - name: DB_DATABASE
+          value: keycloak
+        - name: DB_USER
+          value: postgres
+        - name: DB_PASSWORD
+          value: postgres
+        resources:
+          requests:
+            cpu: 500m

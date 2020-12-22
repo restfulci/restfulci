@@ -5,7 +5,7 @@
 $ yarn install
 
 # serve with hot reload at localhost:3000
-$ API_URL=http://localhost:8881/ yarn dev
+$ API_SERVER=http://localhost:8881/ AUTH_SERVER=http://localhost:8880 yarn dev
 
 # build for production and launch server
 $ yarn build

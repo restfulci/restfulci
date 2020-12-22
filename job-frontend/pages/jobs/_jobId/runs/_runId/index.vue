@@ -68,7 +68,7 @@ export default {
   methods: {
     loadRun() {
       this.$axios.get(
-        '/jobs/'+this.jobId + '/runs/' + this.runId, {
+        this.$config.apiServer + '/jobs/' + this.jobId + '/runs/' + this.runId, {
           headers: {
             'Authorization': "Bearer " + this.$store.state.auth.accessToken
           }

@@ -7,6 +7,11 @@ build:
     gitCommit:
       variant: CommitSha
   artifacts:
+  - image: restfulci/auth-server-kubernetes
+    context: auth-microservice
+    docker:
+      buildArgs:
+        AUTH_ENV: kubernetes
   - image: restfulci/job-master-api-server
     context: job-microservice/master-api
   - image: restfulci/job-slave-executor
@@ -17,8 +22,12 @@ build:
     context: pipeline-microservice/api-cron
   - image: restfulci/pipeline-postgres
     context: pipeline-microservice/database
+  - image: restfulci/job-frontend
+    context: job-frontend
 deploy:
   kubectl:
     manifests:
+    - auth-microservice/kubernetes/*.yaml
     - job-microservice/kubernetes/*.yaml
     - pipeline-microservice/kubernetes/*.yaml
+    - job-frontend/kubernetes/*.yaml

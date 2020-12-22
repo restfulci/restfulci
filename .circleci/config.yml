@@ -226,6 +226,25 @@ jobs:
           name: linter
           command: cd job-frontend && node_modules/.bin/eslint --ext .js,.vue .
 
+  job-frontend-docker-push:
+    docker:
+      - image: circleci/node:10.16.3
+    working_directory: ~/js
+    steps:
+      - checkout
+
+      - setup_remote_docker:
+          docker_layer_caching: false
+
+      - run: cd job-frontend
+
+      - run:
+          name: Build and push job-frontend docker image
+          command: |
+            cd job-frontend && docker build -t restfulci/job-frontend:$CIRCLE_SHA1 .
+            echo $DOCKER_PWD | docker login -u $DOCKER_ID --password-stdin
+            docker push restfulci/job-frontend:$CIRCLE_SHA1
+
   keycloak-build-docker-push:
     executor: python-executor
     steps:
@@ -251,14 +270,14 @@ jobs:
             echo $DOCKER_PWD | docker login -u $DOCKER_ID --password-stdin
             cd auth-microservice
 
-            docker build -f Dockerfile.local -t restfulci/auth-microservice-local:$CIRCLE_SHA1 .
-            docker push restfulci/auth-microservice-local:$CIRCLE_SHA1
+            docker build --build-arg AUTH_ENV=local -t restfulci/auth-server-local:$CIRCLE_SHA1 .
+            docker push restfulci/auth-server-local:$CIRCLE_SHA1
 
-            docker build -f Dockerfile.docker -t restfulci/auth-microservice-docker:$CIRCLE_SHA1 .
-            docker push restfulci/auth-microservice-docker:$CIRCLE_SHA1
+            docker build --build-arg AUTH_ENV=docker -t restfulci/auth-server-docker:$CIRCLE_SHA1 .
+            docker push restfulci/auth-server-docker:$CIRCLE_SHA1
 
-            docker build -f Dockerfile.kubernetes -t restfulci/auth-microservice-kubernetes:$CIRCLE_SHA1 .
-            docker push restfulci/auth-microservice-kubernetes:$CIRCLE_SHA1
+            docker build --build-arg AUTH_ENV=kubernetes -t restfulci/auth-server-kubernetes:$CIRCLE_SHA1 .
+            docker push restfulci/auth-server-kubernetes:$CIRCLE_SHA1
 
 workflows:
   version: 2
@@ -286,6 +305,13 @@ workflows:
 
       - python-linter
       - js-vue-linter
+
+      - job-frontend-docker-push:
+          requires:
+            - js-vue-linter
+          filters:
+            branches:
+              only: master
 
       - keycloak-build-docker-push:
           filters:
