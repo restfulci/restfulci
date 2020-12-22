@@ -2,6 +2,8 @@ AUTH_HOST='http://keycloak:8080'
 
 AUTH_HOST='http://localhost:8880'
 
+AUTH_HOST='http://35.190.189.100'
+
 MASTER_TOKEN=$(curl -X POST \
 "$AUTH_HOST/auth/realms/master/protocol/openid-connect/token" \
 --header 'Content-Type: application/x-www-form-urlencoded' \

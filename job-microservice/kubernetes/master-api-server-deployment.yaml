@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
       - name: master-api-server
-        image: restfulci/job-master-api-server:32391688cb89676ffdc88dd43ddf35add6f391ea
+        image: restfulci/job-master-api-server:4bc2625a429243f0c730b7463100e2a0909fc0d2
         ports:
         - containerPort: 8080
         env:

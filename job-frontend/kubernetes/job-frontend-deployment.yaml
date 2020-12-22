@@ -17,14 +17,16 @@ spec:
     spec:
       containers:
       - name: job-frontend
-        image: restfulci/job-frontend:8a6d94fd40bc1498078d91d81ae8baa76e461afb
+        image: restfulci/job-frontend:4bc2625a429243f0c730b7463100e2a0909fc0d2
         ports:
         - containerPort: 5000
         env:
         - name: API_SERVER
-          value: http://job-api-url-from-outside
+          # value: http://job-api-url-from-outside
+          value: http://35.237.234.194
         - name: AUTH_SERVER
-          value: http://auth-api-url-from-outside
+          # value: http://auth-api-url-from-outside
+          value: http://35.190.189.100
         resources:
           requests:
             cpu: 50m
