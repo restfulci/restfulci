@@ -2,6 +2,8 @@ AUTH_HOST='http://keycloak:8080'
 
 AUTH_HOST='http://localhost:8880'
 
+AUTH_HOST='http://35.190.189.100'
+
 MASTER_TOKEN=$(curl -X POST \
 "$AUTH_HOST/auth/realms/master/protocol/openid-connect/token" \
 --header 'Content-Type: application/x-www-form-urlencoded' \
@@ -50,6 +52,7 @@ TEST_USER_TOKEN=$(curl -X POST \
 curl -v -H "Authorization: Bearer ${TEST_USER_TOKEN}" "$AUTH_HOST/auth/realms/restfulci/protocol/openid-connect/userinfo"
 
 JOB_HOST=http://localhost:8080
+JOB_HOST=http://localhost:8881
 curl -v -H "Authorization: Bearer ${TEST_USER_TOKEN}" $JOB_HOST/jobs
 curl -X POST -H "Content-Type: application/json" -H "Authorization: Bearer ${TEST_USER_TOKEN}" --data '{"name": "manual_freestyle_job_name", "dockerImage": "busybox:1.31", "command": ["sh", "-c", "echo \"Hello world\""]}' $JOB_HOST/jobs
 curl -X POST -H "Content-Type: application/json" -H "Authorization: Bearer ${TEST_USER_TOKEN}" --data '{}' $JOB_HOST/jobs/1/runs
