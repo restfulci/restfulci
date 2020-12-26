@@ -23,7 +23,7 @@ public class MinioConfig {
 	@Bean
 	public MinioClient dockerMinioClient() throws MinioException {
 		return new MinioClient(
-				"http://minio:9000",
+				"http://job-minio:9000",
 				"restfulci", 
 				"secretpassword");
 	}

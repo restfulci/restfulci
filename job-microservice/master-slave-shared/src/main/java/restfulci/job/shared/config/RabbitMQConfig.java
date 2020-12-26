@@ -23,7 +23,7 @@ public class RabbitMQConfig {
 	@Bean
 	public CachingConnectionFactory dockerConnectionFactory() {
 		CachingConnectionFactory connectionFactory = new CachingConnectionFactory();
-		connectionFactory.setHost("rabbitmq");
+		connectionFactory.setHost("job-rabbitmq");
 		connectionFactory.setPort(5672);
 		connectionFactory.setUsername("guest");
 		connectionFactory.setPassword("guest");
