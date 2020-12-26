@@ -13,17 +13,17 @@ executors:
 
   java-with-sidecar-executor:
     docker:
-      - image: circleci/openjdk:11.0.2-jdk
+      - image: cimg/openjdk:15.0.1
         environment:
           TEST_DATABASE_URL: postgresql://postgres@localhost/restfulci
 
-      - image: postgres:12.1
+      - image: postgres:13.1
         environment:
           POSTGRES_DB: restfulci
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
 
-      - image: rabbitmq:3.8.2
+      - image: rabbitmq:3.8.9
 
     working_directory: /tmp/java
 

@@ -10,8 +10,12 @@ import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
+import io.minio.BucketExistsArgs;
+import io.minio.GetObjectArgs;
+import io.minio.MakeBucketArgs;
 import io.minio.MinioClient;
-import io.minio.PutObjectOptions;
+import io.minio.PutObjectArgs;
+import io.minio.RemoveObjectArgs;
 import io.minio.errors.MinioException;
 import restfulci.job.shared.domain.BaseEntity;
 import restfulci.job.shared.domain.GitRunBean;
@@ -39,8 +43,16 @@ public class MinioRepositoryImpl implements MinioRepository {
 		 * Create bucket in initialization, rather than at run time.
 		 */
 		try {
-			if (!minioClient.bucketExists(bucketName)) {
-				minioClient.makeBucket(bucketName);
+			if (!minioClient.bucketExists(
+					BucketExistsArgs
+					.builder()
+					.bucket(bucketName)
+					.build())) {
+				minioClient.makeBucket(
+					MakeBucketArgs
+					.builder()
+					.bucket(bucketName)
+					.build());
 			}
 		} catch (Exception e) {
 			
@@ -48,10 +60,12 @@ public class MinioRepositoryImpl implements MinioRepository {
 		
 		try {
 			minioClient.putObject(
-					bucketName, 
-					objectName, 
-					contentStream,
-					new PutObjectOptions(-1, 5 * 1048576));
+					PutObjectArgs
+					.builder()
+					.bucket(bucketName)
+					.object(objectName)
+					.stream(contentStream, -1, 10485760)
+					.build());
 			
 		} catch (InvalidKeyException e) {
 			// TODO Auto-generated catch block
@@ -71,7 +85,12 @@ public class MinioRepositoryImpl implements MinioRepository {
 	private InputStream minioGet(String bucketName, String objectName) throws MinioException {
 		
 		try {
-			return minioClient.getObject(bucketName, objectName);
+			return minioClient.getObject(
+					GetObjectArgs
+					.builder()
+					.bucket(bucketName)
+					.object(objectName)
+					.build());
 		} catch (InvalidKeyException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -92,7 +111,12 @@ public class MinioRepositoryImpl implements MinioRepository {
 	private void minioRemove(String bucketName, String objectName) throws MinioException {
 		
 		try {
-			minioClient.removeObject(bucketName, objectName);
+			minioClient.removeObject(
+					RemoveObjectArgs
+					.builder()
+					.bucket(bucketName)
+					.object(objectName)
+					.build());
 		} catch (InvalidKeyException | NoSuchAlgorithmException | IllegalArgumentException | IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

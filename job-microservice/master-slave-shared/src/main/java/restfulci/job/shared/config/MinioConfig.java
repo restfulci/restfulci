@@ -13,36 +13,36 @@ public class MinioConfig {
 	@Profile("dev")
 	@Bean
 	public MinioClient devMinioClient() throws MinioException {
-		return new MinioClient(
-				"http://localhost:9000",
-				"restfulci", 
-				"secretpassword");
+		return MinioClient.builder()
+				.endpoint("http://localhost:9000")
+				.credentials("restfulci", "secretpassword")
+				.build();
 	}
 	
 	@Profile("docker")
 	@Bean
 	public MinioClient dockerMinioClient() throws MinioException {
-		return new MinioClient(
-				"http://job-minio:9000",
-				"restfulci", 
-				"secretpassword");
+		return MinioClient.builder()
+				.endpoint("http://job-minio:9000")
+				.credentials("restfulci", "secretpassword")
+				.build();
 	}
 	
 	@Profile("kubernetes")
 	@Bean
 	public MinioClient kubernetesMinioClient() throws MinioException {
-		return new MinioClient(
-				"http://restfulci-job-minio:9000",
-				"restfulci", 
-				"secretpassword");
+		return MinioClient.builder()
+				.endpoint("http://restfulci-job-minio:9000")
+				.credentials("restfulci", "secretpassword")
+				.build();
 	}
 	
 	@Profile("circleci")
 	@Bean
 	public MinioClient circleciMinioClient() throws MinioException {
-		return new MinioClient(
-				"http://localhost:9000",
-				"restfulci", 
-				"secretpassword");
+		return MinioClient.builder()
+				.endpoint("http://localhost:9000")
+				.credentials("restfulci", "secretpassword")
+				.build();
 	}
 }
