@@ -51,7 +51,7 @@ public class MinioRepositoryImpl implements MinioRepository {
 				minioClient.makeBucket(
 					MakeBucketArgs
 					.builder()
-					.bucket("my-bucketname")
+					.bucket(bucketName)
 					.build());
 			}
 		} catch (Exception e) {

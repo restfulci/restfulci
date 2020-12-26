@@ -2,7 +2,7 @@ version: "3"
 services:
 
   job-postgres:
-    image: postgres:12.1
+    image: postgres:13.1
     volumes:
       - ./database/setup.sql:/docker-entrypoint-initdb.d/setup.sql
     environment:
@@ -13,7 +13,7 @@ services:
     restart: always
 
   job-rabbitmq:
-    image: rabbitmq:3.8.2-management
+    image: rabbitmq:3.8.9-management
     # TODO:
     # add queue setup:
     # https://stackoverflow.com/a/42251266/2467072
@@ -23,7 +23,7 @@ services:
       - "15673:15672"
 
   job-minio:
-    image: minio/minio:RELEASE.2020-04-02T21-34-49Z
+    image: minio/minio:RELEASE.2020-12-26T01-35-54Z
     environment:
       - MINIO_ACCESS_KEY=restfulci
       - MINIO_SECRET_KEY=secretpassword
@@ -118,7 +118,7 @@ services:
       - keycloak-postgres
 
   keycloak-postgres:
-    image: postgres:12.1
+    image: postgres:13.1
     environment:
       - POSTGRES_DB=keycloak
       - POSTGRES_USER=postgres
