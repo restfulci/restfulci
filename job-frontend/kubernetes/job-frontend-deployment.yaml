@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
       - name: job-frontend
-        image: restfulci/job-frontend:4bc2625a429243f0c730b7463100e2a0909fc0d2
+        image: restfulci/job-frontend:85d65d5882575a554aa605158d16beacae4ba499
         ports:
         - containerPort: 5000
         env:

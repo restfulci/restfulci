@@ -30,7 +30,7 @@ services:
     command: server /data
 
   keycloak:
-    image: restfulci/auth-server-local:foo
+    image: restfulci/auth-server-local:85d65d5882575a554aa605158d16beacae4ba499
     ports:
       # TODO:
       # Use 8443 instand for SSL.
