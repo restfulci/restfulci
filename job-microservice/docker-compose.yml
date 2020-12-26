@@ -36,6 +36,7 @@ services:
       dockerfile: ./Dockerfile
     environment:
       - SPRING_PROFILES_ACTIVE=docker
+      - AUTH_SERVER=http://localhost:8880
     ports:
       - "8881:8080"
     depends_on:

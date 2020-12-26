@@ -1,5 +1,6 @@
 package restfulci.job.master.config;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
@@ -8,6 +9,9 @@ import restfulci.job.master.config.source.KeycloakSource;
 
 @Configuration
 public class KeycloakConfig {
+	
+	@Value("${AUTH_SERVER:http://localhost:8080}")
+	private String authServer;
 
 	@Profile("dev")
 	@Bean
@@ -34,8 +38,19 @@ public class KeycloakConfig {
 		 * token). If it doesn't match, it returns:
 		 * > WWW-Authenticate: Bearer error="invalid_token", error_description="An error occurred while attempting to decode the Jwt: Signed JWT rejected: Invalid signature", error_uri="https://tools.ietf.org/html/rfc6750#section-3.1"
 		 */
-		keycloakSource.setIssuerUri("http://localhost:8880/auth/realms/restfulci");
+		keycloakSource.setIssuerUri(authServer+"/auth/realms/restfulci");
 		keycloakSource.setJwtSetUri("http://keycloak:8080/auth/realms/restfulci/protocol/openid-connect/certs");
+				
+		return keycloakSource;
+	}
+
+	@Profile("kubernetes")
+	@Bean
+	public KeycloakSource kubernetesKeycloakSource() {
+		KeycloakSource keycloakSource = new KeycloakSource();
+		
+		keycloakSource.setIssuerUri(authServer+"/auth/realms/restfulci");
+		keycloakSource.setJwtSetUri("http://restfulci-auth-server.auth:80/auth/realms/restfulci/protocol/openid-connect/certs");
 				
 		return keycloakSource;
 	}
