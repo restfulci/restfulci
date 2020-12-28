@@ -4,14 +4,16 @@ services:
   job-postgres:
     image: restfulci/job-postgres:85d65d5882575a554aa605158d16beacae4ba499
     environment:
-      # TODO: Change name from `restfulci` to `restfulci-job`
-      - POSTGRES_DB=restfulci
+      - POSTGRES_DB=restfulci-job
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
     restart: always
 
   job-rabbitmq:
     image: rabbitmq:3.8.9-management
+    environment:
+      - RABBITMQ_DEFAULT_USER=restfulci
+      - RABBITMQ_DEFAULT_PASS=secretpassword
     ports:
       - "15673:15672"
 
@@ -27,6 +29,12 @@ services:
     environment:
       - SPRING_PROFILES_ACTIVE=docker
       - AUTH_SERVER=http://localhost:8880
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - RABBITMQ_DEFAULT_USER=restfulci
+      - RABBITMQ_DEFAULT_PASS=secretpassword
+      - MINIO_ACCESS_KEY=restfulci
+      - MINIO_SECRET_KEY=secretpassword
     ports:
       - "8881:8080"
     depends_on:
@@ -45,6 +53,12 @@ services:
     environment:
       - SSH_AUTH_SOCK
       - SPRING_PROFILES_ACTIVE=docker
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - RABBITMQ_DEFAULT_USER=restfulci
+      - RABBITMQ_DEFAULT_PASS=secretpassword
+      - MINIO_ACCESS_KEY=restfulci
+      - MINIO_SECRET_KEY=secretpassword
     depends_on:
       - job-postgres
       - job-rabbitmq
