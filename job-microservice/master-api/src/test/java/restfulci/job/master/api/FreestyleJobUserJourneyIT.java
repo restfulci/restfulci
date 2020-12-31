@@ -2,6 +2,8 @@ package restfulci.job.master.api;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -195,6 +197,10 @@ public class FreestyleJobUserJourneyIT {
 				Map.class);
 		assertEquals(triggeredRun.get("status"), "IN_PROGRESS");
 		assertEquals(triggeredRun.get("type"), "FREESTYLE");
+		assertNotNull(triggeredRun.get("triggerAt"));
+		assertNull(triggeredRun.get("completeAt"));
+		assertNull(triggeredRun.get("durationInSecond"));
+		assertNull(triggeredRun.get("exitCode"));
 		assertEquals(
 				objectMapper.convertValue(triggeredRun.get("job"), Map.class).get("type"),
 				"FREESTYLE");

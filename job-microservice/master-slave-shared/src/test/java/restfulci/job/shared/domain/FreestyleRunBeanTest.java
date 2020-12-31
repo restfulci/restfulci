@@ -48,7 +48,8 @@ public class FreestyleRunBeanTest {
 				+ "\"completeAt\":\"1970-01-01 12:00:01\","
 				+ "\"exitCode\":0,"
 				+ "\"runResults\":[],"
-				+ "\"type\":\"FREESTYLE\"}");
+				+ "\"type\":\"FREESTYLE\","
+				+ "\"durationInSecond\":1}");
 		assertEquals(
 				mapper.writeValueAsString(job),
 				"{\"id\":123,"
