@@ -41,6 +41,8 @@ public class DockerExecTest {
 	@MockBean private RunRepository runRepository;
 	@MockBean private MinioRepository minioRepository;
 	
+	private final String containerName = "restfulci-unit-test-container";
+	
 	@Test
 	public void testCreateNetwork() throws Exception {
 		Network network = exec.createNetworkIfNotExist("restfulci-unit-test");
@@ -58,6 +60,14 @@ public class DockerExecTest {
 	}
 	
 	@Test
+	public void testCreateAndKillSidecar() throws Exception {
+		
+		exec.pullImage("busybox:1.31");
+		String containerId = exec.createSidecar("busybox:1.31", containerName, "bridge");
+		exec.killSidecar(containerId);
+	}
+	
+	@Test
 	public void testRunCommand() throws Exception {
 		
 		RunBean run = new FreestyleRunBean();
@@ -66,6 +76,7 @@ public class DockerExecTest {
 		exec.runCommandAndUpdateRunBean(
 				run, 
 				"busybox:1.31",
+				containerName,
 				"bridge",
 				Arrays.asList(new String[]{"sh", "-c", "echo \"Hello world\""}), 
 				new HashMap<String, String>(),
@@ -95,6 +106,7 @@ public class DockerExecTest {
 		exec.runCommandAndUpdateRunBean(
 				run, 
 				"busybox:1.31", 
+				containerName,
 				"bridge",
 				Arrays.asList(new String[]{"sh", "-c", "echo \"Hello $WORD\""}), 
 				inputs,
@@ -149,6 +161,7 @@ public class DockerExecTest {
 		exec.runCommandAndUpdateRunBean(
 				run, 
 				"busybox:1.31", 
+				containerName,
 				"bridge",
 				/*
 				 * No need to `mkdir /result`, as docker will create `/result`

@@ -110,11 +110,45 @@ public class DockerExecImpl implements DockerExec {
 		
 		return imageId;
 	}
+	
+	@Override
+	public String createSidecar(String imageTag, String containerName, String networkName) {
+		
+		log.info("Create sidecar container for docker image: {}", imageTag);
+		
+		/*
+		 * TODO:
+		 * Seems no way to just let a container running forever?
+		 * Without `withCmd` the container will exit immediately.
+		 * https://github.com/docker-java/docker-java/blob/3.2.7/docker-java/src/test/java/com/github/dockerjava/cmd/KillContainerCmdIT.java#L23
+		 */
+		CreateContainerResponse container = dockerClient.createContainerCmd(imageTag)
+				.withCmd("sleep", "9999")
+				.withName(containerName)
+				.withHostConfig(newHostConfig().withNetworkMode(networkName))
+				.exec();
+		
+		dockerClient.startContainerCmd(container.getId()).exec();
+		
+		log.info("Created sidecar container {} for docker image: {}", container.getId(), imageTag);
+		
+		return container.getId();
+	}
+	
+	@Override
+	public void killSidecar(String containerId) {
+		
+		log.info("Kill sidecar container: {}", containerId);
+		
+		dockerClient.killContainerCmd(containerId).exec();
+		dockerClient.removeContainerCmd(containerId).exec();
+	}
 
 	@Override
 	public void runCommandAndUpdateRunBean(
 			RunBean run, 
 			String imageTag, 
+			String containerName,
 			String networkName,
 			List<String> command, 
 			Map<String, String> inputs,
@@ -162,6 +196,7 @@ public class DockerExecImpl implements DockerExec {
 		CreateContainerResponse container = dockerClient.createContainerCmd(imageTag)
 				.withCmd(command)
 				.withEnv(inputList)
+				.withName(containerName)
 				.withHostConfig(newHostConfig().withNetworkMode(networkName).withBinds(binds))
 				.exec();
 		
@@ -181,6 +216,9 @@ public class DockerExecImpl implements DockerExec {
 				.withSince(timestamp)
 				.exec(loggingCallback);
 		loggingCallback.awaitCompletion();
+		
+		dockerClient.removeContainerCmd(container.getId()).exec();
+		
 		try {
 			/*
 			 * TODO:

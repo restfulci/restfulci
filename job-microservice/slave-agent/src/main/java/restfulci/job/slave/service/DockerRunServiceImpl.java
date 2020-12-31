@@ -42,6 +42,7 @@ public class DockerRunServiceImpl implements DockerRunService {
 	@Autowired private MinioRepository minioRepository;
 	
 	private final String networkName = "restfulci-net";
+	private final String mainContainerName = "restfulci-main";
 
 	private RunBean getRun(Integer runId) throws IOException {
 		
@@ -101,6 +102,7 @@ public class DockerRunServiceImpl implements DockerRunService {
 		dockerExec.runCommandAndUpdateRunBean(
 				run, 
 				job.getDockerImage(), 
+				mainContainerName,
 				networkName,
 				Arrays.asList(job.getCommand()),
 				getInputMap(run),
@@ -191,6 +193,7 @@ public class DockerRunServiceImpl implements DockerRunService {
 			dockerExec.runCommandAndUpdateRunBean(
 					run, 
 					runConfig.getEnvironment().getImage(),
+					mainContainerName,
 					networkName,
 					runConfig.getCommand(), 
 					getInputMap(run),
@@ -201,6 +204,7 @@ public class DockerRunServiceImpl implements DockerRunService {
 			dockerExec.runCommandAndUpdateRunBean(
 					run, 
 					imageId, 
+					mainContainerName,
 					networkName,
 					runConfig.getCommand(), 
 					getInputMap(run),

@@ -16,9 +16,17 @@ public interface DockerExec {
 
 	public void pullImage(String imageTag) throws InterruptedException;
 	public String buildImageAndGetId(Path localRepoPath, RunConfigBean runConfig);
+	
+	public String createSidecar(
+			String imageTag,
+			String containerName, 
+			String networkName);
+	public void killSidecar(String containerId);
+	
 	public void runCommandAndUpdateRunBean(
 			RunBean run, 
 			String imageTag, 
+			String containerName,
 			String networkName,
 			List<String> command, 
 			Map<String, String> inputs,
