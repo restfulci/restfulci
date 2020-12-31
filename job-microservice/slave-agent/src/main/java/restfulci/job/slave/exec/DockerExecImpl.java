@@ -1,5 +1,7 @@
 package restfulci.job.slave.exec;
 
+import static com.github.dockerjava.api.model.HostConfig.newHostConfig;
+
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.InputStream;
@@ -14,15 +16,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.github.dockerjava.api.DockerClient;
+import com.github.dockerjava.api.async.ResultCallback;
 import com.github.dockerjava.api.command.CreateContainerResponse;
 import com.github.dockerjava.api.model.Bind;
 import com.github.dockerjava.api.model.Frame;
 import com.github.dockerjava.api.model.Image;
 import com.github.dockerjava.api.model.Volume;
-import com.github.dockerjava.core.command.BuildImageResultCallback;
-import com.github.dockerjava.core.command.LogContainerResultCallback;
-import com.github.dockerjava.core.command.PullImageResultCallback;
-import com.github.dockerjava.core.command.WaitContainerResultCallback;
 
 import io.minio.errors.MinioException;
 import lombok.extern.slf4j.Slf4j;
@@ -59,7 +58,7 @@ public class DockerExecImpl implements DockerExec {
 		
 		log.info("Pulling new docker image from remote server: {}", imageTag);
 		dockerClient.pullImageCmd(imageTag)
-				.exec(new PullImageResultCallback())
+				.start()
 				.awaitCompletion(30, TimeUnit.SECONDS);
 	}
 	
@@ -67,7 +66,7 @@ public class DockerExecImpl implements DockerExec {
 	public String buildImageAndGetId(Path localRepoPath, RunConfigBean runConfig) {
 		
 		/*
-		 * https://github.com/docker-java/docker-java/blob/3.1.5/src/test/java/com/github/dockerjava/cmd/BuildImageCmdIT.java
+		 * https://github.com/docker-java/docker-java/blob/3.2.7/docker-java/src/test/java/com/github/dockerjava/cmd/BuildImageCmdIT.java
 		 */
 		log.info(
 				"Build image from context path {} and Dockerfile path {}",
@@ -78,7 +77,7 @@ public class DockerExecImpl implements DockerExec {
 				.withBaseDirectory(runConfig.getBaseDir(localRepoPath))
 				.withDockerfile(runConfig.getDockerfile(localRepoPath))
 				.withNoCache(true)
-				.exec(new BuildImageResultCallback())
+				.start()
 				.awaitImageId();
 		
 		return imageId;
@@ -129,19 +128,19 @@ public class DockerExecImpl implements DockerExec {
 		}
 		
 		/*
-		 * https://github.com/docker-java/docker-java/blob/3.1.5/src/test/java/com/github/dockerjava/cmd/LogContainerCmdIT.java
+		 * https://github.com/docker-java/docker-java/blob/3.2.7/docker-java/src/test/java/com/github/dockerjava/cmd/StartContainerCmdIT.java
 		 */
 		CreateContainerResponse container = dockerClient.createContainerCmd(imageTag)
 				.withCmd(command)
 				.withEnv(inputList)
-				.withBinds(binds)
+				.withHostConfig(newHostConfig().withBinds(binds))
 				.exec();
 		
 		int timestamp = (int) (System.currentTimeMillis() / 1000);
 		dockerClient.startContainerCmd(container.getId()).exec();
 		
 		int exitCode = dockerClient.waitContainerCmd(container.getId())
-				.exec(new WaitContainerResultCallback())
+				.start()
 				.awaitStatusCode();
 		run.setExitCode(exitCode);
 		log.info("Execute command exit code: {}", exitCode);
@@ -170,12 +169,12 @@ public class DockerExecImpl implements DockerExec {
 
 	/*
 	 * Copyright (c) docker-java
-	 * https://github.com/docker-java/docker-java/blob/3.1.5/src/test/java/com/github/dockerjava/utils/LogContainerTestCallback.java#L3
+	 * https://github.com/docker-java/docker-java/blob/3.2.7/docker-java/src/test/java/com/github/dockerjava/utils/LogContainerTestCallback.java
 	 */
-	private class LogContainerCallbackWrapper extends LogContainerResultCallback {
+	private class LogContainerCallbackWrapper extends ResultCallback.Adapter<Frame> {
 		protected final StringBuffer log = new StringBuffer();
 
-		List<Frame> collectedFrames = new ArrayList<Frame>();
+		List<Frame> collectedFrames = new ArrayList<>();
 
 		boolean collectFrames = false;
 
