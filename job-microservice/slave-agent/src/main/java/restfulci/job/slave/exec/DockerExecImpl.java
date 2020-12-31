@@ -18,9 +18,11 @@ import org.springframework.stereotype.Component;
 import com.github.dockerjava.api.DockerClient;
 import com.github.dockerjava.api.async.ResultCallback;
 import com.github.dockerjava.api.command.CreateContainerResponse;
+import com.github.dockerjava.api.command.CreateNetworkResponse;
 import com.github.dockerjava.api.model.Bind;
 import com.github.dockerjava.api.model.Frame;
 import com.github.dockerjava.api.model.Image;
+import com.github.dockerjava.api.model.Network;
 import com.github.dockerjava.api.model.Volume;
 
 import io.minio.errors.MinioException;
@@ -36,6 +38,32 @@ public class DockerExecImpl implements DockerExec {
 	@Autowired private DockerClient dockerClient;
 	
 	@Autowired private MinioRepository minioRepository;
+	
+	@Override
+	public Network createNetworkIfNotExist(String networkName) {
+		/*
+		 * https://github.com/docker-java/docker-java/blob/3.2.7/docker-java/src/test/java/com/github/dockerjava/cmd/InspectNetworkCmdIT.java
+		 * 
+		 * Looks like without it docker-java will just create networks with the same name:
+		 * > $ docker network ls
+		 * > 1718f7c3e5d3        restfulci-unit-test             bridge              local
+		 * > eb87afb4dfe0        restfulci-unit-test             bridge              local
+		 * > 7efc6e8e5368        restfulci-unit-test             bridge              local
+		 */
+		List<Network> networks = dockerClient.listNetworksCmd().exec();
+		for (Network network : networks) {
+			if (network.getName().equals(networkName)) {
+				return network;
+			}
+		}
+		
+		/*
+		 * https://github.com/docker-java/docker-java/blob/3.2.7/docker-java/src/test/java/com/github/dockerjava/cmd/CreateNetworkCmdIT.java
+		 */
+		CreateNetworkResponse createNetworkResponse = dockerClient.createNetworkCmd().withName(networkName).exec();
+		Network network = dockerClient.inspectNetworkCmd().withNetworkId(createNetworkResponse.getId()).exec();
+		return network;
+	}
 
 	@Override
 	public void pullImage(String imageTag) throws InterruptedException {
@@ -87,6 +115,7 @@ public class DockerExecImpl implements DockerExec {
 	public void runCommandAndUpdateRunBean(
 			RunBean run, 
 			String imageTag, 
+			String networkName,
 			List<String> command, 
 			Map<String, String> inputs,
 			Map<RunConfigBean.RunConfigResultBean, File> mounts) throws InterruptedException {
@@ -126,14 +155,14 @@ public class DockerExecImpl implements DockerExec {
 		for (Map.Entry<RunConfigBean.RunConfigResultBean, File> entry : mounts.entrySet()) {
 			binds.add(new Bind(entry.getValue().getAbsolutePath(), new Volume(entry.getKey().getPath())));
 		}
-		
+			
 		/*
 		 * https://github.com/docker-java/docker-java/blob/3.2.7/docker-java/src/test/java/com/github/dockerjava/cmd/StartContainerCmdIT.java
 		 */
 		CreateContainerResponse container = dockerClient.createContainerCmd(imageTag)
 				.withCmd(command)
 				.withEnv(inputList)
-				.withHostConfig(newHostConfig().withBinds(binds))
+				.withHostConfig(newHostConfig().withNetworkMode(networkName).withBinds(binds))
 				.exec();
 		
 		int timestamp = (int) (System.currentTimeMillis() / 1000);

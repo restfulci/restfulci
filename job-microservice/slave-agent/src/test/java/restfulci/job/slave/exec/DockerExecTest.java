@@ -23,6 +23,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
+import com.github.dockerjava.api.model.Network;
+
 import restfulci.job.shared.dao.MinioRepository;
 import restfulci.job.shared.dao.RunRepository;
 import restfulci.job.shared.domain.FreestyleRunBean;
@@ -40,6 +42,15 @@ public class DockerExecTest {
 	@MockBean private MinioRepository minioRepository;
 	
 	@Test
+	public void testCreateNetwork() throws Exception {
+		Network network = exec.createNetworkIfNotExist("restfulci-unit-test");
+		assertEquals(network.getName(), "restfulci-unit-test");
+		
+		Network networkAgain = exec.createNetworkIfNotExist("restfulci-unit-test");
+		assertEquals(networkAgain.getName(), "restfulci-unit-test");
+	}
+	
+	@Test
 	public void testPullImage() throws Exception {
 		exec.pullImage("busybox");
 		exec.pullImage("busybox:1.31");
@@ -54,7 +65,8 @@ public class DockerExecTest {
 		exec.pullImage("busybox:1.31");
 		exec.runCommandAndUpdateRunBean(
 				run, 
-				"busybox:1.31", 
+				"busybox:1.31",
+				"bridge",
 				Arrays.asList(new String[]{"sh", "-c", "echo \"Hello world\""}), 
 				new HashMap<String, String>(),
 				new HashMap<RunConfigBean.RunConfigResultBean, File>());
@@ -83,6 +95,7 @@ public class DockerExecTest {
 		exec.runCommandAndUpdateRunBean(
 				run, 
 				"busybox:1.31", 
+				"bridge",
 				Arrays.asList(new String[]{"sh", "-c", "echo \"Hello $WORD\""}), 
 				inputs,
 				new HashMap<RunConfigBean.RunConfigResultBean, File>());
@@ -136,6 +149,7 @@ public class DockerExecTest {
 		exec.runCommandAndUpdateRunBean(
 				run, 
 				"busybox:1.31", 
+				"bridge",
 				/*
 				 * No need to `mkdir /result`, as docker will create `/result`
 				 * when there's a volume mount `/some/host/path:/result`.

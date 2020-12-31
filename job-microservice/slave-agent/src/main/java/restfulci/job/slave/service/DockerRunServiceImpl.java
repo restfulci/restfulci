@@ -40,6 +40,8 @@ public class DockerRunServiceImpl implements DockerRunService {
 	@Autowired private RunRepository runRepository;
 	@Autowired private RemoteGitRepository remoteGitRepository;
 	@Autowired private MinioRepository minioRepository;
+	
+	private final String networkName = "restfulci-net";
 
 	private RunBean getRun(Integer runId) throws IOException {
 		
@@ -56,6 +58,8 @@ public class DockerRunServiceImpl implements DockerRunService {
 	public void runByMessage(RunMessageBean runMessage) throws InterruptedException, IOException {
 		
 		RunBean run = getRun(runMessage.getRunId());
+		
+		dockerExec.createNetworkIfNotExist(networkName);
 		
 		if (run instanceof FreestyleRunBean) {
 			FreestyleRunBean freestyleRun = (FreestyleRunBean)run;
@@ -97,6 +101,7 @@ public class DockerRunServiceImpl implements DockerRunService {
 		dockerExec.runCommandAndUpdateRunBean(
 				run, 
 				job.getDockerImage(), 
+				networkName,
 				Arrays.asList(job.getCommand()),
 				getInputMap(run),
 				new HashMap<RunConfigBean.RunConfigResultBean, File>());
@@ -185,7 +190,8 @@ public class DockerRunServiceImpl implements DockerRunService {
 			dockerExec.pullImage(runConfig.getEnvironment().getImage());
 			dockerExec.runCommandAndUpdateRunBean(
 					run, 
-					runConfig.getEnvironment().getImage(), 
+					runConfig.getEnvironment().getImage(),
+					networkName,
 					runConfig.getCommand(), 
 					getInputMap(run),
 					mounts);
@@ -195,6 +201,7 @@ public class DockerRunServiceImpl implements DockerRunService {
 			dockerExec.runCommandAndUpdateRunBean(
 					run, 
 					imageId, 
+					networkName,
 					runConfig.getCommand(), 
 					getInputMap(run),
 					mounts);
