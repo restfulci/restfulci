@@ -8,14 +8,16 @@ services:
     volumes:
       - ./database/setup.sql:/docker-entrypoint-initdb.d/setup.sql
     environment:
-      # TODO: Change name from `restfulci` to `restfulci-job`
-      - POSTGRES_DB=restfulci
+      - POSTGRES_DB=restfulci-job
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
     restart: always
 
   job-rabbitmq:
     image: rabbitmq:3.8.9-management
+    environment:
+      - RABBITMQ_DEFAULT_USER=restfulci
+      - RABBITMQ_DEFAULT_PASS=secretpassword
     ports:
       - "5673:5672"
       - "15673:15672"
@@ -25,8 +27,8 @@ services:
     ports:
       - "9000:9000"
     environment:
-      MINIO_ACCESS_KEY: restfulci
-      MINIO_SECRET_KEY: secretpassword
+      - MINIO_ACCESS_KEY=restfulci
+      - MINIO_SECRET_KEY=secretpassword
     command: server /data
 
   keycloak:

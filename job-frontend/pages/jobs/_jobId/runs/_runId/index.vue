@@ -33,6 +33,9 @@
       <p v-if="run.completeAt !== null">
         Completed at: {{ run.completeAt }}
       </p>
+      <p v-if="run.durationInSecond !== null">
+        Duration: {{ run.durationInSecond }} seconds
+      </p>
       <p v-if="run.exitCode !== null">
         Exit code: {{ run.exitCode }}
       </p>

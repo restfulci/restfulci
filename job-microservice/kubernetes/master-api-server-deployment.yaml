@@ -26,6 +26,18 @@ spec:
         - name: AUTH_SERVER
           # value: http://auth-api-url-from-outside
           value: http://35.190.189.100
+        - name: POSTGRES_USER
+          value: postgres
+        - name: POSTGRES_PASSWORD
+          value: postgres
+        - name: RABBITMQ_DEFAULT_USER
+          value: "restfulci"
+        - name: RABBITMQ_DEFAULT_PASS
+          value: "secretpassword"
+        - name: MINIO_ACCESS_KEY
+          value: "restfulci"
+        - name: MINIO_SECRET_KEY
+          value: "secretpassword"
         resources:
           requests:
             cpu: 300m

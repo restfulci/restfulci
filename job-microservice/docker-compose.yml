@@ -6,14 +6,16 @@ services:
     volumes:
       - ./database/setup.sql:/docker-entrypoint-initdb.d/setup.sql
     environment:
-      # TODO: Change name from `restfulci` to `restfulci-job`
-      - POSTGRES_DB=restfulci
+      - POSTGRES_DB=restfulci-job
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
     restart: always
 
   job-rabbitmq:
     image: rabbitmq:3.8.9-management
+    environment:
+      - RABBITMQ_DEFAULT_USER=restfulci
+      - RABBITMQ_DEFAULT_PASS=secretpassword
     # TODO:
     # add queue setup:
     # https://stackoverflow.com/a/42251266/2467072
@@ -37,6 +39,12 @@ services:
     environment:
       - SPRING_PROFILES_ACTIVE=docker
       - AUTH_SERVER=http://localhost:8880
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - RABBITMQ_DEFAULT_USER=restfulci
+      - RABBITMQ_DEFAULT_PASS=secretpassword
+      - MINIO_ACCESS_KEY=restfulci
+      - MINIO_SECRET_KEY=secretpassword
     ports:
       - "8881:8080"
     depends_on:
@@ -92,6 +100,12 @@ services:
     environment:
       - SSH_AUTH_SOCK
       - SPRING_PROFILES_ACTIVE=docker
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - RABBITMQ_DEFAULT_USER=restfulci
+      - RABBITMQ_DEFAULT_PASS=secretpassword
+      - MINIO_ACCESS_KEY=restfulci
+      - MINIO_SECRET_KEY=secretpassword
     depends_on:
       - job-postgres
       - job-rabbitmq

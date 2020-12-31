@@ -31,4 +31,9 @@ public abstract class GitRunBean extends RunBean {
 	public JobType getType() {
 		return JobType.GIT;
 	}
+	
+	/*
+	 * TODO:
+	 * Commit author and message.
+	 */
 }

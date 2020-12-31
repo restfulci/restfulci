@@ -17,6 +17,11 @@ spec:
       - name: rabbitmq
         image: rabbitmq:3.8.9-management
         imagePullPolicy: "IfNotPresent"
+        env:
+        - name: RABBITMQ_DEFAULT_USER
+          value: "restfulci"
+        - name: RABBITMQ_DEFAULT_PASS
+          value: "secretpassword"
         ports:
         - containerPort: 5672
         - containerPort: 15672

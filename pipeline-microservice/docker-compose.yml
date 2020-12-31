@@ -6,8 +6,7 @@ services:
       context: ./database
       dockerfile: ./Dockerfile
     environment:
-      # TODO: Change name from `restfulci` to `restfulci-pipeline`
-      - POSTGRES_DB=restfulci
+      - POSTGRES_DB=restfulci-pipeline
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
     restart: always
@@ -26,6 +25,8 @@ services:
       dockerfile: ./Dockerfile
     environment:
       - SPRING_PROFILES_ACTIVE=docker
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
     ports:
       - "8882:8080"
     depends_on:

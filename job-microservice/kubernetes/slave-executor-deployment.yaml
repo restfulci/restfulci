@@ -24,6 +24,18 @@ spec:
         env:
         - name: SPRING_PROFILES_ACTIVE
           value: kubernetes
+        - name: POSTGRES_USER
+          value: postgres
+        - name: POSTGRES_PASSWORD
+          value: postgres
+        - name: RABBITMQ_DEFAULT_USER
+          value: "restfulci"
+        - name: RABBITMQ_DEFAULT_PASS
+          value: "secretpassword"
+        - name: MINIO_ACCESS_KEY
+          value: "restfulci"
+        - name: MINIO_SECRET_KEY
+          value: "secretpassword"
         # Setting up docker sibling. Refer to
         # https://estl.tech/accessing-docker-from-a-kubernetes-pod-68996709c04b
         # https://devops.stackexchange.com/a/2507

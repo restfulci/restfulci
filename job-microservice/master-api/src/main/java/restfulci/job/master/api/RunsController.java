@@ -77,9 +77,9 @@ public class RunsController {
 	}
 	
 	/*
-	 * TODO:
-	 * Return YAML mime type?
-	 * https://stackoverflow.com/questions/332129/yaml-mime-type
+	 * May consider return YAML mime type.
+	 * Ruby on rails uses `application/x-yaml`: https://stackoverflow.com/questions/332129/yaml-mime-type
+	 * Unfortunately there's no supporting type in Spring yet: https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/http/MediaType.html
 	 */
 	@GetMapping("/{runId}/configuration")
 	public String getRunConfiguration(@PathVariable @Min(1) Integer runId) throws Exception {
