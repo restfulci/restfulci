@@ -25,6 +25,19 @@ public class RunConfigBean {
 	
 	@Setter
 	@Getter
+	public static class RunConfigSidecarBean {
+
+		/*
+		 * TODO:
+		 * Should sidecar support build?
+		 */
+		private String name;
+		private String image;
+		private Map<String, String> environment = new HashMap<String, String>();
+	}
+	
+	@Setter
+	@Getter
 	public static class RunConfigBuildBean {
 
 		private String context;
@@ -52,6 +65,7 @@ public class RunConfigBean {
 	private String version;
 	
 	private RunConfigExecutorBean executor;
+	private List<RunConfigSidecarBean> sidecars = new ArrayList<RunConfigSidecarBean>();
 	private List<String> command;
 	private List<RunConfigResultBean> results = new ArrayList<RunConfigResultBean>();
 	

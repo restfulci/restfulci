@@ -4,16 +4,8 @@ executor:
   build:
     context: ./path/to/subproject
     dockerfile: ./Dockerfile
-  environment:
-    FOO: bar
 
 command:
   - bash
   - -c
-  - "\"echo $FOO\""
-
-results:
-  - type: junit
-    path: target/surefile-reports
-  - type: junit
-    path: target/failsafe-reports
+  - "\"echo 0\""
