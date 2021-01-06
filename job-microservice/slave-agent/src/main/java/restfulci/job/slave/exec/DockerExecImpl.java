@@ -98,8 +98,8 @@ public class DockerExecImpl implements DockerExec {
 		 */
 		log.info(
 				"Build image from context path {} and Dockerfile path {}",
-				runConfig.getEnvironment().getBuild().getContext(),
-				runConfig.getEnvironment().getBuild().getDockerfile());
+				runConfig.getExecutor().getBuild().getContext(),
+				runConfig.getExecutor().getBuild().getDockerfile());
 		String imageId = dockerClient
 				.buildImageCmd()
 				.withBaseDirectory(runConfig.getBaseDir(localRepoPath))
@@ -151,7 +151,8 @@ public class DockerExecImpl implements DockerExec {
 			String containerName,
 			String networkName,
 			List<String> command, 
-			Map<String, String> inputs,
+			Map<String, String> envVars,
+			
 			Map<RunConfigBean.RunConfigResultBean, File> mounts) throws InterruptedException {
 		
 		log.info("Execute command {} in docker image: {}", command, imageTag);
@@ -160,7 +161,7 @@ public class DockerExecImpl implements DockerExec {
 		 * https://github.com/docker-java/docker-java/issues/933#issuecomment-336422012
 		 */
 		List<String> inputList = new ArrayList<String>();
-		for (Map.Entry<String, String> entry : inputs.entrySet()) {
+		for (Map.Entry<String, String> entry : envVars.entrySet()) {
 			inputList.add(entry.getKey()+"="+entry.getValue());
 		}
 		

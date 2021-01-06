@@ -1,14 +1,16 @@
 version: 1.0
 
-environment:
+executor:
   build:
     context: ./path/to/subproject
     dockerfile: ./Dockerfile
+  environment:
+    FOO: bar
 
 command:
   - bash
   - -c
-  - "\"echo 0\""
+  - "\"echo $FOO\""
 
 results:
   - type: junit

@@ -23,11 +23,13 @@ public class RunConfigYamlParserTest {
 		RunConfigBean runConfig = RunConfigYamlParser.parse(yamlContent);
 		
 		assertEquals(runConfig.getVersion(), "1.0");
-		assertEquals(runConfig.getEnvironment().getImage(), "busybox:1.31");
+		assertEquals(runConfig.getExecutor().getImage(), "busybox:1.31");
+		assertEquals(runConfig.getExecutor().getEnvironment().size(), 1);
+		assertEquals(runConfig.getExecutor().getEnvironment().get("FOO"), "bar");
 		assertEquals(runConfig.getCommand().size(), 3);
 		assertEquals(runConfig.getCommand().get(0), "bash");
 		assertEquals(runConfig.getCommand().get(1), "-c");
-		assertEquals(runConfig.getCommand().get(2), "\"echo 0\"");
+		assertEquals(runConfig.getCommand().get(2), "\"echo $FOO\"");
 		assertEquals(runConfig.getResults().size(), 2);
 		assertEquals(runConfig.getResults().get(0).getType(), "junit");
 		assertEquals(runConfig.getResults().get(0).getPath(), "target/surefile-reports");
@@ -44,12 +46,14 @@ public class RunConfigYamlParserTest {
 		RunConfigBean runConfig = RunConfigYamlParser.parse(yamlContent);
 		
 		assertEquals(runConfig.getVersion(), "1.0");
-		assertEquals(runConfig.getEnvironment().getBuild().getContext(), "./path/to/subproject");
-		assertEquals(runConfig.getEnvironment().getBuild().getDockerfile(), "./Dockerfile");
+		assertEquals(runConfig.getExecutor().getBuild().getContext(), "./path/to/subproject");
+		assertEquals(runConfig.getExecutor().getBuild().getDockerfile(), "./Dockerfile");
+		assertEquals(runConfig.getExecutor().getEnvironment().size(), 1);
+		assertEquals(runConfig.getExecutor().getEnvironment().get("FOO"), "bar");
 		assertEquals(runConfig.getCommand().size(), 3);
 		assertEquals(runConfig.getCommand().get(0), "bash");
 		assertEquals(runConfig.getCommand().get(1), "-c");
-		assertEquals(runConfig.getCommand().get(2), "\"echo 0\"");
+		assertEquals(runConfig.getCommand().get(2), "\"echo $FOO\"");
 		assertEquals(runConfig.getResults().size(), 2);
 		assertEquals(runConfig.getResults().get(0).getType(), "junit");
 		assertEquals(runConfig.getResults().get(0).getPath(), "target/surefile-reports");
@@ -65,13 +69,14 @@ public class RunConfigYamlParserTest {
 	}
 	
 	@Test
-	public void testWithoutResultsElement() throws IOException {
+	public void testMinimal() throws IOException {
 		
-		File exampleYamlFile = new File(getClass().getClassLoader().getResource("restfulci-without-results-element.yml").getFile());
+		File exampleYamlFile = new File(getClass().getClassLoader().getResource("restfulci-minimal.yml").getFile());
 		String yamlContent = String.join("\n", Files.readAllLines(exampleYamlFile.toPath()));
 		
 		RunConfigBean runConfig = RunConfigYamlParser.parse(yamlContent);
 		
+		assertEquals(runConfig.getExecutor().getEnvironment().size(), 0);
 		assertEquals(runConfig.getResults().size(), 0);
 	}
 }

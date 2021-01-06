@@ -29,6 +29,6 @@ public interface DockerExec {
 			String containerName,
 			String networkName,
 			List<String> command, 
-			Map<String, String> inputs,
+			Map<String, String> envVars,
 			Map<RunConfigBean.RunConfigResultBean, File> mounts) throws InterruptedException;
 }

@@ -202,6 +202,11 @@ public class DockerRunServiceTest {
 		testRunGitJobHelloWorld("git-shell-baked");
 	}
 	
+	@Test
+	public void testRunGitJobWithEnvironmentVaribles() throws Exception {
+		testRunGitJobHelloWorld("git-with-envvar");
+	}
+	
 	private void testRunGitJobHelloWorld(String resourceName) throws Exception {
 		
 		RunMessageBean runMessage = new RunMessageBean();

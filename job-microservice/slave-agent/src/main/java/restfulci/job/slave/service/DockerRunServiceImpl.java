@@ -85,13 +85,22 @@ public class DockerRunServiceImpl implements DockerRunService {
 		runRepository.saveAndFlush(run);
 	}
 	
-	private Map<String, String> getInputMap(RunBean run) {
-		
-		Map<String, String> inputMap = new HashMap<String, String>();
+	private Map<String, String> getEnvVars(RunBean run) {	
+		Map<String, String> envVars = new HashMap<String, String>();
+		updateWithInputs(envVars, run);
+		return envVars;
+	}
+	
+	private Map<String, String> getEnvVars(RunConfigBean runConfig, RunBean run) {
+		Map<String, String> envVars = runConfig.getExecutor().getEnvironment();
+		updateWithInputs(envVars, run);
+		return envVars;
+	}
+	
+	private void updateWithInputs(Map<String, String> envVars, RunBean run) {
 		for (InputBean input : run.getInputs()) {
-			inputMap.put(input.getName(), input.getValue());
+			envVars.put(input.getName(), input.getValue());
 		}
-		return inputMap;
 	}
 	
 	private void runFreestyleJob(FreestyleRunBean run) throws InterruptedException {
@@ -105,7 +114,7 @@ public class DockerRunServiceImpl implements DockerRunService {
 				mainContainerName,
 				networkName,
 				Arrays.asList(job.getCommand()),
-				getInputMap(run),
+				getEnvVars(run),
 				new HashMap<RunConfigBean.RunConfigResultBean, File>());
 		
 		/*
@@ -188,15 +197,15 @@ public class DockerRunServiceImpl implements DockerRunService {
 			mounts.put(result, Files.createTempDirectory("result-").toFile());
 		}
 		
-		if (runConfig.getEnvironment().getImage() != null) {
-			dockerExec.pullImage(runConfig.getEnvironment().getImage());
+		if (runConfig.getExecutor().getImage() != null) {
+			dockerExec.pullImage(runConfig.getExecutor().getImage());
 			dockerExec.runCommandAndUpdateRunBean(
 					run, 
-					runConfig.getEnvironment().getImage(),
+					runConfig.getExecutor().getImage(),
 					mainContainerName,
 					networkName,
 					runConfig.getCommand(), 
-					getInputMap(run),
+					getEnvVars(runConfig, run),
 					mounts);
 		}
 		else {
@@ -207,7 +216,7 @@ public class DockerRunServiceImpl implements DockerRunService {
 					mainContainerName,
 					networkName,
 					runConfig.getCommand(), 
-					getInputMap(run),
+					getEnvVars(run),
 					mounts);
 		}
 		

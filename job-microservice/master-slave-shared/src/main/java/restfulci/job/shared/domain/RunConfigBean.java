@@ -3,7 +3,9 @@ package restfulci.job.shared.domain;
 import java.io.File;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -14,10 +16,11 @@ public class RunConfigBean {
 	
 	@Setter
 	@Getter
-	public static class RunConfigEnvironmentBean {
+	public static class RunConfigExecutorBean {
 
 		private String image;
 		private RunConfigBuildBean build;
+		private Map<String, String> environment = new HashMap<String, String>();
 	}
 	
 	@Setter
@@ -48,20 +51,20 @@ public class RunConfigBean {
 
 	private String version;
 	
-	private RunConfigEnvironmentBean environment;
+	private RunConfigExecutorBean executor;
 	private List<String> command;
 	private List<RunConfigResultBean> results = new ArrayList<RunConfigResultBean>();
 	
 	public File getBaseDir(Path localRepoPath) {
 		return localRepoPath
-				.resolve(this.getEnvironment().getBuild().getContext())
+				.resolve(this.getExecutor().getBuild().getContext())
 				.toFile();
 	}
 	
 	public File getDockerfile(Path localRepoPath) {
 		return localRepoPath
-				.resolve(this.getEnvironment().getBuild().getContext())
-				.resolve(this.getEnvironment().getBuild().getDockerfile())
+				.resolve(this.getExecutor().getBuild().getContext())
+				.resolve(this.getExecutor().getBuild().getDockerfile())
 				.toFile();
 	}
 }

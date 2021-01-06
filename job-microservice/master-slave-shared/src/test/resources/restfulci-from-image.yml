@@ -1,12 +1,14 @@
 version: 1.0
 
-environment:
+executor:
   image: busybox:1.31
+  environment:
+    FOO: bar
 
 command:
   - bash
   - -c
-  - "\"echo 0\""
+  - "\"echo $FOO\""
 
 results:
   - type: junit

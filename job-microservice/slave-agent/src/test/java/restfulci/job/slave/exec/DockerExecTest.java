@@ -99,8 +99,8 @@ public class DockerExecTest {
 		
 		RunBean run = new FreestyleRunBean();
 		
-		Map<String, String> inputs = new HashMap<String, String>();
-		inputs.put("WORD", "customized input");
+		Map<String, String> envVars = new HashMap<String, String>();
+		envVars.put("WORD", "customized input");
 		
 		exec.pullImage("busybox:1.31");
 		exec.runCommandAndUpdateRunBean(
@@ -109,7 +109,7 @@ public class DockerExecTest {
 				containerName,
 				"bridge",
 				Arrays.asList(new String[]{"sh", "-c", "echo \"Hello $WORD\""}), 
-				inputs,
+				envVars,
 				new HashMap<RunConfigBean.RunConfigResultBean, File>());
 		
 		assertEquals(run.getExitCode(), 0);
