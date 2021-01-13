@@ -20,7 +20,8 @@ public interface DockerExec {
 	public String createSidecar(
 			String imageTag,
 			String containerName, 
-			String networkName);
+			String networkName,
+			Map<String, String> envVars);
 	public void killSidecar(String containerId);
 	
 	public void runCommandAndUpdateRunBean(

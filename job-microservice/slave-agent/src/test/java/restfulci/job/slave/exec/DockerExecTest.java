@@ -63,7 +63,11 @@ public class DockerExecTest {
 	public void testCreateAndKillSidecar() throws Exception {
 		
 		exec.pullImage("busybox:1.31");
-		String containerId = exec.createSidecar("busybox:1.31", containerName, "bridge");
+		String containerId = exec.createSidecar(
+				"busybox:1.31", 
+				containerName, 
+				"bridge",
+				new HashMap<String, String>());
 		exec.killSidecar(containerId);
 	}
 	

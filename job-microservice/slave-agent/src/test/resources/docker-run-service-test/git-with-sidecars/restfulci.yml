@@ -1,0 +1,17 @@
+version: 1.0
+
+executor:
+  image: alpine:3.12.3
+
+sidecars:
+  - name: lazybox
+    image: busybox:1.31
+  - name: sleepingbox
+    image: busybox:1.31
+    environment:
+      FOO: bar
+
+command:
+  - sh
+  - -c
+  - "ping -c 2 lazybox"

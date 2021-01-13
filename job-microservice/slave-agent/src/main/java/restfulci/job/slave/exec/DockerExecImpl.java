@@ -112,9 +112,18 @@ public class DockerExecImpl implements DockerExec {
 	}
 	
 	@Override
-	public String createSidecar(String imageTag, String containerName, String networkName) {
+	public String createSidecar(
+			String imageTag, 
+			String containerName, 
+			String networkName,
+			Map<String, String> envVars) {
 		
 		log.info("Create sidecar container for docker image: {}", imageTag);
+		
+		List<String> envVarLists = new ArrayList<String>();
+		for (Map.Entry<String, String> entry : envVars.entrySet()) {
+			envVarLists.add(entry.getKey()+"="+entry.getValue());
+		}
 		
 		/*
 		 * TODO:
@@ -124,6 +133,7 @@ public class DockerExecImpl implements DockerExec {
 		 */
 		CreateContainerResponse container = dockerClient.createContainerCmd(imageTag)
 				.withCmd("sleep", "9999")
+				.withEnv(envVarLists)
 				.withName(containerName)
 				.withHostConfig(newHostConfig().withNetworkMode(networkName))
 				.exec();
@@ -160,9 +170,9 @@ public class DockerExecImpl implements DockerExec {
 		/*
 		 * https://github.com/docker-java/docker-java/issues/933#issuecomment-336422012
 		 */
-		List<String> inputList = new ArrayList<String>();
+		List<String> envVarLists = new ArrayList<String>();
 		for (Map.Entry<String, String> entry : envVars.entrySet()) {
-			inputList.add(entry.getKey()+"="+entry.getValue());
+			envVarLists.add(entry.getKey()+"="+entry.getValue());
 		}
 		
 		/*
@@ -196,42 +206,45 @@ public class DockerExecImpl implements DockerExec {
 		 */
 		CreateContainerResponse container = dockerClient.createContainerCmd(imageTag)
 				.withCmd(command)
-				.withEnv(inputList)
+				.withEnv(envVarLists)
 				.withName(containerName)
 				.withHostConfig(newHostConfig().withNetworkMode(networkName).withBinds(binds))
 				.exec();
 		
-		int timestamp = (int) (System.currentTimeMillis() / 1000);
-		dockerClient.startContainerCmd(container.getId()).exec();
-		
-		int exitCode = dockerClient.waitContainerCmd(container.getId())
-				.start()
-				.awaitStatusCode();
-		run.setExitCode(exitCode);
-		log.info("Execute command exit code: {}", exitCode);
-		
-		LogContainerCallbackWrapper loggingCallback = new LogContainerCallbackWrapper();
-		dockerClient.logContainerCmd(container.getId())
-				.withStdErr(true)
-				.withStdOut(true)
-				.withSince(timestamp)
-				.exec(loggingCallback);
-		loggingCallback.awaitCompletion();
-		
-		dockerClient.removeContainerCmd(container.getId()).exec();
-		
 		try {
-			/*
-			 * TODO:
-			 * Directly consume InputStream coming from docker execution.
-			 */
-			InputStream contentStream = new ByteArrayInputStream(
-					loggingCallback.toString().getBytes(StandardCharsets.UTF_8));
-			minioRepository.putRunOutputAndUpdateRunBean(run, contentStream);
-			log.info("Execute command output: \n{}", loggingCallback.toString());
-		} catch (MinioException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			int timestamp = (int) (System.currentTimeMillis() / 1000);
+			dockerClient.startContainerCmd(container.getId()).exec();
+			
+			int exitCode = dockerClient.waitContainerCmd(container.getId())
+					.start()
+					.awaitStatusCode();
+			run.setExitCode(exitCode);
+			log.info("Execute command exit code: {}", exitCode);
+			
+			LogContainerCallbackWrapper loggingCallback = new LogContainerCallbackWrapper();
+			dockerClient.logContainerCmd(container.getId())
+					.withStdErr(true)
+					.withStdOut(true)
+					.withSince(timestamp)
+					.exec(loggingCallback);
+			loggingCallback.awaitCompletion();
+			
+			try {
+				/*
+				 * TODO:
+				 * Directly consume InputStream coming from docker execution.
+				 */
+				InputStream contentStream = new ByteArrayInputStream(
+						loggingCallback.toString().getBytes(StandardCharsets.UTF_8));
+				minioRepository.putRunOutputAndUpdateRunBean(run, contentStream);
+				log.info("Execute command output: \n{}", loggingCallback.toString());
+			} catch (MinioException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		finally {
+			dockerClient.removeContainerCmd(container.getId()).exec();
 		}
 	}
 

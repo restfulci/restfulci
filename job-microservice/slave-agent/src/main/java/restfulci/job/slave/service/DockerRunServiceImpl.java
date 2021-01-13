@@ -5,9 +5,11 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -130,7 +132,7 @@ public class DockerRunServiceImpl implements DockerRunService {
 		 * (1) Create temporary local folder.
 		 * (2) Clone (by branch name or commit SHA) single commit into the local folder.
 		 * (3) Find the config file in local folder and generate `RunConfigBean`.
-		 * (4) Build image, run job based on config file and the contents in git clone.
+		 * (4) Build image, run sidecars, run job, kill sidecars (based on config file and the contents in git clone).
 		 * (5) Clean up docker container (TODO).
 		 * (6) Clean up the temporary local folder (TODO).
 		 */
@@ -197,27 +199,49 @@ public class DockerRunServiceImpl implements DockerRunService {
 			mounts.put(result, Files.createTempDirectory("result-").toFile());
 		}
 		
-		if (runConfig.getExecutor().getImage() != null) {
-			dockerExec.pullImage(runConfig.getExecutor().getImage());
-			dockerExec.runCommandAndUpdateRunBean(
-					run, 
-					runConfig.getExecutor().getImage(),
-					mainContainerName,
-					networkName,
-					runConfig.getCommand(), 
-					getEnvVars(runConfig, run),
-					mounts);
+		/*
+		 * TODO:
+		 * If sidecars can support build from Dockerfile, we'll need to build sidecars as well.
+		 */
+		
+		List<String> sidecarIds = new ArrayList<String>();	
+		try {
+			for (RunConfigBean.RunConfigSidecarBean sidecar : runConfig.getSidecars()) {
+				sidecarIds.add(
+						dockerExec.createSidecar(
+								sidecar.getImage(), 
+								sidecar.getName(), 
+								networkName,
+								sidecar.getEnvironment()));
+			}
+			
+			if (runConfig.getExecutor().getImage() != null) {
+				dockerExec.pullImage(runConfig.getExecutor().getImage());
+				dockerExec.runCommandAndUpdateRunBean(
+						run, 
+						runConfig.getExecutor().getImage(),
+						mainContainerName,
+						networkName,
+						runConfig.getCommand(), 
+						getEnvVars(runConfig, run),
+						mounts);
+			}
+			else {
+				String imageId = dockerExec.buildImageAndGetId(localRepoPath, runConfig);
+				dockerExec.runCommandAndUpdateRunBean(
+						run, 
+						imageId, 
+						mainContainerName,
+						networkName,
+						runConfig.getCommand(), 
+						getEnvVars(run),
+						mounts);
+			}
 		}
-		else {
-			String imageId = dockerExec.buildImageAndGetId(localRepoPath, runConfig);
-			dockerExec.runCommandAndUpdateRunBean(
-					run, 
-					imageId, 
-					mainContainerName,
-					networkName,
-					runConfig.getCommand(), 
-					getEnvVars(run),
-					mounts);
+		finally {
+			for (String sidecarId : sidecarIds) {
+				dockerExec.killSidecar(sidecarId);
+			}
 		}
 		
 		for (Map.Entry<RunConfigBean.RunConfigResultBean, File> entry : mounts.entrySet()) {

@@ -10,7 +10,7 @@
 In each microservice folder
 
 ```bash
-docker-compose -f docker-compose.dev.yml rm -v -f job-postgres # pipeline microservice
+docker-compose -f docker-compose.dev.yml rm -v -f job-postgres # job microservice
 docker-compose -f docker-compose.dev.yml up
 ```
 
