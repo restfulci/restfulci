@@ -126,13 +126,28 @@ public class DockerExecImpl implements DockerExec {
 		}
 		
 		/*
-		 * TODO:
-		 * Seems no way to just let a container running forever?
-		 * Without `withCmd` the container will exit immediately.
+		 * We shouldn't have `withCmd`, especially we shouldn't have some
+		 * `sleep 9999` as seen from
 		 * https://github.com/docker-java/docker-java/blob/3.2.7/docker-java/src/test/java/com/github/dockerjava/cmd/KillContainerCmdIT.java#L23
+		 * 
+		 * The reason is 
+		 * > docker run postgres:13.1
+		 * will create a real functional postgres, while
+		 * > docker run postgres:13.1 sleep 9999
+		 * will not, and `psql` to it will cause
+		 * > psql: could not connect to server: Connection refused
+		 * > Is the server running on host "postgres1" (192.168.0.2) and accepting
+		 * > TCP/IP connections on port 5432?
+		 * 
+		 * TODO:
+		 * This makes
+		 * > docker run busybox
+		 * exit immediately, hence breaks several unit tests.
+		 * We'll need to fix those unit tests.
+		 * Or we may want something similar to docker-compose's
+		 * `restart: always`
 		 */
 		CreateContainerResponse container = dockerClient.createContainerCmd(imageTag)
-				.withCmd("sleep", "9999")
 				.withEnv(envVarLists)
 				.withName(containerName)
 				.withHostConfig(newHostConfig().withNetworkMode(networkName))
@@ -140,7 +155,7 @@ public class DockerExecImpl implements DockerExec {
 		
 		dockerClient.startContainerCmd(container.getId()).exec();
 		
-		log.info("Created sidecar container {} for docker image: {}", container.getId(), imageTag);
+		log.info("Created sidecar container name {} ID {} for docker image {}", containerName, container.getId(), imageTag);
 		
 		return container.getId();
 	}
@@ -148,7 +163,7 @@ public class DockerExecImpl implements DockerExec {
 	@Override
 	public void killSidecar(String containerId) {
 		
-		log.info("Kill sidecar container: {}", containerId);
+		log.info("Kill sidecar container ID {}", containerId);
 		
 		dockerClient.killContainerCmd(containerId).exec();
 		dockerClient.removeContainerCmd(containerId).exec();
