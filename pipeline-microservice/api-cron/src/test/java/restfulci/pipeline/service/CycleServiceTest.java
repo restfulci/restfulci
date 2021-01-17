@@ -2,6 +2,7 @@ package restfulci.pipeline.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -15,7 +16,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -110,7 +110,7 @@ public class CycleServiceTest {
 		CycleDTO cycleDTO = new CycleDTO();
 		cycleDTO.put("EXCLUDE", "foo");
 		
-		Assertions.assertThrows(CycleDataException.class, () -> {
+		assertThrows(CycleDataException.class, () -> {
 			service.triggerCycle(456, cycleDTO);
 		});
 	}
@@ -124,7 +124,7 @@ public class CycleServiceTest {
 		pipeline.addParameter(parameter);
 		given(pipelineService.getPipeline(456)).willReturn(pipeline);
 		
-		Assertions.assertThrows(CycleDataException.class, () -> {
+		assertThrows(CycleDataException.class, () -> {
 			service.triggerCycle(456, new CycleDTO());
 		});
 	}
@@ -142,7 +142,7 @@ public class CycleServiceTest {
 		CycleDTO cycleDTO = new CycleDTO();
 		cycleDTO.put("ENV", "development");
 		
-		Assertions.assertThrows(CycleDataException.class, () -> {
+		assertThrows(CycleDataException.class, () -> {
 			service.triggerCycle(456, cycleDTO);
 		});
 	}
@@ -166,7 +166,7 @@ public class CycleServiceTest {
 		
 		given(pipelineService.getPipeline(456)).willReturn(pipeline);
 		
-		Assertions.assertThrows(IncompleteParameterLinkException.class, () -> {
+		assertThrows(IncompleteParameterLinkException.class, () -> {
 			service.triggerCycle(456, new CycleDTO());
 		});
 	}

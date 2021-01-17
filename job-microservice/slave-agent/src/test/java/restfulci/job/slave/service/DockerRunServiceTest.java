@@ -278,6 +278,9 @@ public class DockerRunServiceTest {
 		 * Change alpine to busybox, dockerjava errors out with a thread error.
 		 * We'll probably want to understand more on why that happens, and fix
 		 * it. 
+		 * 
+		 * Looks like it is for case the container errors out (`invalid_cmd`)
+		 * instead of failed (`exit 1`).
 		 */
 		
 		RunMessageBean runMessage = getMockRunMessage();
@@ -308,12 +311,6 @@ public class DockerRunServiceTest {
 		assertTrue(consoleOutput.contains("lazybox ping statistics"));
 		assertTrue(consoleOutput.contains("packets transmitted"));
 	}
-	
-	/*
-	 * TODO:
-	 * Unit test that when anything goes wrong inside of the test, container can 
-	 * still be stopped and removed at the end.
-	 */
 	
 	/*
 	 * This test can pass locally but will fail CircleCI with error:
@@ -368,6 +365,27 @@ public class DockerRunServiceTest {
 		ZipUtil.unpack(zipFile, resultFolder);
 		assertEquals(resultFolder.list().length, 1);
 		assertEquals(resultFolder.list()[0], "this.txt");
+	}
+	
+	@Test
+	public void testFailedExecutorWillCleanupContainers() throws Exception {
+		
+		final String resourceName = "git-failed";
+		
+		RunMessageBean runMessage = getMockRunMessage();
+		GitRunBean run = getMockGitRun();
+		
+		Optional<RunBean> maybeRun = Optional.of(run);
+		given(runRepository.findById(456)).willReturn(maybeRun);
+		
+		mockGit(resourceName);
+		
+		service.runByMessage(runMessage);
+		
+		ArgumentCaptor<RunBean> runCaptor = ArgumentCaptor.forClass(RunBean.class);
+		verify(runRepository, times(1)).saveAndFlush(runCaptor.capture());
+		assertTrue(runCaptor.getValue() instanceof GitRunBean);
+		assertEquals(runCaptor.getValue().getStatus(), RunStatus.FAIL);
 	}
 	
 	private RunMessageBean getMockRunMessage() {

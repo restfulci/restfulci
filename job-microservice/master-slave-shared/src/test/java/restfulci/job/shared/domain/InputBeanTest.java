@@ -1,8 +1,9 @@
 package restfulci.job.shared.domain;
 
+import static org.junit.jupiter.api.Assertions.assertThrows;
+
 import java.io.IOException;
 
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -56,7 +57,7 @@ public class InputBeanTest {
 		input.setValue("qualified");
 		run.addInput(input);
 		
-		Assertions.assertThrows(IOException.class, () -> {
+		assertThrows(IOException.class, () -> {
 			run.validateInput();
 		});
 	}
@@ -72,7 +73,7 @@ public class InputBeanTest {
 		input.setValue("not-qualified");
 		run.addInput(input);
 		
-		Assertions.assertThrows(IOException.class, () -> {
+		assertThrows(IOException.class, () -> {
 			run.validateInput();
 		});
 	}

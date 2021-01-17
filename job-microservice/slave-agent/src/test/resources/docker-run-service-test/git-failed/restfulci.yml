@@ -1,0 +1,13 @@
+version: 1.0
+
+executor:
+  image: busybox:1.31
+
+sidecars:
+  - name: lazybox
+    image: busybox:1.31
+
+command:
+  - sh
+  - -c
+  - "exit 1"

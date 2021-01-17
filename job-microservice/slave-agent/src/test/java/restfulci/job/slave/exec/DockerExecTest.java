@@ -1,6 +1,7 @@
 package restfulci.job.slave.exec;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -23,6 +24,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
+import com.github.dockerjava.api.exception.BadRequestException;
 import com.github.dockerjava.api.model.Network;
 
 import restfulci.job.shared.dao.MinioRepository;
@@ -185,5 +187,63 @@ public class DockerExecTest {
 		
 		assertEquals(hostMountPoint.list().length, 1);
 		assertEquals(hostMountPoint.list()[0], "this.txt");
+	}
+	
+	@Test
+	public void testRunFailedCommand() throws Exception {
+		
+		RunBean run = new FreestyleRunBean();
+		
+		exec.pullImage("busybox:1.31");
+		exec.runCommandAndUpdateRunBean(
+				run, 
+				"busybox:1.31",
+				containerName,
+				"bridge",
+				Arrays.asList(new String[]{"sh", "-c", "exit 1"}), 
+				new HashMap<String, String>(),
+				new HashMap<RunConfigBean.RunConfigResultBean, File>());
+		
+		assertEquals(run.getExitCode(), 1);
+	}
+	
+	@Test
+	public void testRunInvalidCommandInsideShell() throws Exception {
+		
+		RunBean run = new FreestyleRunBean();
+		
+		exec.pullImage("busybox:1.31");
+		exec.runCommandAndUpdateRunBean(
+				run, 
+				"busybox:1.31",
+				containerName,
+				"bridge",
+				Arrays.asList(new String[]{"sh", "-c", "invalid"}), 
+				new HashMap<String, String>(),
+				new HashMap<RunConfigBean.RunConfigResultBean, File>());
+		
+		assertEquals(run.getExitCode(), 127);
+		
+		ArgumentCaptor<InputStream> inputStreamCaptor = ArgumentCaptor.forClass(InputStream.class);
+		verify(minioRepository, times(1)).putRunOutputAndUpdateRunBean(eq(run), inputStreamCaptor.capture());
+		assertEquals(IOUtils.toString(inputStreamCaptor.getValue(), StandardCharsets.UTF_8.name()), "sh: invalid: not found\n");
+	}
+	
+	@Test
+	public void testRunInvalidCommandOutsideShell() throws Exception {
+		
+		RunBean run = new FreestyleRunBean();
+		exec.pullImage("busybox:1.31");
+		
+		assertThrows(BadRequestException.class, () -> {
+			exec.runCommandAndUpdateRunBean(
+					run, 
+					"busybox:1.31",
+					containerName,
+					"bridge",
+					Arrays.asList(new String[]{"invalid"}), 
+					new HashMap<String, String>(),
+					new HashMap<RunConfigBean.RunConfigResultBean, File>());
+		});
 	}
 }

@@ -80,6 +80,14 @@ public class DockerRunServiceImpl implements DockerRunService {
 			run.setStatus(RunStatus.SUCCEED);
 		}
 		else {
+			/*
+			 * TODO:
+			 * Handle `com.github.dockerjava.exception.BadRequestException`
+			 * while run the job.
+			 * It should fail the job instead of exception out.
+			 * It is for `cmdnotexist` instead of `bash -c "cmdnotexist"`. The
+			 * later one returns 127 and fail.
+			 */
 			run.setStatus(RunStatus.FAIL);
 		}
 		
