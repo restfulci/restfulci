@@ -17,8 +17,10 @@ import org.springframework.stereotype.Component;
 
 import com.github.dockerjava.api.DockerClient;
 import com.github.dockerjava.api.async.ResultCallback;
+import com.github.dockerjava.api.command.CreateContainerCmd;
 import com.github.dockerjava.api.command.CreateContainerResponse;
 import com.github.dockerjava.api.command.CreateNetworkResponse;
+import com.github.dockerjava.api.exception.ConflictException;
 import com.github.dockerjava.api.model.Bind;
 import com.github.dockerjava.api.model.Frame;
 import com.github.dockerjava.api.model.Image;
@@ -116,6 +118,7 @@ public class DockerExecImpl implements DockerExec {
 			String imageTag, 
 			String containerName, 
 			String networkName,
+			List<String> command,
 			Map<String, String> envVars) {
 		
 		log.info("Create sidecar container for docker image: {}", imageTag);
@@ -126,36 +129,33 @@ public class DockerExecImpl implements DockerExec {
 		}
 		
 		/*
-		 * We shouldn't have `withCmd`, especially we shouldn't have some
-		 * `sleep 9999` as seen from
+		 * Need `command` for some containers which will exit immediately
+		 * (e.g. busybox) as we'll need to pass `sleep infinity` in.
 		 * https://github.com/docker-java/docker-java/blob/3.2.7/docker-java/src/test/java/com/github/dockerjava/cmd/KillContainerCmdIT.java#L23
 		 * 
-		 * The reason is 
+		 * For long live containers (e.g. postgres) there's no need to do so.
+		 * 
+		 * We can't just `sleep infinity` for all containers by default, because 
 		 * > docker run postgres:13.1
 		 * will create a real functional postgres, while
-		 * > docker run postgres:13.1 sleep 9999
+		 * > docker run postgres:13.1 sleep infinity
 		 * will not, and `psql` to it will cause
 		 * > psql: could not connect to server: Connection refused
 		 * > Is the server running on host "postgres1" (192.168.0.2) and accepting
 		 * > TCP/IP connections on port 5432?
-		 * 
-		 * TODO:
-		 * This makes
-		 * > docker run busybox
-		 * exit immediately, hence breaks several unit tests.
-		 * We'll need to fix those unit tests.
-		 * Or we may want something similar to docker-compose's
-		 * `restart: always`
 		 */
-		CreateContainerResponse container = dockerClient.createContainerCmd(imageTag)
+		CreateContainerCmd cmd = dockerClient.createContainerCmd(imageTag)
 				.withEnv(envVarLists)
 				.withName(containerName)
-				.withHostConfig(newHostConfig().withNetworkMode(networkName))
-				.exec();
+				.withHostConfig(newHostConfig().withNetworkMode(networkName));
+		if (command != null) {
+			cmd = cmd.withCmd(command);
+		}
+		CreateContainerResponse container = cmd.exec();
 		
 		dockerClient.startContainerCmd(container.getId()).exec();
 		
-		log.info("Created sidecar container name {} ID {} for docker image {}", containerName, container.getId(), imageTag);
+		log.info("Created sidecar container with name {} ID {} for docker image {}", containerName, container.getId(), imageTag);
 		
 		return container.getId();
 	}
@@ -163,9 +163,15 @@ public class DockerExecImpl implements DockerExec {
 	@Override
 	public void killSidecar(String containerId) {
 		
-		log.info("Kill sidecar container ID {}", containerId);
+		log.info("Kill sidecar container with ID {}", containerId);
 		
-		dockerClient.killContainerCmd(containerId).exec();
+		try {
+			dockerClient.killContainerCmd(containerId).exec();
+		}
+		catch (ConflictException e) {
+			log.info("Sidecar container with ID {} has stopped running. No termination is needed.", containerId);
+		}
+		
 		dockerClient.removeContainerCmd(containerId).exec();
 	}
 

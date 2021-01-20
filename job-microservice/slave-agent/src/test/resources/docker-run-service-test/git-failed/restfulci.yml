@@ -6,6 +6,11 @@ executor:
 sidecars:
   - name: lazybox
     image: busybox:1.31
+    command:
+      - sleep
+      - infinity
+  - name: fleetingbox
+    image: busybox:1.31
 
 command:
   - sh

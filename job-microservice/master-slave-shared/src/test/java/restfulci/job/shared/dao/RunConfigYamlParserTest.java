@@ -1,6 +1,7 @@
 package restfulci.job.shared.dao;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 import java.io.File;
 import java.io.IOException;
@@ -95,14 +96,21 @@ public class RunConfigYamlParserTest {
 		assertEquals(runConfig.getVersion(), "1.0");
 		assertEquals(runConfig.getExecutor().getImage(), "busybox:1.31");
 		assertEquals(runConfig.getExecutor().getEnvironment().size(), 0);
-		assertEquals(runConfig.getSidecars().size(), 2);
+		assertEquals(runConfig.getSidecars().size(), 3);
 		assertEquals(runConfig.getSidecars().get(0).getName(), "lazybox");
 		assertEquals(runConfig.getSidecars().get(0).getImage(), "busybox:1.31");
+		assertEquals(runConfig.getSidecars().get(0).getCommand().size(), 2);
+		assertEquals(runConfig.getSidecars().get(0).getCommand().get(0), "sleep");
+		assertEquals(runConfig.getSidecars().get(0).getCommand().get(1), "infinity");
 		assertEquals(runConfig.getSidecars().get(0).getEnvironment().size(), 0);
-		assertEquals(runConfig.getSidecars().get(1).getName(), "sleepingbox");
+		assertEquals(runConfig.getSidecars().get(1).getName(), "fleetingbox");
 		assertEquals(runConfig.getSidecars().get(1).getImage(), "busybox:1.31");
+		assertNull(runConfig.getSidecars().get(1).getCommand());
 		assertEquals(runConfig.getSidecars().get(1).getEnvironment().size(), 1);
 		assertEquals(runConfig.getSidecars().get(1).getEnvironment().get("FOO"), "bar");
+		assertEquals(runConfig.getSidecars().get(2).getName(), "postgresbox");
+		assertEquals(runConfig.getSidecars().get(2).getImage(), "postgres:13.1");
+		assertNull(runConfig.getSidecars().get(2).getCommand());
 		assertEquals(runConfig.getCommand().size(), 3);
 		assertEquals(runConfig.getCommand().get(0), "bash");
 		assertEquals(runConfig.getCommand().get(1), "-c");

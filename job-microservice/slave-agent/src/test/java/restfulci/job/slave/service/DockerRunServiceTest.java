@@ -270,9 +270,9 @@ public class DockerRunServiceTest {
 	}
 	
 	@Test
-	public void testRunGitJobWithSidecars() throws Exception {
+	public void testRunGitJobWithCommandedSidecars() throws Exception {
 		
-		final String resourceName = "git-with-sidecars";
+		final String resourceName = "git-with-commanded-sidecars";
 		/*
 		 * TODO:
 		 * Change alpine to busybox, dockerjava errors out with a thread error.

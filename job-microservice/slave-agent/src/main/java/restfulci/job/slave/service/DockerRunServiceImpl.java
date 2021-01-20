@@ -220,6 +220,7 @@ public class DockerRunServiceImpl implements DockerRunService {
 								sidecar.getImage(), 
 								sidecar.getName(), 
 								networkName,
+								sidecar.getCommand(),
 								sidecar.getEnvironment()));
 			}
 			

@@ -62,13 +62,40 @@ public class DockerExecTest {
 	}
 	
 	@Test
-	public void testCreateAndKillSidecar() throws Exception {
+	public void testCreateAndKillSidecarWithNullCommand() throws Exception {
+		
+		exec.pullImage("postgres:13.1");
+		String containerId = exec.createSidecar(
+				"postgres:13.1", 
+				containerName, 
+				"bridge",
+				null,
+				new HashMap<String, String>());
+		exec.killSidecar(containerId);
+	}
+	
+	@Test
+	public void testCreateAndKillSidecarWithNonnullCommand() throws Exception {
 		
 		exec.pullImage("busybox:1.31");
 		String containerId = exec.createSidecar(
 				"busybox:1.31", 
 				containerName, 
 				"bridge",
+				Arrays.asList(new String[]{"sleep", "infinity"}),
+				new HashMap<String, String>());
+		exec.killSidecar(containerId);
+	}
+	
+	@Test
+	public void testCreateAndKillSidecarWhichMayHaveStoppedRunning() throws Exception {
+		
+		exec.pullImage("busybox:1.31");
+		String containerId = exec.createSidecar(
+				"busybox:1.31", 
+				containerName, 
+				"bridge",
+				null,
 				new HashMap<String, String>());
 		exec.killSidecar(containerId);
 	}

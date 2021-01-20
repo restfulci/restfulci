@@ -21,6 +21,7 @@ public interface DockerExec {
 			String imageTag,
 			String containerName, 
 			String networkName,
+			List<String> command,
 			Map<String, String> envVars);
 	public void killSidecar(String containerId);
 	

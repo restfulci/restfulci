@@ -33,6 +33,7 @@ public class RunConfigBean {
 		 */
 		private String name;
 		private String image;
+		private List<String> command;
 		private Map<String, String> environment = new HashMap<String, String>();
 	}
 	

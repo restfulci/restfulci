@@ -6,7 +6,10 @@ executor:
 sidecars:
   - name: lazybox
     image: busybox:1.31
-  - name: sleepingbox
+    command:
+      - sleep
+      - infinity
+  - name: fleetingbox
     image: busybox:1.31
     environment:
       FOO: bar
