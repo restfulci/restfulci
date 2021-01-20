@@ -1,6 +1,7 @@
 package restfulci.job.slave.exec;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -23,6 +24,9 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
+import com.github.dockerjava.api.exception.BadRequestException;
+import com.github.dockerjava.api.model.Network;
+
 import restfulci.job.shared.dao.MinioRepository;
 import restfulci.job.shared.dao.RunRepository;
 import restfulci.job.shared.domain.FreestyleRunBean;
@@ -39,11 +43,61 @@ public class DockerExecTest {
 	@MockBean private RunRepository runRepository;
 	@MockBean private MinioRepository minioRepository;
 	
+	private final String containerName = "restfulci-unit-test-container";
+	
+	@Test
+	public void testCreateNetwork() throws Exception {
+		Network network = exec.createNetworkIfNotExist("restfulci-unit-test");
+		assertEquals(network.getName(), "restfulci-unit-test");
+		
+		Network networkAgain = exec.createNetworkIfNotExist("restfulci-unit-test");
+		assertEquals(networkAgain.getName(), "restfulci-unit-test");
+	}
+	
 	@Test
 	public void testPullImage() throws Exception {
 		exec.pullImage("busybox");
-		exec.pullImage("busybox:1.31");
+		exec.pullImage("busybox:1.33");
 		exec.pullImage("busybox:latest");
+	}
+	
+	@Test
+	public void testCreateAndKillSidecarWithNullCommand() throws Exception {
+		
+		exec.pullImage("postgres:13.1");
+		String containerId = exec.createSidecar(
+				"postgres:13.1", 
+				containerName, 
+				"bridge",
+				null,
+				new HashMap<String, String>());
+		exec.killSidecar(containerId);
+	}
+	
+	@Test
+	public void testCreateAndKillSidecarWithNonnullCommand() throws Exception {
+		
+		exec.pullImage("busybox:1.33");
+		String containerId = exec.createSidecar(
+				"busybox:1.33", 
+				containerName, 
+				"bridge",
+				Arrays.asList(new String[]{"sleep", "infinity"}),
+				new HashMap<String, String>());
+		exec.killSidecar(containerId);
+	}
+	
+	@Test
+	public void testCreateAndKillSidecarWhichMayHaveStoppedRunning() throws Exception {
+		
+		exec.pullImage("busybox:1.33");
+		String containerId = exec.createSidecar(
+				"busybox:1.33", 
+				containerName, 
+				"bridge",
+				null,
+				new HashMap<String, String>());
+		exec.killSidecar(containerId);
 	}
 	
 	@Test
@@ -51,10 +105,12 @@ public class DockerExecTest {
 		
 		RunBean run = new FreestyleRunBean();
 		
-		exec.pullImage("busybox:1.31");
+		exec.pullImage("busybox:1.33");
 		exec.runCommandAndUpdateRunBean(
 				run, 
-				"busybox:1.31", 
+				"busybox:1.33",
+				containerName,
+				"bridge",
 				Arrays.asList(new String[]{"sh", "-c", "echo \"Hello world\""}), 
 				new HashMap<String, String>(),
 				new HashMap<RunConfigBean.RunConfigResultBean, File>());
@@ -76,15 +132,17 @@ public class DockerExecTest {
 		
 		RunBean run = new FreestyleRunBean();
 		
-		Map<String, String> inputs = new HashMap<String, String>();
-		inputs.put("WORD", "customized input");
+		Map<String, String> envVars = new HashMap<String, String>();
+		envVars.put("WORD", "customized input");
 		
-		exec.pullImage("busybox:1.31");
+		exec.pullImage("busybox:1.33");
 		exec.runCommandAndUpdateRunBean(
 				run, 
-				"busybox:1.31", 
+				"busybox:1.33", 
+				containerName,
+				"bridge",
 				Arrays.asList(new String[]{"sh", "-c", "echo \"Hello $WORD\""}), 
-				inputs,
+				envVars,
 				new HashMap<RunConfigBean.RunConfigResultBean, File>());
 		
 		assertEquals(run.getExitCode(), 0);
@@ -132,10 +190,12 @@ public class DockerExecTest {
 		
 		RunBean run = new FreestyleRunBean();
 		
-		exec.pullImage("busybox:1.31");
+		exec.pullImage("busybox:1.33");
 		exec.runCommandAndUpdateRunBean(
 				run, 
-				"busybox:1.31", 
+				"busybox:1.33", 
+				containerName,
+				"bridge",
 				/*
 				 * No need to `mkdir /result`, as docker will create `/result`
 				 * when there's a volume mount `/some/host/path:/result`.
@@ -154,5 +214,63 @@ public class DockerExecTest {
 		
 		assertEquals(hostMountPoint.list().length, 1);
 		assertEquals(hostMountPoint.list()[0], "this.txt");
+	}
+	
+	@Test
+	public void testRunFailedCommand() throws Exception {
+		
+		RunBean run = new FreestyleRunBean();
+		
+		exec.pullImage("busybox:1.33");
+		exec.runCommandAndUpdateRunBean(
+				run, 
+				"busybox:1.33",
+				containerName,
+				"bridge",
+				Arrays.asList(new String[]{"sh", "-c", "exit 1"}), 
+				new HashMap<String, String>(),
+				new HashMap<RunConfigBean.RunConfigResultBean, File>());
+		
+		assertEquals(run.getExitCode(), 1);
+	}
+	
+	@Test
+	public void testRunInvalidCommandInsideShell() throws Exception {
+		
+		RunBean run = new FreestyleRunBean();
+		
+		exec.pullImage("busybox:1.33");
+		exec.runCommandAndUpdateRunBean(
+				run, 
+				"busybox:1.33",
+				containerName,
+				"bridge",
+				Arrays.asList(new String[]{"sh", "-c", "invalid"}), 
+				new HashMap<String, String>(),
+				new HashMap<RunConfigBean.RunConfigResultBean, File>());
+		
+		assertEquals(run.getExitCode(), 127);
+		
+		ArgumentCaptor<InputStream> inputStreamCaptor = ArgumentCaptor.forClass(InputStream.class);
+		verify(minioRepository, times(1)).putRunOutputAndUpdateRunBean(eq(run), inputStreamCaptor.capture());
+		assertEquals(IOUtils.toString(inputStreamCaptor.getValue(), StandardCharsets.UTF_8.name()), "sh: invalid: not found\n");
+	}
+	
+	@Test
+	public void testRunInvalidCommandOutsideShell() throws Exception {
+		
+		RunBean run = new FreestyleRunBean();
+		exec.pullImage("busybox:1.33");
+		
+		assertThrows(BadRequestException.class, () -> {
+			exec.runCommandAndUpdateRunBean(
+					run, 
+					"busybox:1.33",
+					containerName,
+					"bridge",
+					Arrays.asList(new String[]{"invalid"}), 
+					new HashMap<String, String>(),
+					new HashMap<RunConfigBean.RunConfigResultBean, File>());
+		});
 	}
 }

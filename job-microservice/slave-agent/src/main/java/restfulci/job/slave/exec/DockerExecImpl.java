@@ -1,5 +1,7 @@
 package restfulci.job.slave.exec;
 
+import static com.github.dockerjava.api.model.HostConfig.newHostConfig;
+
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.InputStream;
@@ -14,15 +16,16 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.github.dockerjava.api.DockerClient;
+import com.github.dockerjava.api.async.ResultCallback;
+import com.github.dockerjava.api.command.CreateContainerCmd;
 import com.github.dockerjava.api.command.CreateContainerResponse;
+import com.github.dockerjava.api.command.CreateNetworkResponse;
+import com.github.dockerjava.api.exception.ConflictException;
 import com.github.dockerjava.api.model.Bind;
 import com.github.dockerjava.api.model.Frame;
 import com.github.dockerjava.api.model.Image;
+import com.github.dockerjava.api.model.Network;
 import com.github.dockerjava.api.model.Volume;
-import com.github.dockerjava.core.command.BuildImageResultCallback;
-import com.github.dockerjava.core.command.LogContainerResultCallback;
-import com.github.dockerjava.core.command.PullImageResultCallback;
-import com.github.dockerjava.core.command.WaitContainerResultCallback;
 
 import io.minio.errors.MinioException;
 import lombok.extern.slf4j.Slf4j;
@@ -37,6 +40,32 @@ public class DockerExecImpl implements DockerExec {
 	@Autowired private DockerClient dockerClient;
 	
 	@Autowired private MinioRepository minioRepository;
+	
+	@Override
+	public Network createNetworkIfNotExist(String networkName) {
+		/*
+		 * https://github.com/docker-java/docker-java/blob/3.2.7/docker-java/src/test/java/com/github/dockerjava/cmd/InspectNetworkCmdIT.java
+		 * 
+		 * Looks like without it docker-java will just create networks with the same name:
+		 * > $ docker network ls
+		 * > 1718f7c3e5d3        restfulci-unit-test             bridge              local
+		 * > eb87afb4dfe0        restfulci-unit-test             bridge              local
+		 * > 7efc6e8e5368        restfulci-unit-test             bridge              local
+		 */
+		List<Network> networks = dockerClient.listNetworksCmd().exec();
+		for (Network network : networks) {
+			if (network.getName().equals(networkName)) {
+				return network;
+			}
+		}
+		
+		/*
+		 * https://github.com/docker-java/docker-java/blob/3.2.7/docker-java/src/test/java/com/github/dockerjava/cmd/CreateNetworkCmdIT.java
+		 */
+		CreateNetworkResponse createNetworkResponse = dockerClient.createNetworkCmd().withName(networkName).exec();
+		Network network = dockerClient.inspectNetworkCmd().withNetworkId(createNetworkResponse.getId()).exec();
+		return network;
+	}
 
 	@Override
 	public void pullImage(String imageTag) throws InterruptedException {
@@ -59,7 +88,7 @@ public class DockerExecImpl implements DockerExec {
 		
 		log.info("Pulling new docker image from remote server: {}", imageTag);
 		dockerClient.pullImageCmd(imageTag)
-				.exec(new PullImageResultCallback())
+				.start()
 				.awaitCompletion(30, TimeUnit.SECONDS);
 	}
 	
@@ -67,29 +96,94 @@ public class DockerExecImpl implements DockerExec {
 	public String buildImageAndGetId(Path localRepoPath, RunConfigBean runConfig) {
 		
 		/*
-		 * https://github.com/docker-java/docker-java/blob/3.1.5/src/test/java/com/github/dockerjava/cmd/BuildImageCmdIT.java
+		 * https://github.com/docker-java/docker-java/blob/3.2.7/docker-java/src/test/java/com/github/dockerjava/cmd/BuildImageCmdIT.java
 		 */
 		log.info(
 				"Build image from context path {} and Dockerfile path {}",
-				runConfig.getEnvironment().getBuild().getContext(),
-				runConfig.getEnvironment().getBuild().getDockerfile());
+				runConfig.getExecutor().getBuild().getContext(),
+				runConfig.getExecutor().getBuild().getDockerfile());
 		String imageId = dockerClient
 				.buildImageCmd()
 				.withBaseDirectory(runConfig.getBaseDir(localRepoPath))
 				.withDockerfile(runConfig.getDockerfile(localRepoPath))
 				.withNoCache(true)
-				.exec(new BuildImageResultCallback())
+				.start()
 				.awaitImageId();
 		
 		return imageId;
+	}
+	
+	@Override
+	public String createSidecar(
+			String imageTag, 
+			String containerName, 
+			String networkName,
+			List<String> command,
+			Map<String, String> envVars) {
+		
+		log.info("Create sidecar container for docker image: {}", imageTag);
+		
+		List<String> envVarLists = new ArrayList<String>();
+		for (Map.Entry<String, String> entry : envVars.entrySet()) {
+			envVarLists.add(entry.getKey()+"="+entry.getValue());
+		}
+		
+		/*
+		 * Need `command` for some containers which will exit immediately
+		 * (e.g. busybox) as we'll need to pass `sleep infinity` in.
+		 * https://github.com/docker-java/docker-java/blob/3.2.7/docker-java/src/test/java/com/github/dockerjava/cmd/KillContainerCmdIT.java#L23
+		 * 
+		 * For long live containers (e.g. postgres) there's no need to do so.
+		 * 
+		 * We can't just `sleep infinity` for all containers by default, because 
+		 * > docker run postgres:13.1
+		 * will create a real functional postgres, while
+		 * > docker run postgres:13.1 sleep infinity
+		 * will not, and `psql` to it will cause
+		 * > psql: could not connect to server: Connection refused
+		 * > Is the server running on host "postgres1" (192.168.0.2) and accepting
+		 * > TCP/IP connections on port 5432?
+		 */
+		CreateContainerCmd cmd = dockerClient.createContainerCmd(imageTag)
+				.withEnv(envVarLists)
+				.withName(containerName)
+				.withHostConfig(newHostConfig().withNetworkMode(networkName));
+		if (command != null) {
+			cmd = cmd.withCmd(command);
+		}
+		CreateContainerResponse container = cmd.exec();
+		
+		dockerClient.startContainerCmd(container.getId()).exec();
+		
+		log.info("Created sidecar container with name {} ID {} for docker image {}", containerName, container.getId(), imageTag);
+		
+		return container.getId();
+	}
+	
+	@Override
+	public void killSidecar(String containerId) {
+		
+		log.info("Kill sidecar container with ID {}", containerId);
+		
+		try {
+			dockerClient.killContainerCmd(containerId).exec();
+		}
+		catch (ConflictException e) {
+			log.info("Sidecar container with ID {} has stopped running. No termination is needed.", containerId);
+		}
+		
+		dockerClient.removeContainerCmd(containerId).exec();
 	}
 
 	@Override
 	public void runCommandAndUpdateRunBean(
 			RunBean run, 
 			String imageTag, 
+			String containerName,
+			String networkName,
 			List<String> command, 
-			Map<String, String> inputs,
+			Map<String, String> envVars,
+			
 			Map<RunConfigBean.RunConfigResultBean, File> mounts) throws InterruptedException {
 		
 		log.info("Execute command {} in docker image: {}", command, imageTag);
@@ -97,9 +191,9 @@ public class DockerExecImpl implements DockerExec {
 		/*
 		 * https://github.com/docker-java/docker-java/issues/933#issuecomment-336422012
 		 */
-		List<String> inputList = new ArrayList<String>();
-		for (Map.Entry<String, String> entry : inputs.entrySet()) {
-			inputList.add(entry.getKey()+"="+entry.getValue());
+		List<String> envVarLists = new ArrayList<String>();
+		for (Map.Entry<String, String> entry : envVars.entrySet()) {
+			envVarLists.add(entry.getKey()+"="+entry.getValue());
 		}
 		
 		/*
@@ -127,55 +221,62 @@ public class DockerExecImpl implements DockerExec {
 		for (Map.Entry<RunConfigBean.RunConfigResultBean, File> entry : mounts.entrySet()) {
 			binds.add(new Bind(entry.getValue().getAbsolutePath(), new Volume(entry.getKey().getPath())));
 		}
-		
+			
 		/*
-		 * https://github.com/docker-java/docker-java/blob/3.1.5/src/test/java/com/github/dockerjava/cmd/LogContainerCmdIT.java
+		 * https://github.com/docker-java/docker-java/blob/3.2.7/docker-java/src/test/java/com/github/dockerjava/cmd/StartContainerCmdIT.java
 		 */
 		CreateContainerResponse container = dockerClient.createContainerCmd(imageTag)
 				.withCmd(command)
-				.withEnv(inputList)
-				.withBinds(binds)
+				.withEnv(envVarLists)
+				.withName(containerName)
+				.withHostConfig(newHostConfig().withNetworkMode(networkName).withBinds(binds))
 				.exec();
 		
-		int timestamp = (int) (System.currentTimeMillis() / 1000);
-		dockerClient.startContainerCmd(container.getId()).exec();
-		
-		int exitCode = dockerClient.waitContainerCmd(container.getId())
-				.exec(new WaitContainerResultCallback())
-				.awaitStatusCode();
-		run.setExitCode(exitCode);
-		log.info("Execute command exit code: {}", exitCode);
-		
-		LogContainerCallbackWrapper loggingCallback = new LogContainerCallbackWrapper();
-		dockerClient.logContainerCmd(container.getId())
-				.withStdErr(true)
-				.withStdOut(true)
-				.withSince(timestamp)
-				.exec(loggingCallback);
-		loggingCallback.awaitCompletion();
 		try {
-			/*
-			 * TODO:
-			 * Directly consume InputStream coming from docker execution.
-			 */
-			InputStream contentStream = new ByteArrayInputStream(
-					loggingCallback.toString().getBytes(StandardCharsets.UTF_8));
-			minioRepository.putRunOutputAndUpdateRunBean(run, contentStream);
-			log.info("Execute command output: \n{}", loggingCallback.toString());
-		} catch (MinioException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			int timestamp = (int) (System.currentTimeMillis() / 1000);
+			dockerClient.startContainerCmd(container.getId()).exec();
+			
+			int exitCode = dockerClient.waitContainerCmd(container.getId())
+					.start()
+					.awaitStatusCode();
+			run.setExitCode(exitCode);
+			log.info("Execute command exit code: {}", exitCode);
+			
+			LogContainerCallbackWrapper loggingCallback = new LogContainerCallbackWrapper();
+			dockerClient.logContainerCmd(container.getId())
+					.withStdErr(true)
+					.withStdOut(true)
+					.withSince(timestamp)
+					.exec(loggingCallback);
+			loggingCallback.awaitCompletion();
+			
+			try {
+				/*
+				 * TODO:
+				 * Directly consume InputStream coming from docker execution.
+				 */
+				InputStream contentStream = new ByteArrayInputStream(
+						loggingCallback.toString().getBytes(StandardCharsets.UTF_8));
+				minioRepository.putRunOutputAndUpdateRunBean(run, contentStream);
+				log.info("Execute command output: \n{}", loggingCallback.toString());
+			} catch (MinioException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		finally {
+			dockerClient.removeContainerCmd(container.getId()).exec();
 		}
 	}
 
 	/*
 	 * Copyright (c) docker-java
-	 * https://github.com/docker-java/docker-java/blob/3.1.5/src/test/java/com/github/dockerjava/utils/LogContainerTestCallback.java#L3
+	 * https://github.com/docker-java/docker-java/blob/3.2.7/docker-java/src/test/java/com/github/dockerjava/utils/LogContainerTestCallback.java
 	 */
-	private class LogContainerCallbackWrapper extends LogContainerResultCallback {
+	private class LogContainerCallbackWrapper extends ResultCallback.Adapter<Frame> {
 		protected final StringBuffer log = new StringBuffer();
 
-		List<Frame> collectedFrames = new ArrayList<Frame>();
+		List<Frame> collectedFrames = new ArrayList<>();
 
 		boolean collectFrames = false;
 

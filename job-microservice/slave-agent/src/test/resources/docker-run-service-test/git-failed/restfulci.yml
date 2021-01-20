@@ -1,0 +1,18 @@
+version: 1.0
+
+executor:
+  image: busybox:1.33
+
+sidecars:
+  - name: lazybox
+    image: busybox:1.33
+    command:
+      - sleep
+      - infinity
+  - name: fleetingbox
+    image: busybox:1.33
+
+command:
+  - sh
+  - -c
+  - "exit 1"

@@ -1,6 +1,7 @@
 package restfulci.job.master.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.times;
@@ -8,7 +9,6 @@ import static org.mockito.Mockito.verify;
 
 import java.util.ArrayList;
 
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -60,7 +60,7 @@ public class RunServiceTest {
 		RunDTO runDTO = new RunDTO();
 		runDTO.put("branchName", "master");
 		
-		Assertions.assertThrows(RunDataException.class, () -> {
+		assertThrows(RunDataException.class, () -> {
 			runService.triggerRun(456, runDTO, new UserBean());
 		});
 	}
@@ -73,7 +73,7 @@ public class RunServiceTest {
 		
 		RunDTO runDTO = new RunDTO();
 		
-		Assertions.assertThrows(RunDataException.class, () -> {
+		assertThrows(RunDataException.class, () -> {
 			runService.triggerRun(456, runDTO, new UserBean());
 		});
 	}
@@ -179,7 +179,7 @@ public class RunServiceTest {
 		
 		RunDTO runDTO = new RunDTO();
 		
-		Assertions.assertThrows(RunDataException.class, () -> {
+		assertThrows(RunDataException.class, () -> {
 			runService.triggerRun(456, runDTO, new UserBean());
 		});
 	}
@@ -193,7 +193,7 @@ public class RunServiceTest {
 		RunDTO runDTO = new RunDTO();
 		runDTO.put("EXCLUDE", "staging");
 		
-		Assertions.assertThrows(RunDataException.class, () -> {
+		assertThrows(RunDataException.class, () -> {
 			runService.triggerRun(456, runDTO, new UserBean());
 		});
 	}
@@ -211,7 +211,7 @@ public class RunServiceTest {
 		RunDTO runDTO = new RunDTO();
 		runDTO.put("ENV", "development");
 		
-		Assertions.assertThrows(RunDataException.class, () -> {
+		assertThrows(RunDataException.class, () -> {
 			runService.triggerRun(456, runDTO, new UserBean());
 		});
 	}

@@ -5,9 +5,11 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -40,6 +42,9 @@ public class DockerRunServiceImpl implements DockerRunService {
 	@Autowired private RunRepository runRepository;
 	@Autowired private RemoteGitRepository remoteGitRepository;
 	@Autowired private MinioRepository minioRepository;
+	
+	private final String networkName = "restfulci-net";
+	private final String mainContainerName = "restfulci-main";
 
 	private RunBean getRun(Integer runId) throws IOException {
 		
@@ -57,6 +62,8 @@ public class DockerRunServiceImpl implements DockerRunService {
 		
 		RunBean run = getRun(runMessage.getRunId());
 		
+		dockerExec.createNetworkIfNotExist(networkName);
+		
 		if (run instanceof FreestyleRunBean) {
 			FreestyleRunBean freestyleRun = (FreestyleRunBean)run;
 			runFreestyleJob(freestyleRun);
@@ -73,6 +80,14 @@ public class DockerRunServiceImpl implements DockerRunService {
 			run.setStatus(RunStatus.SUCCEED);
 		}
 		else {
+			/*
+			 * TODO:
+			 * Handle `com.github.dockerjava.exception.BadRequestException`
+			 * while run the job.
+			 * It should fail the job instead of exception out.
+			 * It is for `cmdnotexist` instead of `bash -c "cmdnotexist"`. The
+			 * later one returns 127 and fail.
+			 */
 			run.setStatus(RunStatus.FAIL);
 		}
 		
@@ -80,13 +95,22 @@ public class DockerRunServiceImpl implements DockerRunService {
 		runRepository.saveAndFlush(run);
 	}
 	
-	private Map<String, String> getInputMap(RunBean run) {
-		
-		Map<String, String> inputMap = new HashMap<String, String>();
+	private Map<String, String> getEnvVars(RunBean run) {	
+		Map<String, String> envVars = new HashMap<String, String>();
+		updateWithInputs(envVars, run);
+		return envVars;
+	}
+	
+	private Map<String, String> getEnvVars(RunConfigBean runConfig, RunBean run) {
+		Map<String, String> envVars = runConfig.getExecutor().getEnvironment();
+		updateWithInputs(envVars, run);
+		return envVars;
+	}
+	
+	private void updateWithInputs(Map<String, String> envVars, RunBean run) {
 		for (InputBean input : run.getInputs()) {
-			inputMap.put(input.getName(), input.getValue());
+			envVars.put(input.getName(), input.getValue());
 		}
-		return inputMap;
 	}
 	
 	private void runFreestyleJob(FreestyleRunBean run) throws InterruptedException {
@@ -97,8 +121,10 @@ public class DockerRunServiceImpl implements DockerRunService {
 		dockerExec.runCommandAndUpdateRunBean(
 				run, 
 				job.getDockerImage(), 
+				mainContainerName,
+				networkName,
 				Arrays.asList(job.getCommand()),
-				getInputMap(run),
+				getEnvVars(run),
 				new HashMap<RunConfigBean.RunConfigResultBean, File>());
 		
 		/*
@@ -114,7 +140,7 @@ public class DockerRunServiceImpl implements DockerRunService {
 		 * (1) Create temporary local folder.
 		 * (2) Clone (by branch name or commit SHA) single commit into the local folder.
 		 * (3) Find the config file in local folder and generate `RunConfigBean`.
-		 * (4) Build image, run job based on config file and the contents in git clone.
+		 * (4) Build image, run sidecars, run job, kill sidecars (based on config file and the contents in git clone).
 		 * (5) Clean up docker container (TODO).
 		 * (6) Clean up the temporary local folder (TODO).
 		 */
@@ -181,23 +207,51 @@ public class DockerRunServiceImpl implements DockerRunService {
 			mounts.put(result, Files.createTempDirectory("result-").toFile());
 		}
 		
-		if (runConfig.getEnvironment().getImage() != null) {
-			dockerExec.pullImage(runConfig.getEnvironment().getImage());
-			dockerExec.runCommandAndUpdateRunBean(
-					run, 
-					runConfig.getEnvironment().getImage(), 
-					runConfig.getCommand(), 
-					getInputMap(run),
-					mounts);
+		/*
+		 * TODO:
+		 * If sidecars can support build from Dockerfile, we'll need to build sidecars as well.
+		 */
+		
+		List<String> sidecarIds = new ArrayList<String>();	
+		try {
+			for (RunConfigBean.RunConfigSidecarBean sidecar : runConfig.getSidecars()) {
+				dockerExec.pullImage(sidecar.getImage());
+				sidecarIds.add(
+						dockerExec.createSidecar(
+								sidecar.getImage(), 
+								sidecar.getName(), 
+								networkName,
+								sidecar.getCommand(),
+								sidecar.getEnvironment()));
+			}
+			
+			if (runConfig.getExecutor().getImage() != null) {
+				dockerExec.pullImage(runConfig.getExecutor().getImage());
+				dockerExec.runCommandAndUpdateRunBean(
+						run, 
+						runConfig.getExecutor().getImage(),
+						mainContainerName,
+						networkName,
+						runConfig.getCommand(), 
+						getEnvVars(runConfig, run),
+						mounts);
+			}
+			else {
+				String imageId = dockerExec.buildImageAndGetId(localRepoPath, runConfig);
+				dockerExec.runCommandAndUpdateRunBean(
+						run, 
+						imageId, 
+						mainContainerName,
+						networkName,
+						runConfig.getCommand(), 
+						getEnvVars(run),
+						mounts);
+			}
 		}
-		else {
-			String imageId = dockerExec.buildImageAndGetId(localRepoPath, runConfig);
-			dockerExec.runCommandAndUpdateRunBean(
-					run, 
-					imageId, 
-					runConfig.getCommand(), 
-					getInputMap(run),
-					mounts);
+		finally {
+			for (String sidecarId : sidecarIds) {
+				dockerExec.killSidecar(sidecarId);
+			}
 		}
 		
 		for (Map.Entry<RunConfigBean.RunConfigResultBean, File> entry : mounts.entrySet()) {

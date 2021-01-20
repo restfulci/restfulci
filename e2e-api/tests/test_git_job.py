@@ -81,6 +81,18 @@ class TestGitJob(AuthTestSuite):
             validate_console_log=validate_console_log,
             validate_results=validate_results)
 
+    def test_python_postgres(self):
+
+        def validate_console_log(response):
+            self.assertTrue("postgres" in response.text)
+            self.assertTrue("foo" in response.text)
+            self.assertTrue("template1" in response.text)
+            self.assertTrue("template0" in response.text)
+
+        self._test_skeleton(
+            "python-postgres",
+            validate_console_log=validate_console_log)
+
     def _test_skeleton(
             self,
             project_name,

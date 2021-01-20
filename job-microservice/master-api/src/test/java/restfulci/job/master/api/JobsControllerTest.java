@@ -61,7 +61,7 @@ public class JobsControllerTest {
 		
 		Map<String, Object> jobData = new HashMap<String, Object>();
 		jobData.put("name", "job_name");
-		jobData.put("dockerImage", "busybox:1.31");
+		jobData.put("dockerImage", "busybox:1.33");
 		jobData.put("command", new String[]{"sh", "-c", "echo \"Hello world\""});
 			
 		this.mockMvc.perform(post("/jobs")

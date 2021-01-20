@@ -1,0 +1,20 @@
+version: 1.0
+
+executor:
+  image: alpine:3.12.3
+
+sidecars:
+  - name: lazybox
+    image: busybox:1.33
+    command:
+      - sleep
+      - infinity
+  - name: fleetingbox
+    image: busybox:1.33
+    environment:
+      FOO: bar
+
+command:
+  - sh
+  - -c
+  - "ping -c 2 lazybox"

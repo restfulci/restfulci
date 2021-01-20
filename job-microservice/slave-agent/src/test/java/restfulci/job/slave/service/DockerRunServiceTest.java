@@ -72,7 +72,7 @@ public class DockerRunServiceTest {
 		FreestyleJobBean job = new FreestyleJobBean();
 		job.setId(123);
 		job.setName("job");
-		job.setDockerImage("busybox:1.31");
+		job.setDockerImage("busybox:1.33");
 		job.setCommand(new String[] {"sh", "-c", "echo \"Hello world\""});
 		
 		FreestyleRunBean run = new FreestyleRunBean();
@@ -101,14 +101,12 @@ public class DockerRunServiceTest {
 	@Test
 	public void testRunFailedFreestyleJob() throws Exception{
 		
-		RunMessageBean runMessage = new RunMessageBean();
-		runMessage.setJobId(123);
-		runMessage.setRunId(456);
+		RunMessageBean runMessage = getMockRunMessage();
 		
 		FreestyleJobBean job = new FreestyleJobBean();
 		job.setId(123);
 		job.setName("job");
-		job.setDockerImage("busybox:1.31");
+		job.setDockerImage("busybox:1.33");
 		job.setCommand(new String[] {"sh", "-c", "echx \"Hello world\""});
 		
 		FreestyleRunBean run = new FreestyleRunBean();
@@ -143,7 +141,7 @@ public class DockerRunServiceTest {
 		FreestyleJobBean job = new FreestyleJobBean();
 		job.setId(123);
 		job.setName("job");
-		job.setDockerImage("busybox:1.31");
+		job.setDockerImage("busybox:1.33");
 		job.setCommand(new String[] {"sh", "-c", "echo \"Hello $WORD\""});
 		
 		ParameterBean parameter = new ParameterBean();
@@ -202,25 +200,15 @@ public class DockerRunServiceTest {
 		testRunGitJobHelloWorld("git-shell-baked");
 	}
 	
+	@Test
+	public void testRunGitJobWithEnvironmentVaribles() throws Exception {
+		testRunGitJobHelloWorld("git-with-envvar");
+	}
+	
 	private void testRunGitJobHelloWorld(String resourceName) throws Exception {
 		
-		RunMessageBean runMessage = new RunMessageBean();
-		runMessage.setJobId(123);
-		runMessage.setRunId(456);
-		
-		GitJobBean job = new GitJobBean();
-		job.setId(123);
-		job.setName("job");
-		job.setRemoteOrigin("git@github.com:dummy/dummy.git");
-		job.setConfigFilepath("restfulci.yml");
-		
-		GitBranchRunBean run = new GitBranchRunBean();
-		run.setId(456);
-		run.setJob(job);
-		run.setBranchName("master");
-		run.setStatus(RunStatus.IN_PROGRESS);
-		run.setTriggerAt(new Date(0L));
-		run.setCompleteAt(new Date(1000L));
+		RunMessageBean runMessage = getMockRunMessage();
+		GitRunBean run = getMockGitRun();
 		
 		Optional<RunBean> maybeRun = Optional.of(run);
 		given(runRepository.findById(456)).willReturn(maybeRun);
@@ -250,27 +238,8 @@ public class DockerRunServiceTest {
 		
 		final String resourceName = "git-with-parameters";
 		
-		RunMessageBean runMessage = new RunMessageBean();
-		runMessage.setJobId(123);
-		runMessage.setRunId(456);
-		
-		GitJobBean job = new GitJobBean();
-		job.setId(123);
-		job.setName("job");
-		job.setRemoteOrigin("git@github.com:dummy/dummy.git");
-		job.setConfigFilepath("restfulci.yml");
-		
-		ParameterBean parameter = new ParameterBean();
-		parameter.setName("WORD");
-		job.addParameter(parameter);
-		
-		GitBranchRunBean run = new GitBranchRunBean();
-		run.setId(456);
-		run.setJob(job);
-		run.setBranchName("master");
-		run.setStatus(RunStatus.IN_PROGRESS);
-		run.setTriggerAt(new Date(0L));
-		run.setCompleteAt(new Date(1000L));
+		RunMessageBean runMessage = getMockRunMessage();
+		GitRunBean run = getMockGitRun();
 		
 		InputBean input = new InputBean();
 		input.setName("WORD");
@@ -300,6 +269,49 @@ public class DockerRunServiceTest {
 		assertEquals(IOUtils.toString(inputStreamCaptor.getValue(), StandardCharsets.UTF_8.name()), "Hello customized input\n");
 	}
 	
+	@Test
+	public void testRunGitJobWithCommandedSidecars() throws Exception {
+		
+		final String resourceName = "git-with-commanded-sidecars";
+		/*
+		 * TODO:
+		 * Change alpine to busybox, dockerjava errors out with a thread error.
+		 * We'll probably want to understand more on why that happens, and fix
+		 * it. 
+		 * 
+		 * Looks like it is for case the container errors out (`invalid_cmd`)
+		 * instead of failed (`exit 1`).
+		 */
+		
+		RunMessageBean runMessage = getMockRunMessage();
+		GitRunBean run = getMockGitRun();
+		
+		Optional<RunBean> maybeRun = Optional.of(run);
+		given(runRepository.findById(456)).willReturn(maybeRun);
+		
+		mockGit(resourceName);
+		
+		service.runByMessage(runMessage);
+		
+		ArgumentCaptor<RunBean> runCaptor = ArgumentCaptor.forClass(RunBean.class);
+		verify(runRepository, times(1)).saveAndFlush(runCaptor.capture());
+		assertTrue(runCaptor.getValue() instanceof GitRunBean);
+		assertEquals(runCaptor.getValue().getStatus(), RunStatus.SUCCEED);
+		
+		ArgumentCaptor<InputStream> inputStreamCaptor = ArgumentCaptor.forClass(InputStream.class);
+		verify(minioRepository, times(1)).putRunConfigurationAndUpdateRunBean(eq(run), inputStreamCaptor.capture());
+		assertEquals(
+				IOUtils.toString(inputStreamCaptor.getValue(), StandardCharsets.UTF_8.name()),
+				FileUtils.readFileToString(
+						new File(getClass().getClassLoader().getResource("docker-run-service-test/"+resourceName+"/restfulci.yml").getFile()), 
+						StandardCharsets.UTF_8));
+		verify(minioRepository, times(1)).putRunOutputAndUpdateRunBean(eq(run), inputStreamCaptor.capture());
+		String consoleOutput = IOUtils.toString(inputStreamCaptor.getValue(), StandardCharsets.UTF_8.name());
+		assertTrue(consoleOutput.contains("PING lazybox"));
+		assertTrue(consoleOutput.contains("lazybox ping statistics"));
+		assertTrue(consoleOutput.contains("packets transmitted"));
+	}
+	
 	/*
 	 * This test can pass locally but will fail CircleCI with error:
 	 * > org.zeroturnaround.zip.ZipException: Given directory 
@@ -313,23 +325,8 @@ public class DockerRunServiceTest {
 		
 		final String resourceName = "git-with-results";
 		
-		RunMessageBean runMessage = new RunMessageBean();
-		runMessage.setJobId(123);
-		runMessage.setRunId(456);
-		
-		GitJobBean job = new GitJobBean();
-		job.setId(123);
-		job.setName("job");
-		job.setRemoteOrigin("git@github.com:dummy/dummy.git");
-		job.setConfigFilepath("restfulci.yml");
-		
-		GitBranchRunBean run = new GitBranchRunBean();
-		run.setId(456);
-		run.setJob(job);
-		run.setBranchName("master");
-		run.setStatus(RunStatus.IN_PROGRESS);
-		run.setTriggerAt(new Date(0L));
-		run.setCompleteAt(new Date(1000L));
+		RunMessageBean runMessage = getMockRunMessage();
+		GitRunBean run = getMockGitRun();
 		
 		Optional<RunBean> maybeRun = Optional.of(run);
 		given(runRepository.findById(456)).willReturn(maybeRun);
@@ -368,6 +365,54 @@ public class DockerRunServiceTest {
 		ZipUtil.unpack(zipFile, resultFolder);
 		assertEquals(resultFolder.list().length, 1);
 		assertEquals(resultFolder.list()[0], "this.txt");
+	}
+	
+	@Test
+	public void testFailedExecutorWillCleanupContainers() throws Exception {
+		
+		final String resourceName = "git-failed";
+		
+		RunMessageBean runMessage = getMockRunMessage();
+		GitRunBean run = getMockGitRun();
+		
+		Optional<RunBean> maybeRun = Optional.of(run);
+		given(runRepository.findById(456)).willReturn(maybeRun);
+		
+		mockGit(resourceName);
+		
+		service.runByMessage(runMessage);
+		
+		ArgumentCaptor<RunBean> runCaptor = ArgumentCaptor.forClass(RunBean.class);
+		verify(runRepository, times(1)).saveAndFlush(runCaptor.capture());
+		assertTrue(runCaptor.getValue() instanceof GitRunBean);
+		assertEquals(runCaptor.getValue().getStatus(), RunStatus.FAIL);
+	}
+	
+	private RunMessageBean getMockRunMessage() {
+		
+		RunMessageBean runMessage = new RunMessageBean();
+		runMessage.setJobId(123);
+		runMessage.setRunId(456);
+		return runMessage;
+	}
+	
+	private GitRunBean getMockGitRun() {
+		
+		GitJobBean job = new GitJobBean();
+		job.setId(123);
+		job.setName("job");
+		job.setRemoteOrigin("git@github.com:dummy/dummy.git");
+		job.setConfigFilepath("restfulci.yml");
+		
+		GitBranchRunBean run = new GitBranchRunBean();
+		run.setId(456);
+		run.setJob(job);
+		run.setBranchName("master");
+		run.setStatus(RunStatus.IN_PROGRESS);
+		run.setTriggerAt(new Date(0L));
+		run.setCompleteAt(new Date(1000L));
+		
+		return run;
 	}
 	
 	private void mockGit(String resourceName) throws IOException, InterruptedException {
