@@ -8,7 +8,7 @@ def job(job_id):
     return {
         "id": job_id,
         "name": "job_name",
-        "dockerImage": "busybox:1.31",
+        "dockerImage": "busybox:1.33",
         "command": ["sh", "-c", "echo \"Hello $ENV\""],
         "type": "FREESTYLE",
         "parameters": [

@@ -22,7 +22,7 @@ public class InputBeanTest {
 		job = new FreestyleJobBean();
 		job.setId(123);
 		job.setName("job");
-		job.setDockerImage("busybox:1.31");
+		job.setDockerImage("busybox:1.33");
 		job.setCommand(new String[] {"echo", "0"});
 		
 		ParameterBean parameter = new ParameterBean();

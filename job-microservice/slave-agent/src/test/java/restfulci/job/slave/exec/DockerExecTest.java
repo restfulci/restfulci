@@ -57,7 +57,7 @@ public class DockerExecTest {
 	@Test
 	public void testPullImage() throws Exception {
 		exec.pullImage("busybox");
-		exec.pullImage("busybox:1.31");
+		exec.pullImage("busybox:1.33");
 		exec.pullImage("busybox:latest");
 	}
 	
@@ -77,9 +77,9 @@ public class DockerExecTest {
 	@Test
 	public void testCreateAndKillSidecarWithNonnullCommand() throws Exception {
 		
-		exec.pullImage("busybox:1.31");
+		exec.pullImage("busybox:1.33");
 		String containerId = exec.createSidecar(
-				"busybox:1.31", 
+				"busybox:1.33", 
 				containerName, 
 				"bridge",
 				Arrays.asList(new String[]{"sleep", "infinity"}),
@@ -90,9 +90,9 @@ public class DockerExecTest {
 	@Test
 	public void testCreateAndKillSidecarWhichMayHaveStoppedRunning() throws Exception {
 		
-		exec.pullImage("busybox:1.31");
+		exec.pullImage("busybox:1.33");
 		String containerId = exec.createSidecar(
-				"busybox:1.31", 
+				"busybox:1.33", 
 				containerName, 
 				"bridge",
 				null,
@@ -105,10 +105,10 @@ public class DockerExecTest {
 		
 		RunBean run = new FreestyleRunBean();
 		
-		exec.pullImage("busybox:1.31");
+		exec.pullImage("busybox:1.33");
 		exec.runCommandAndUpdateRunBean(
 				run, 
-				"busybox:1.31",
+				"busybox:1.33",
 				containerName,
 				"bridge",
 				Arrays.asList(new String[]{"sh", "-c", "echo \"Hello world\""}), 
@@ -135,10 +135,10 @@ public class DockerExecTest {
 		Map<String, String> envVars = new HashMap<String, String>();
 		envVars.put("WORD", "customized input");
 		
-		exec.pullImage("busybox:1.31");
+		exec.pullImage("busybox:1.33");
 		exec.runCommandAndUpdateRunBean(
 				run, 
-				"busybox:1.31", 
+				"busybox:1.33", 
 				containerName,
 				"bridge",
 				Arrays.asList(new String[]{"sh", "-c", "echo \"Hello $WORD\""}), 
@@ -190,10 +190,10 @@ public class DockerExecTest {
 		
 		RunBean run = new FreestyleRunBean();
 		
-		exec.pullImage("busybox:1.31");
+		exec.pullImage("busybox:1.33");
 		exec.runCommandAndUpdateRunBean(
 				run, 
-				"busybox:1.31", 
+				"busybox:1.33", 
 				containerName,
 				"bridge",
 				/*
@@ -221,10 +221,10 @@ public class DockerExecTest {
 		
 		RunBean run = new FreestyleRunBean();
 		
-		exec.pullImage("busybox:1.31");
+		exec.pullImage("busybox:1.33");
 		exec.runCommandAndUpdateRunBean(
 				run, 
-				"busybox:1.31",
+				"busybox:1.33",
 				containerName,
 				"bridge",
 				Arrays.asList(new String[]{"sh", "-c", "exit 1"}), 
@@ -239,10 +239,10 @@ public class DockerExecTest {
 		
 		RunBean run = new FreestyleRunBean();
 		
-		exec.pullImage("busybox:1.31");
+		exec.pullImage("busybox:1.33");
 		exec.runCommandAndUpdateRunBean(
 				run, 
-				"busybox:1.31",
+				"busybox:1.33",
 				containerName,
 				"bridge",
 				Arrays.asList(new String[]{"sh", "-c", "invalid"}), 
@@ -260,12 +260,12 @@ public class DockerExecTest {
 	public void testRunInvalidCommandOutsideShell() throws Exception {
 		
 		RunBean run = new FreestyleRunBean();
-		exec.pullImage("busybox:1.31");
+		exec.pullImage("busybox:1.33");
 		
 		assertThrows(BadRequestException.class, () -> {
 			exec.runCommandAndUpdateRunBean(
 					run, 
-					"busybox:1.31",
+					"busybox:1.33",
 					containerName,
 					"bridge",
 					Arrays.asList(new String[]{"invalid"}), 

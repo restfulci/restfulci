@@ -72,7 +72,7 @@ public class DockerRunServiceTest {
 		FreestyleJobBean job = new FreestyleJobBean();
 		job.setId(123);
 		job.setName("job");
-		job.setDockerImage("busybox:1.31");
+		job.setDockerImage("busybox:1.33");
 		job.setCommand(new String[] {"sh", "-c", "echo \"Hello world\""});
 		
 		FreestyleRunBean run = new FreestyleRunBean();
@@ -106,7 +106,7 @@ public class DockerRunServiceTest {
 		FreestyleJobBean job = new FreestyleJobBean();
 		job.setId(123);
 		job.setName("job");
-		job.setDockerImage("busybox:1.31");
+		job.setDockerImage("busybox:1.33");
 		job.setCommand(new String[] {"sh", "-c", "echx \"Hello world\""});
 		
 		FreestyleRunBean run = new FreestyleRunBean();
@@ -141,7 +141,7 @@ public class DockerRunServiceTest {
 		FreestyleJobBean job = new FreestyleJobBean();
 		job.setId(123);
 		job.setName("job");
-		job.setDockerImage("busybox:1.31");
+		job.setDockerImage("busybox:1.33");
 		job.setCommand(new String[] {"sh", "-c", "echo \"Hello $WORD\""});
 		
 		ParameterBean parameter = new ParameterBean();

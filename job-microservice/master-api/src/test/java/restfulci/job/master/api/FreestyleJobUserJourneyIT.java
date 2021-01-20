@@ -112,11 +112,11 @@ public class FreestyleJobUserJourneyIT {
 		final String jobName = "it_freestyle_job_name";
 		Map<String, Object> jobData = new HashMap<String, Object>();
 		jobData.put("name", jobName);
-		jobData.put("dockerImage", "busybox:1.31");
+		jobData.put("dockerImage", "busybox:1.33");
 		jobData.put("command", new String[] {"sh", "-c", "echo \"Hello world\""});
 		
 		/*
-		 * curl -X POST -H "Content-Type: application/json" --data '{"name": "manual_freestyle_job_name", "dockerImage": "busybox:1.31", "command": ["sh", "-c", "echo \"Hello world\""]}' localhost:8881/jobs
+		 * curl -X POST -H "Content-Type: application/json" --data '{"name": "manual_freestyle_job_name", "dockerImage": "busybox:1.33", "command": ["sh", "-c", "echo \"Hello world\""]}' localhost:8881/jobs
 		 */
 		Map<?, ?> createdJob = objectMapper.readValue(
 				mockMvc.perform(post("/jobs")
@@ -248,7 +248,7 @@ public class FreestyleJobUserJourneyIT {
 		final String jobName = "it_freestyle_job_name";
 		Map<String, Object> jobData = new HashMap<String, Object>();
 		jobData.put("name", jobName);
-		jobData.put("dockerImage", "busybox:1.31");
+		jobData.put("dockerImage", "busybox:1.33");
 		jobData.put("command", new String[] {"sh", "-c", "echo \"Hello world\""});
 		
 		Map<?, ?> createdJob = objectMapper.readValue(
@@ -283,7 +283,7 @@ public class FreestyleJobUserJourneyIT {
 		final String jobName = "it_freestyle_job_name";
 		Map<String, Object> jobData = new HashMap<String, Object>();
 		jobData.put("name", jobName);
-		jobData.put("dockerImage", "busybox:1.31");
+		jobData.put("dockerImage", "busybox:1.33");
 		jobData.put("command", new String[] {"sh", "-c", "expr $MINUEND - $SUBTRAHEND"});
 		
 		Map<?, ?> createdJob = objectMapper.readValue(
@@ -335,7 +335,7 @@ public class FreestyleJobUserJourneyIT {
 		final String jobName = "it_freestyle_job_name";
 		Map<String, Object> jobData = new HashMap<String, Object>();
 		jobData.put("name", jobName);
-		jobData.put("dockerImage", "busybox:1.31");
+		jobData.put("dockerImage", "busybox:1.33");
 		jobData.put("command", new String[] {"sh", "-c", "echo $NOT_EXIST"});
 		
 		Map<?, ?> createdJob = objectMapper.readValue(

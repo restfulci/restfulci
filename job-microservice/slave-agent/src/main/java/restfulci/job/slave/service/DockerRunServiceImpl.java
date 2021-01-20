@@ -215,6 +215,7 @@ public class DockerRunServiceImpl implements DockerRunService {
 		List<String> sidecarIds = new ArrayList<String>();	
 		try {
 			for (RunConfigBean.RunConfigSidecarBean sidecar : runConfig.getSidecars()) {
+				dockerExec.pullImage(sidecar.getImage());
 				sidecarIds.add(
 						dockerExec.createSidecar(
 								sidecar.getImage(), 

@@ -33,7 +33,7 @@ public class JobServiceTest {
 		
 		JobDTO jobDTO = new JobDTO();
 		jobDTO.setName("job_name");
-		jobDTO.setDockerImage("busybox:1.31");
+		jobDTO.setDockerImage("busybox:1.33");
 		jobDTO.setCommand(new String[]{"sh", "-c", "echo \"Hello world\""});
 		
 		jobService.createJob(jobDTO);

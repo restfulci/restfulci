@@ -18,7 +18,7 @@ class TestFreestyleJob(AuthTestSuite):
     def test_hello_world(self):
         job_defination_json = {
             "name": self.freestyle_job_name,
-            "dockerImage": "busybox:1.31",
+            "dockerImage": "busybox:1.33",
             "command": [
                 "sh",
                 "-c",
@@ -36,7 +36,7 @@ class TestFreestyleJob(AuthTestSuite):
     def test_subtraction(self):
         job_defination_json = {
             "name": self.freestyle_job_name,
-            "dockerImage": "busybox:1.31",
+            "dockerImage": "busybox:1.33",
             "command": [
                 "sh",
                 "-c",

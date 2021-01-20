@@ -220,7 +220,7 @@ class TestPipeline(TestCase):
             },
             json={
                 "name": "freestyle_job_name_{}".format(randint(0, 10**10)),
-                "dockerImage": "busybox:1.31",
+                "dockerImage": "busybox:1.33",
                 "command": [
                     "sh",
                     "-c",

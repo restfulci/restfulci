@@ -24,7 +24,7 @@ public class RunConfigYamlParserTest {
 		RunConfigBean runConfig = RunConfigYamlParser.parse(yamlContent);
 		
 		assertEquals(runConfig.getVersion(), "1.0");
-		assertEquals(runConfig.getExecutor().getImage(), "busybox:1.31");
+		assertEquals(runConfig.getExecutor().getImage(), "busybox:1.33");
 		assertEquals(runConfig.getExecutor().getEnvironment().size(), 0);
 		assertEquals(runConfig.getSidecars().size(), 0);
 		assertEquals(runConfig.getCommand().size(), 3);
@@ -70,7 +70,7 @@ public class RunConfigYamlParserTest {
 		RunConfigBean runConfig = RunConfigYamlParser.parse(yamlContent);
 		
 		assertEquals(runConfig.getVersion(), "1.0");
-		assertEquals(runConfig.getExecutor().getImage(), "busybox:1.31");
+		assertEquals(runConfig.getExecutor().getImage(), "busybox:1.33");
 		assertEquals(runConfig.getExecutor().getEnvironment().size(), 1);
 		assertEquals(runConfig.getExecutor().getEnvironment().get("FOO"), "bar");
 		assertEquals(runConfig.getSidecars().size(), 0);
@@ -94,17 +94,17 @@ public class RunConfigYamlParserTest {
 		RunConfigBean runConfig = RunConfigYamlParser.parse(yamlContent);
 		
 		assertEquals(runConfig.getVersion(), "1.0");
-		assertEquals(runConfig.getExecutor().getImage(), "busybox:1.31");
+		assertEquals(runConfig.getExecutor().getImage(), "busybox:1.33");
 		assertEquals(runConfig.getExecutor().getEnvironment().size(), 0);
 		assertEquals(runConfig.getSidecars().size(), 3);
 		assertEquals(runConfig.getSidecars().get(0).getName(), "lazybox");
-		assertEquals(runConfig.getSidecars().get(0).getImage(), "busybox:1.31");
+		assertEquals(runConfig.getSidecars().get(0).getImage(), "busybox:1.33");
 		assertEquals(runConfig.getSidecars().get(0).getCommand().size(), 2);
 		assertEquals(runConfig.getSidecars().get(0).getCommand().get(0), "sleep");
 		assertEquals(runConfig.getSidecars().get(0).getCommand().get(1), "infinity");
 		assertEquals(runConfig.getSidecars().get(0).getEnvironment().size(), 0);
 		assertEquals(runConfig.getSidecars().get(1).getName(), "fleetingbox");
-		assertEquals(runConfig.getSidecars().get(1).getImage(), "busybox:1.31");
+		assertEquals(runConfig.getSidecars().get(1).getImage(), "busybox:1.33");
 		assertNull(runConfig.getSidecars().get(1).getCommand());
 		assertEquals(runConfig.getSidecars().get(1).getEnvironment().size(), 1);
 		assertEquals(runConfig.getSidecars().get(1).getEnvironment().get("FOO"), "bar");
