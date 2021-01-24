@@ -159,6 +159,17 @@ public abstract class RunBean extends BaseEntity {
 	@Column(name="run_output_object_referral", updatable=true)
 	private String runOutputObjectReferral;
 	
+	@JsonIgnore
+	public String getDefaultRunOutputObjectReferral() {
+		if (runOutputObjectReferral != null) {
+			return runOutputObjectReferral;
+		}
+		if (id != null) {
+			return id.toString();
+		}
+		return null;
+	}
+	
 	@OneToMany(targetEntity=RunResultBean.class, fetch=FetchType.EAGER, cascade=CascadeType.ALL, mappedBy="run")
 	private Set<RunResultBean> runResults = new HashSet<RunResultBean>();
 	

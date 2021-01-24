@@ -150,7 +150,9 @@ public class DockerRunServiceImpl implements DockerRunService {
 		try {
 			log.info("Save configuration file");
 			Path configFilepath = remoteGitRepository.getConfigFilepath(run, localRepoPath);
-			minioRepository.putRunConfigurationAndUpdateRunBean(run, new FileInputStream(configFilepath.toFile()));
+			String runConfigurationObjectReferral = minioRepository.putRunConfigurationAndReturnObjectName(
+					new FileInputStream(configFilepath.toFile()), run.getDefaultRunConfigurationObjectReferral());
+			run.setRunConfigurationObjectReferral(runConfigurationObjectReferral);
 		} 
 		catch (MinioException e) {
 			// TODO Auto-generated catch block
@@ -270,8 +272,9 @@ public class DockerRunServiceImpl implements DockerRunService {
 			try {
 				runResult.setContainerPath(entry.getKey().getPath());
 				runResult.setType(entry.getKey().getType());
-				minioRepository.putRunResultAndUpdateRunResultBean(
-						runResult, new FileInputStream(zipFile));
+				String runResultObjectReferral = minioRepository.putRunResultAndReturnObjectName(
+						new FileInputStream(zipFile), runResult.getDefaultObjectReferral());
+				runResult.setObjectReferral(runResultObjectReferral);
 			} 
 			catch (MinioException e) {
 				// TODO Auto-generated catch block

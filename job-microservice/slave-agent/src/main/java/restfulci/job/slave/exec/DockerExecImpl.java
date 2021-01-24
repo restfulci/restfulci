@@ -257,7 +257,9 @@ public class DockerExecImpl implements DockerExec {
 				 */
 				InputStream contentStream = new ByteArrayInputStream(
 						loggingCallback.toString().getBytes(StandardCharsets.UTF_8));
-				minioRepository.putRunOutputAndUpdateRunBean(run, contentStream);
+				String runOutputObjectReferral = minioRepository.putRunOutputAndReturnObjectName(
+						contentStream, run.getDefaultRunOutputObjectReferral());
+				run.setRunOutputObjectReferral(runOutputObjectReferral);
 				log.info("Execute command output: \n{}", loggingCallback.toString());
 			} catch (MinioException e) {
 				// TODO Auto-generated catch block

@@ -39,4 +39,14 @@ public class RunResultBean extends BaseEntity {
 	@Column(name="object_referral", updatable=true)
 	private String objectReferral;
 	
+	@JsonIgnore
+	public String getDefaultObjectReferral() {
+		if (objectReferral != null) {
+			return objectReferral;
+		}
+		if (id != null) {
+			return id.toString();
+		}
+		return null;
+	}
 }

@@ -32,7 +32,6 @@ import restfulci.job.shared.dao.RunRepository;
 import restfulci.job.shared.domain.FreestyleRunBean;
 import restfulci.job.shared.domain.RunBean;
 import restfulci.job.shared.domain.RunConfigBean;
-import restfulci.job.slave.exec.DockerExec;
 
 @ExtendWith(SpringExtension.class)
 @SpringBootTest
@@ -123,8 +122,11 @@ public class DockerExecTest {
 //		assertNotNull(run.getRunOutputObjectReferral());
 		
 		ArgumentCaptor<InputStream> inputStreamCaptor = ArgumentCaptor.forClass(InputStream.class);
-		verify(minioRepository, times(1)).putRunOutputAndUpdateRunBean(eq(run), inputStreamCaptor.capture());
-		assertEquals(IOUtils.toString(inputStreamCaptor.getValue(), StandardCharsets.UTF_8.name()), "Hello world\n");
+		verify(minioRepository, times(1)).putRunOutputAndReturnObjectName(
+				inputStreamCaptor.capture(), eq(run.getDefaultRunOutputObjectReferral()));
+		assertEquals(
+				IOUtils.toString(inputStreamCaptor.getValue(), StandardCharsets.UTF_8.name()), 
+				"Hello world\n");
 	}
 	
 	@Test
@@ -153,8 +155,11 @@ public class DockerExecTest {
 //		assertNotNull(run.getRunOutputObjectReferral());
 		
 		ArgumentCaptor<InputStream> inputStreamCaptor = ArgumentCaptor.forClass(InputStream.class);
-		verify(minioRepository, times(1)).putRunOutputAndUpdateRunBean(eq(run), inputStreamCaptor.capture());
-		assertEquals(IOUtils.toString(inputStreamCaptor.getValue(), StandardCharsets.UTF_8.name()), "Hello customized input\n");
+		verify(minioRepository, times(1)).putRunOutputAndReturnObjectName(
+				inputStreamCaptor.capture(), eq(run.getDefaultRunOutputObjectReferral()));
+		assertEquals(
+				IOUtils.toString(inputStreamCaptor.getValue(), StandardCharsets.UTF_8.name()), 
+				"Hello customized input\n");
 	}
 	
 	/*
@@ -209,8 +214,11 @@ public class DockerExecTest {
 //		assertNotNull(run.getRunOutputObjectReferral());
 		
 		ArgumentCaptor<InputStream> inputStreamCaptor = ArgumentCaptor.forClass(InputStream.class);
-		verify(minioRepository, times(1)).putRunOutputAndUpdateRunBean(eq(run), inputStreamCaptor.capture());
-		assertEquals(IOUtils.toString(inputStreamCaptor.getValue(), StandardCharsets.UTF_8.name()), "this.txt\n");
+		verify(minioRepository, times(1)).putRunOutputAndReturnObjectName(
+				inputStreamCaptor.capture(), eq(run.getDefaultRunOutputObjectReferral()));
+		assertEquals(
+				IOUtils.toString(inputStreamCaptor.getValue(), StandardCharsets.UTF_8.name()), 
+				"this.txt\n");
 		
 		assertEquals(hostMountPoint.list().length, 1);
 		assertEquals(hostMountPoint.list()[0], "this.txt");
@@ -252,8 +260,11 @@ public class DockerExecTest {
 		assertEquals(run.getExitCode(), 127);
 		
 		ArgumentCaptor<InputStream> inputStreamCaptor = ArgumentCaptor.forClass(InputStream.class);
-		verify(minioRepository, times(1)).putRunOutputAndUpdateRunBean(eq(run), inputStreamCaptor.capture());
-		assertEquals(IOUtils.toString(inputStreamCaptor.getValue(), StandardCharsets.UTF_8.name()), "sh: invalid: not found\n");
+		verify(minioRepository, times(1)).putRunOutputAndReturnObjectName(
+				inputStreamCaptor.capture(), eq(run.getDefaultRunOutputObjectReferral()));
+		assertEquals(
+				IOUtils.toString(inputStreamCaptor.getValue(), StandardCharsets.UTF_8.name()), 
+				"sh: invalid: not found\n");
 	}
 	
 	@Test
