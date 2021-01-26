@@ -30,8 +30,8 @@ import com.github.dockerjava.api.model.Volume;
 import io.minio.errors.MinioException;
 import lombok.extern.slf4j.Slf4j;
 import restfulci.job.shared.dao.MinioRepository;
-import restfulci.job.shared.domain.RunBean;
 import restfulci.job.shared.domain.RunConfigBean;
+import restfulci.job.slave.dto.RunCommandDTO;
 
 @Slf4j
 @Component
@@ -176,15 +176,16 @@ public class DockerExecImpl implements DockerExec {
 	}
 
 	@Override
-	public void runCommandAndUpdateRunBean(
-			RunBean run, 
+	public RunCommandDTO runCommand(
 			String imageTag, 
 			String containerName,
 			String networkName,
 			List<String> command, 
 			Map<String, String> envVars,
-			
-			Map<RunConfigBean.RunConfigResultBean, File> mounts) throws InterruptedException {
+			Map<RunConfigBean.RunConfigResultBean, File> mounts,
+			String defaultRunOutputObjectReferral) throws InterruptedException {
+		
+		RunCommandDTO runDTO = new RunCommandDTO();
 		
 		log.info("Execute command {} in docker image: {}", command, imageTag);
 		
@@ -239,7 +240,7 @@ public class DockerExecImpl implements DockerExec {
 			int exitCode = dockerClient.waitContainerCmd(container.getId())
 					.start()
 					.awaitStatusCode();
-			run.setExitCode(exitCode);
+			runDTO.setExitCode(exitCode);
 			log.info("Execute command exit code: {}", exitCode);
 			
 			LogContainerCallbackWrapper loggingCallback = new LogContainerCallbackWrapper();
@@ -258,8 +259,8 @@ public class DockerExecImpl implements DockerExec {
 				InputStream contentStream = new ByteArrayInputStream(
 						loggingCallback.toString().getBytes(StandardCharsets.UTF_8));
 				String runOutputObjectReferral = minioRepository.putRunOutputAndReturnObjectName(
-						contentStream, run.getDefaultRunOutputObjectReferral());
-				run.setRunOutputObjectReferral(runOutputObjectReferral);
+						contentStream, defaultRunOutputObjectReferral);
+				runDTO.setRunOutputObjectReferral(runOutputObjectReferral);
 				log.info("Execute command output: \n{}", loggingCallback.toString());
 			} catch (MinioException e) {
 				// TODO Auto-generated catch block
@@ -269,6 +270,8 @@ public class DockerExecImpl implements DockerExec {
 		finally {
 			dockerClient.removeContainerCmd(container.getId()).exec();
 		}
+		
+		return runDTO;
 	}
 
 	/*

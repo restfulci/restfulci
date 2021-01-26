@@ -29,8 +29,9 @@ import restfulci.job.shared.domain.InputBean;
 import restfulci.job.shared.domain.RunBean;
 import restfulci.job.shared.domain.RunConfigBean;
 import restfulci.job.shared.domain.RunMessageBean;
-import restfulci.job.shared.domain.RunStatus;
 import restfulci.job.shared.domain.RunResultBean;
+import restfulci.job.shared.domain.RunStatus;
+import restfulci.job.slave.dto.RunCommandDTO;
 import restfulci.job.slave.exec.DockerExec;
 
 @Slf4j
@@ -118,14 +119,15 @@ public class DockerRunServiceImpl implements DockerRunService {
 		FreestyleJobBean job = run.getJob();
 		
 		dockerExec.pullImage(job.getDockerImage());
-		dockerExec.runCommandAndUpdateRunBean(
-				run, 
+		RunCommandDTO runDTO = dockerExec.runCommand(
 				job.getDockerImage(), 
 				mainContainerName,
 				networkName,
 				Arrays.asList(job.getCommand()),
 				getEnvVars(run),
-				new HashMap<RunConfigBean.RunConfigResultBean, File>());
+				new HashMap<RunConfigBean.RunConfigResultBean, File>(),
+				run.getDefaultRunOutputObjectReferral());
+		runDTO.updateRunBean(run);
 		
 		/*
 		 * TODO:
@@ -229,25 +231,27 @@ public class DockerRunServiceImpl implements DockerRunService {
 			
 			if (runConfig.getExecutor().getImage() != null) {
 				dockerExec.pullImage(runConfig.getExecutor().getImage());
-				dockerExec.runCommandAndUpdateRunBean(
-						run, 
+				RunCommandDTO runDTO = dockerExec.runCommand(
 						runConfig.getExecutor().getImage(),
 						mainContainerName,
 						networkName,
 						runConfig.getCommand(), 
 						getEnvVars(runConfig, run),
-						mounts);
+						mounts,
+						run.getDefaultRunOutputObjectReferral());
+				runDTO.updateRunBean(run);
 			}
 			else {
 				String imageId = dockerExec.buildImageAndGetId(localRepoPath, runConfig);
-				dockerExec.runCommandAndUpdateRunBean(
-						run, 
+				RunCommandDTO runDTO = dockerExec.runCommand(
 						imageId, 
 						mainContainerName,
 						networkName,
 						runConfig.getCommand(), 
 						getEnvVars(run),
-						mounts);
+						mounts,
+						run.getDefaultRunOutputObjectReferral());
+				runDTO.updateRunBean(run);
 			}
 		}
 		finally {

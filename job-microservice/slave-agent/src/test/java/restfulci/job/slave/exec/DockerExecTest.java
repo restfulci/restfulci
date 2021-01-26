@@ -25,13 +25,13 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import com.github.dockerjava.api.exception.BadRequestException;
+import com.github.dockerjava.api.exception.NotFoundException;
 import com.github.dockerjava.api.model.Network;
 
 import restfulci.job.shared.dao.MinioRepository;
 import restfulci.job.shared.dao.RunRepository;
-import restfulci.job.shared.domain.FreestyleRunBean;
-import restfulci.job.shared.domain.RunBean;
 import restfulci.job.shared.domain.RunConfigBean;
+import restfulci.job.slave.dto.RunCommandDTO;
 
 @ExtendWith(SpringExtension.class)
 @SpringBootTest
@@ -58,6 +58,13 @@ public class DockerExecTest {
 		exec.pullImage("busybox");
 		exec.pullImage("busybox:1.33");
 		exec.pullImage("busybox:latest");
+	}
+	
+	@Test
+	public void testPullInvalidImage() throws Exception {
+		assertThrows(NotFoundException.class, () -> {
+			exec.pullImage("notexistbox:1.2345");
+		});
 	}
 	
 	@Test
@@ -102,28 +109,26 @@ public class DockerExecTest {
 	@Test
 	public void testRunCommand() throws Exception {
 		
-		RunBean run = new FreestyleRunBean();
-		
 		exec.pullImage("busybox:1.33");
-		exec.runCommandAndUpdateRunBean(
-				run, 
+		RunCommandDTO runDTO = exec.runCommand(
 				"busybox:1.33",
 				containerName,
 				"bridge",
 				Arrays.asList(new String[]{"sh", "-c", "echo \"Hello world\""}), 
 				new HashMap<String, String>(),
-				new HashMap<RunConfigBean.RunConfigResultBean, File>());
+				new HashMap<RunConfigBean.RunConfigResultBean, File>(),
+				"mockRunResultObjectReferral");
 		
-		assertEquals(run.getExitCode(), 0);
+		assertEquals(runDTO.getExitCode(), 0);
 		/*
 		 * Cannot assert this, as the set logic is in `minioRepository`
 		 * which is mocked here.
 		 */
-//		assertNotNull(run.getRunOutputObjectReferral());
+//		assertNotNull(runDTO.getRunOutputObjectReferral());
 		
 		ArgumentCaptor<InputStream> inputStreamCaptor = ArgumentCaptor.forClass(InputStream.class);
 		verify(minioRepository, times(1)).putRunOutputAndReturnObjectName(
-				inputStreamCaptor.capture(), eq(run.getDefaultRunOutputObjectReferral()));
+				inputStreamCaptor.capture(), eq("mockRunResultObjectReferral"));
 		assertEquals(
 				IOUtils.toString(inputStreamCaptor.getValue(), StandardCharsets.UTF_8.name()), 
 				"Hello world\n");
@@ -132,31 +137,29 @@ public class DockerExecTest {
 	@Test
 	public void testRunCommandWithInput() throws Exception {
 		
-		RunBean run = new FreestyleRunBean();
-		
 		Map<String, String> envVars = new HashMap<String, String>();
 		envVars.put("WORD", "customized input");
 		
 		exec.pullImage("busybox:1.33");
-		exec.runCommandAndUpdateRunBean(
-				run, 
+		RunCommandDTO runDTO = exec.runCommand(
 				"busybox:1.33", 
 				containerName,
 				"bridge",
 				Arrays.asList(new String[]{"sh", "-c", "echo \"Hello $WORD\""}), 
 				envVars,
-				new HashMap<RunConfigBean.RunConfigResultBean, File>());
+				new HashMap<RunConfigBean.RunConfigResultBean, File>(),
+				"mockRunResultObjectReferral");
 		
-		assertEquals(run.getExitCode(), 0);
 		/*
 		 * Cannot assert this, as the set logic is in `minioRepository`
 		 * which is mocked here.
 		 */
-//		assertNotNull(run.getRunOutputObjectReferral());
+		assertEquals(runDTO.getExitCode(), 0);
+//		assertNotNull(runDTO.getRunOutputObjectReferral());
 		
 		ArgumentCaptor<InputStream> inputStreamCaptor = ArgumentCaptor.forClass(InputStream.class);
 		verify(minioRepository, times(1)).putRunOutputAndReturnObjectName(
-				inputStreamCaptor.capture(), eq(run.getDefaultRunOutputObjectReferral()));
+				inputStreamCaptor.capture(), eq("mockRunResultObjectReferral"));
 		assertEquals(
 				IOUtils.toString(inputStreamCaptor.getValue(), StandardCharsets.UTF_8.name()), 
 				"Hello customized input\n");
@@ -193,11 +196,8 @@ public class DockerExecTest {
 		Map<RunConfigBean.RunConfigResultBean, File> mounts = new HashMap<RunConfigBean.RunConfigResultBean, File>();
 		mounts.put(runConfigResult, hostMountPoint);
 		
-		RunBean run = new FreestyleRunBean();
-		
 		exec.pullImage("busybox:1.33");
-		exec.runCommandAndUpdateRunBean(
-				run, 
+		RunCommandDTO runDTO = exec.runCommand( 
 				"busybox:1.33", 
 				containerName,
 				"bridge",
@@ -208,14 +208,15 @@ public class DockerExecTest {
 				 */
 				Arrays.asList(new String[]{"sh", "-c", "touch /result/this.txt && ls /result"}), 
 				new HashMap<String, String>(),
-				mounts);
+				mounts,
+				"mockRunResultObjectReferral");
 		
-		assertEquals(run.getExitCode(), 0);
+		assertEquals(runDTO.getExitCode(), 0);
 //		assertNotNull(run.getRunOutputObjectReferral());
 		
 		ArgumentCaptor<InputStream> inputStreamCaptor = ArgumentCaptor.forClass(InputStream.class);
 		verify(minioRepository, times(1)).putRunOutputAndReturnObjectName(
-				inputStreamCaptor.capture(), eq(run.getDefaultRunOutputObjectReferral()));
+				inputStreamCaptor.capture(), eq("mockRunResultObjectReferral"));
 		assertEquals(
 				IOUtils.toString(inputStreamCaptor.getValue(), StandardCharsets.UTF_8.name()), 
 				"this.txt\n");
@@ -227,41 +228,37 @@ public class DockerExecTest {
 	@Test
 	public void testRunFailedCommand() throws Exception {
 		
-		RunBean run = new FreestyleRunBean();
-		
 		exec.pullImage("busybox:1.33");
-		exec.runCommandAndUpdateRunBean(
-				run, 
+		RunCommandDTO runDTO = exec.runCommand(
 				"busybox:1.33",
 				containerName,
 				"bridge",
 				Arrays.asList(new String[]{"sh", "-c", "exit 1"}), 
 				new HashMap<String, String>(),
-				new HashMap<RunConfigBean.RunConfigResultBean, File>());
+				new HashMap<RunConfigBean.RunConfigResultBean, File>(),
+				"mockRunResultObjectReferral");
 		
-		assertEquals(run.getExitCode(), 1);
+		assertEquals(runDTO.getExitCode(), 1);
 	}
 	
 	@Test
 	public void testRunInvalidCommandInsideShell() throws Exception {
-		
-		RunBean run = new FreestyleRunBean();
-		
+
 		exec.pullImage("busybox:1.33");
-		exec.runCommandAndUpdateRunBean(
-				run, 
+		RunCommandDTO runDTO = exec.runCommand(
 				"busybox:1.33",
 				containerName,
 				"bridge",
 				Arrays.asList(new String[]{"sh", "-c", "invalid"}), 
 				new HashMap<String, String>(),
-				new HashMap<RunConfigBean.RunConfigResultBean, File>());
+				new HashMap<RunConfigBean.RunConfigResultBean, File>(),
+				"mockRunResultObjectReferral");
 		
-		assertEquals(run.getExitCode(), 127);
+		assertEquals(runDTO.getExitCode(), 127);
 		
 		ArgumentCaptor<InputStream> inputStreamCaptor = ArgumentCaptor.forClass(InputStream.class);
 		verify(minioRepository, times(1)).putRunOutputAndReturnObjectName(
-				inputStreamCaptor.capture(), eq(run.getDefaultRunOutputObjectReferral()));
+				inputStreamCaptor.capture(), eq("mockRunResultObjectReferral"));
 		assertEquals(
 				IOUtils.toString(inputStreamCaptor.getValue(), StandardCharsets.UTF_8.name()), 
 				"sh: invalid: not found\n");
@@ -270,18 +267,17 @@ public class DockerExecTest {
 	@Test
 	public void testRunInvalidCommandOutsideShell() throws Exception {
 		
-		RunBean run = new FreestyleRunBean();
 		exec.pullImage("busybox:1.33");
 		
 		assertThrows(BadRequestException.class, () -> {
-			exec.runCommandAndUpdateRunBean(
-					run, 
+			exec.runCommand(
 					"busybox:1.33",
 					containerName,
 					"bridge",
 					Arrays.asList(new String[]{"invalid"}), 
 					new HashMap<String, String>(),
-					new HashMap<RunConfigBean.RunConfigResultBean, File>());
+					new HashMap<RunConfigBean.RunConfigResultBean, File>(),
+					"mockRunResultObjectReferral");
 		});
 	}
 }
