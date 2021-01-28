@@ -15,6 +15,7 @@ import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.yaml.snakeyaml.error.YAMLException;
 import org.zeroturnaround.zip.ZipUtil;
 
 import com.github.dockerjava.api.exception.BadRequestException;
@@ -154,6 +155,23 @@ public class DockerRunServiceImpl implements DockerRunService {
 		Path localRepoPath = Files.createTempDirectory("local-repo");
 		remoteGitRepository.copyToLocal(run, localRepoPath);
 		
+		RunConfigBean runConfig;
+		try {
+			runConfig = remoteGitRepository.getConfigFromFilepath(run, localRepoPath);
+		}
+		catch (IOException e) {
+			log.info("Git job error getting config file: {}", e.getMessage());
+			run.setStatus(RunStatus.FAIL);
+			run.setErrorMessage("Error getting config file: \n"+e.getMessage());
+			return;
+		}
+		catch (YAMLException e) {
+			log.info("Git job config YAML parsing error: {}", e.getMessage());
+			run.setStatus(RunStatus.FAIL);
+			run.setErrorMessage("Config YAML parsing error: \n"+e.getMessage());
+			return;
+		}
+		
 		try {
 			log.info("Save configuration file");
 			Path configFilepath = remoteGitRepository.getConfigFilepath(run, localRepoPath);
@@ -165,8 +183,6 @@ public class DockerRunServiceImpl implements DockerRunService {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		
-		RunConfigBean runConfig = remoteGitRepository.getConfigFromFilepath(run, localRepoPath);
 		
 		/*
 		 * For Docker desktop on Mac, need to edit `Library/Group\ Containers/group.com.docker/settings.json`
