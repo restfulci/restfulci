@@ -507,6 +507,22 @@ public class DockerRunServiceTest {
 	}
 	
 	@Test
+	public void testRunGitJobInvalidDockerfile() throws Exception {
+		String errorMessage = testRunGitJobAndReturnErrorMessage("git-invalid-dockerfile");
+		
+		assertTrue(errorMessage.contains("Docker build error"));
+		assertTrue(errorMessage.contains("FROOOOM"));
+	}
+	
+	@Test
+	public void testRunGitJobNonExistDockerfilePath() throws Exception {
+		String errorMessage = testRunGitJobAndReturnErrorMessage("git-non-exist-dockerfile-path");
+		
+		assertTrue(errorMessage.contains("Docker build error"));
+		assertTrue(errorMessage.contains("Dockerfile does not exist"));
+	}
+	
+	@Test
 	public void testRunGitJobInvalidCommand() throws Exception {
 		String errorMessage = testRunGitJobAndReturnErrorMessage("git-invalid-command");
 		

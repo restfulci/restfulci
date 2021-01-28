@@ -258,7 +258,15 @@ public class DockerRunServiceImpl implements DockerRunService {
 				}
 			}
 			else {
-				imageId = dockerExec.buildImageAndGetId(localRepoPath, runConfig);
+				try {
+					imageId = dockerExec.buildImageAndGetId(localRepoPath, runConfig);
+				}
+				catch (BadRequestException | IllegalArgumentException e) {
+					log.info("Git job docker build error: {}", e.getMessage());
+					run.setStatus(RunStatus.FAIL);
+					run.setErrorMessage("Docker build error: \n"+e.getMessage());
+					return;
+				}
 			}
 			
 			try {

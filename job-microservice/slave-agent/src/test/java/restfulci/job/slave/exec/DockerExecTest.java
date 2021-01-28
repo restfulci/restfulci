@@ -1,14 +1,21 @@
 package restfulci.job.slave.exec;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import java.io.File;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -70,6 +77,48 @@ public class DockerExecTest {
 		assertThrows(NotFoundException.class, () -> {
 			exec.pullImage("busybox:1234.5");
 		});
+	}
+	
+	@Test
+	public void testBuildImage() throws Exception {
+		RunConfigBean mockRunConfig = mock(RunConfigBean.class, RETURNS_DEEP_STUBS);
+		when(mockRunConfig.getBaseDir(any(Path.class))).thenReturn(
+				new File(getClass().getClassLoader().getResource("docker-exec-test/good").getFile()));
+		when(mockRunConfig.getDockerfile(any(Path.class))).thenReturn(
+				new File(getClass().getClassLoader().getResource("docker-exec-test/good/Dockerfile").getFile()));
+	
+		String imageId = exec.buildImageAndGetId(mock(Path.class), mockRunConfig);
+		assertNotNull(imageId);
+	}
+	
+	@Test
+	public void testBuildImageInalidDockerfile() throws Exception {
+		RunConfigBean mockRunConfig = mock(RunConfigBean.class, RETURNS_DEEP_STUBS);
+		when(mockRunConfig.getBaseDir(any(Path.class))).thenReturn(
+				new File(getClass().getClassLoader().getResource("docker-exec-test/invalid-dockerfile").getFile()));
+		when(mockRunConfig.getDockerfile(any(Path.class))).thenReturn(
+				new File(getClass().getClassLoader().getResource("docker-exec-test/invalid-dockerfile/Dockerfile").getFile()));
+	
+		BadRequestException thrown = assertThrows(BadRequestException.class, () -> {
+			exec.buildImageAndGetId(mock(Path.class), mockRunConfig);
+		});
+		
+		assertTrue(thrown.getMessage().contains("FROOOOM"));
+	}
+	
+	@Test
+	public void testBuildImageFileNotExist() throws Exception {
+		RunConfigBean mockRunConfig = mock(RunConfigBean.class, RETURNS_DEEP_STUBS);
+		when(mockRunConfig.getBaseDir(any(Path.class))).thenReturn(
+				new File(getClass().getClassLoader().getResource("docker-exec-test").getFile()).toPath().resolve("not-exist").toFile());
+		when(mockRunConfig.getDockerfile(any(Path.class))).thenReturn(
+				new File(getClass().getClassLoader().getResource("docker-exec-test").getFile()).toPath().resolve("not-exist").resolve("Dockerfile").toFile());
+		
+		IllegalArgumentException thrown = assertThrows(IllegalArgumentException.class, () -> {
+			exec.buildImageAndGetId(mock(Path.class), mockRunConfig);
+		});
+		
+		assertTrue(thrown.getMessage().contains("Dockerfile does not exist"));
 	}
 	
 	@Test
