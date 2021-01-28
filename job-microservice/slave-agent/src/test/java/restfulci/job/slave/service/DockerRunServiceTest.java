@@ -2,6 +2,7 @@ package restfulci.job.slave.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -211,7 +212,45 @@ public class DockerRunServiceTest {
 		assertTrue(runCaptor.getValue() instanceof FreestyleRunBean);
 		assertNotNull(runCaptor.getValue().getCompleteAt());
 		assertEquals(runCaptor.getValue().getStatus(), RunStatus.FAIL);
+		assertTrue(runCaptor.getValue().getErrorMessage().contains("Pulling image error"));
 		assertTrue(runCaptor.getValue().getErrorMessage().contains("notexistbox"));
+		assertNull(runCaptor.getValue().getExitCode());
+		
+		verify(minioRepository, never()).putRunOutputAndReturnObjectName(
+				any(InputStream.class), any(String.class));
+	}
+	
+	@Test
+	public void testRunFreestyleJobBadRequest() throws Exception{
+		
+		RunMessageBean runMessage = new RunMessageBean();
+		runMessage.setJobId(123);
+		runMessage.setRunId(456);
+		
+		FreestyleJobBean job = new FreestyleJobBean();
+		job.setId(123);
+		job.setDockerImage("busybox:1.33");
+		job.setCommand(new String[] {"invalidcommand"});
+		
+		FreestyleRunBean run = new FreestyleRunBean();
+		run.setId(456);
+		run.setJob(job);
+		run.setStatus(RunStatus.IN_PROGRESS);
+		run.setTriggerAt(new Date(0L));
+		
+		Optional<RunBean> maybeRun = Optional.of(run);
+		given(runRepository.findById(456)).willReturn(maybeRun);
+		
+		service.runByMessage(runMessage);
+		
+		ArgumentCaptor<RunBean> runCaptor = ArgumentCaptor.forClass(RunBean.class);
+		verify(runRepository, times(1)).saveAndFlush(runCaptor.capture());
+		assertTrue(runCaptor.getValue() instanceof FreestyleRunBean);
+		assertNotNull(runCaptor.getValue().getCompleteAt());
+		assertEquals(runCaptor.getValue().getStatus(), RunStatus.FAIL);
+		assertTrue(runCaptor.getValue().getErrorMessage().contains("Invalid command"));
+		assertTrue(runCaptor.getValue().getErrorMessage().contains("invalidcommand"));
+		assertNull(runCaptor.getValue().getExitCode());
 		
 		verify(minioRepository, never()).putRunOutputAndReturnObjectName(
 				any(InputStream.class), any(String.class));
@@ -452,15 +491,30 @@ public class DockerRunServiceTest {
 	
 	@Test
 	public void testRunGitJobInvalidMainImage() throws Exception {
-		testRunGitJobInvalidImage("git-invalid-main-image");
+		String errorMessage = testRunGitJobAndReturnErrorMessage("git-invalid-main-image");
+		
+		assertTrue(errorMessage.contains("Pulling main image error"));
+		assertTrue(errorMessage.contains("notexistbox"));
+		
 	}
 	
 	@Test
 	public void testRunGitJobInvalidSidecarImage() throws Exception {
-		testRunGitJobInvalidImage("git-invalid-sidecar-image");
+		String errorMessage = testRunGitJobAndReturnErrorMessage("git-invalid-sidecar-image");
+		
+		assertTrue(errorMessage.contains("Pulling sidecar image error"));
+		assertTrue(errorMessage.contains("notexistbox"));
 	}
 	
-	private void testRunGitJobInvalidImage(String resourceName) throws Exception {
+	@Test
+	public void testRunGitJobInvalidCommand() throws Exception {
+		String errorMessage = testRunGitJobAndReturnErrorMessage("git-invalid-command");
+		
+		assertTrue(errorMessage.contains("Invalid command"));
+		assertTrue(errorMessage.contains("invalidcommand"));
+	}
+	
+	private String testRunGitJobAndReturnErrorMessage(String resourceName) throws Exception {
 
 		RunMessageBean runMessage = getMockRunMessage();
 		GitRunBean run = getMockGitRun();
@@ -477,10 +531,12 @@ public class DockerRunServiceTest {
 		assertTrue(runCaptor.getValue() instanceof GitRunBean);
 		assertNotNull(runCaptor.getValue().getCompleteAt());
 		assertEquals(runCaptor.getValue().getStatus(), RunStatus.FAIL);
-		assertTrue(runCaptor.getValue().getErrorMessage().contains("notexistbox"));
+		assertNull(runCaptor.getValue().getExitCode());
 		
 		verify(minioRepository, never()).putRunOutputAndReturnObjectName(
 				any(InputStream.class), any(String.class));
+		
+		return runCaptor.getValue().getErrorMessage();
 	}
 	
 	private RunMessageBean getMockRunMessage() {

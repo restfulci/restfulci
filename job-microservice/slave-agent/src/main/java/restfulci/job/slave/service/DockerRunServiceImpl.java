@@ -17,6 +17,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.zeroturnaround.zip.ZipUtil;
 
+import com.github.dockerjava.api.exception.BadRequestException;
 import com.github.dockerjava.api.exception.NotFoundException;
 
 import io.minio.errors.MinioException;
@@ -79,15 +80,6 @@ public class DockerRunServiceImpl implements DockerRunService {
 			throw new IOException("Input run with wrong type");
 		}
 		
-		/*
-		 * TODO:
-		 * Handle `com.github.dockerjava.exception.BadRequestException`
-		 * while run the job.
-		 * It should fail the job instead of exception out.
-		 * It is for `cmdnotexist` instead of `bash -c "cmdnotexist"`. The
-		 * later one returns 127 and fail.
-		 */
-		
 		run.setCompleteAt(new Date());
 		runRepository.saveAndFlush(run);
 	}
@@ -124,15 +116,23 @@ public class DockerRunServiceImpl implements DockerRunService {
 			return;
 		}
 		
-		RunCommandDTO runDTO = dockerExec.runCommand(
-				job.getDockerImage(), 
-				mainContainerName,
-				networkName,
-				Arrays.asList(job.getCommand()),
-				getEnvVars(run),
-				new HashMap<RunConfigBean.RunConfigResultBean, File>(),
-				run.getDefaultRunOutputObjectReferral());
-		runDTO.updateRunBean(run);
+		try {
+			RunCommandDTO runDTO = dockerExec.runCommand(
+					job.getDockerImage(), 
+					mainContainerName,
+					networkName,
+					Arrays.asList(job.getCommand()),
+					getEnvVars(run),
+					new HashMap<RunConfigBean.RunConfigResultBean, File>(),
+					run.getDefaultRunOutputObjectReferral());
+			
+			runDTO.updateRunBean(run);
+		}
+		catch (BadRequestException e) {
+			log.info("Freestyle job invalid command: {}", e.getMessage());
+			run.setStatus(RunStatus.FAIL);
+			run.setErrorMessage("Invalid command: \n"+e.getMessage());
+		}
 		
 		/*
 		 * TODO:
@@ -244,10 +244,11 @@ public class DockerRunServiceImpl implements DockerRunService {
 								sidecar.getEnvironment()));
 			}
 			
+			String imageId;
 			if (runConfig.getExecutor().getImage() != null) {
-				
+				imageId = runConfig.getExecutor().getImage();
 				try {
-					dockerExec.pullImage(runConfig.getExecutor().getImage());
+					dockerExec.pullImage(imageId);
 				}
 				catch (NotFoundException e) {
 					log.info("Git job pulling main image error: {}", e.getMessage());
@@ -255,28 +256,27 @@ public class DockerRunServiceImpl implements DockerRunService {
 					run.setErrorMessage("Pulling main image error: \n"+e.getMessage());
 					return;
 				}
-				
+			}
+			else {
+				imageId = dockerExec.buildImageAndGetId(localRepoPath, runConfig);
+			}
+			
+			try {
 				RunCommandDTO runDTO = dockerExec.runCommand(
-						runConfig.getExecutor().getImage(),
+						imageId, 
 						mainContainerName,
 						networkName,
 						runConfig.getCommand(), 
 						getEnvVars(runConfig, run),
 						mounts,
 						run.getDefaultRunOutputObjectReferral());
+				
 				runDTO.updateRunBean(run);
 			}
-			else {
-				String imageId = dockerExec.buildImageAndGetId(localRepoPath, runConfig);
-				RunCommandDTO runDTO = dockerExec.runCommand(
-						imageId, 
-						mainContainerName,
-						networkName,
-						runConfig.getCommand(), 
-						getEnvVars(run),
-						mounts,
-						run.getDefaultRunOutputObjectReferral());
-				runDTO.updateRunBean(run);
+			catch (BadRequestException e) {
+				log.info("Git job invalid command: {}", e.getMessage());
+				run.setStatus(RunStatus.FAIL);
+				run.setErrorMessage("Invalid command: \n"+e.getMessage());
 			}
 		}
 		finally {

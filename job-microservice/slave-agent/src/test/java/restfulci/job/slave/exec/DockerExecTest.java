@@ -283,7 +283,7 @@ public class DockerExecTest {
 					"busybox:1.33",
 					containerName,
 					"bridge",
-					Arrays.asList(new String[]{"invalid"}), 
+					Arrays.asList(new String[]{"invalidcommand"}), 
 					new HashMap<String, String>(),
 					new HashMap<RunConfigBean.RunConfigResultBean, File>(),
 					"mockRunResultObjectReferral");
