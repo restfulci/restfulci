@@ -48,6 +48,7 @@ CREATE TABLE run (
   trigger_at timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   complete_at timestamp,
   exit_code integer,
+  error_message text,
   run_output_object_referral text
 );
 

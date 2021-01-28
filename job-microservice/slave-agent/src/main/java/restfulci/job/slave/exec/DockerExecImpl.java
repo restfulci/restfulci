@@ -31,6 +31,7 @@ import io.minio.errors.MinioException;
 import lombok.extern.slf4j.Slf4j;
 import restfulci.job.shared.dao.MinioRepository;
 import restfulci.job.shared.domain.RunConfigBean;
+import restfulci.job.shared.domain.RunStatus;
 import restfulci.job.slave.dto.RunCommandDTO;
 
 @Slf4j
@@ -242,6 +243,13 @@ public class DockerExecImpl implements DockerExec {
 					.awaitStatusCode();
 			runDTO.setExitCode(exitCode);
 			log.info("Execute command exit code: {}", exitCode);
+			
+			if (exitCode == 0) {
+				runDTO.setStatus(RunStatus.SUCCEED);
+			}
+			else {
+				runDTO.setStatus(RunStatus.FAIL);
+			}
 			
 			LogContainerCallbackWrapper loggingCallback = new LogContainerCallbackWrapper();
 			dockerClient.logContainerCmd(container.getId())

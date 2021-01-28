@@ -152,8 +152,13 @@ public abstract class RunBean extends BaseEntity {
 		}
 	}
 	
+	@JsonInclude(Include.NON_NULL)
 	@Column(name="exit_code", updatable=true)
 	private Integer exitCode;
+	
+	@JsonInclude(Include.NON_NULL)
+	@Column(name="error_message")
+	private String errorMessage;
 	
 	@JsonIgnore
 	@Column(name="run_output_object_referral", updatable=true)

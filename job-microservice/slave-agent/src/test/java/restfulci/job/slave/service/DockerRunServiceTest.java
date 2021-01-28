@@ -1,11 +1,13 @@
 package restfulci.job.slave.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
@@ -71,7 +73,6 @@ public class DockerRunServiceTest {
 		
 		FreestyleJobBean job = new FreestyleJobBean();
 		job.setId(123);
-		job.setName("job");
 		job.setDockerImage("busybox:1.33");
 		job.setCommand(new String[] {"sh", "-c", "echo \"Hello world\""});
 		
@@ -80,7 +81,6 @@ public class DockerRunServiceTest {
 		run.setJob(job);
 		run.setStatus(RunStatus.IN_PROGRESS);
 		run.setTriggerAt(new Date(0L));
-		run.setCompleteAt(new Date(1000L));
 		
 		Optional<RunBean> maybeRun = Optional.of(run);
 		given(runRepository.findById(456)).willReturn(maybeRun);
@@ -90,6 +90,7 @@ public class DockerRunServiceTest {
 		ArgumentCaptor<RunBean> runCaptor = ArgumentCaptor.forClass(RunBean.class);
 		verify(runRepository, times(1)).saveAndFlush(runCaptor.capture());
 		assertTrue(runCaptor.getValue() instanceof FreestyleRunBean);
+		assertNotNull(runCaptor.getValue().getCompleteAt());
 		assertEquals(runCaptor.getValue().getStatus(), RunStatus.SUCCEED);
 //		assertNotNull(runCaptor.getValue().getRunOutputObjectReferral());
 		
@@ -108,7 +109,6 @@ public class DockerRunServiceTest {
 		
 		FreestyleJobBean job = new FreestyleJobBean();
 		job.setId(123);
-		job.setName("job");
 		job.setDockerImage("busybox:1.33");
 		job.setCommand(new String[] {"sh", "-c", "echx \"Hello world\""});
 		
@@ -117,7 +117,6 @@ public class DockerRunServiceTest {
 		run.setJob(job);
 		run.setStatus(RunStatus.IN_PROGRESS);
 		run.setTriggerAt(new Date(0L));
-		run.setCompleteAt(new Date(1000L));
 		
 		Optional<RunBean> maybeRun = Optional.of(run);
 		given(runRepository.findById(456)).willReturn(maybeRun);
@@ -127,6 +126,7 @@ public class DockerRunServiceTest {
 		ArgumentCaptor<RunBean> runCaptor = ArgumentCaptor.forClass(RunBean.class);
 		verify(runRepository, times(1)).saveAndFlush(runCaptor.capture());
 		assertTrue(runCaptor.getValue() instanceof FreestyleRunBean);
+		assertNotNull(runCaptor.getValue().getCompleteAt());
 		assertEquals(runCaptor.getValue().getStatus(), RunStatus.FAIL);
 		
 		ArgumentCaptor<InputStream> inputStreamCaptor = ArgumentCaptor.forClass(InputStream.class);
@@ -146,7 +146,6 @@ public class DockerRunServiceTest {
 		
 		FreestyleJobBean job = new FreestyleJobBean();
 		job.setId(123);
-		job.setName("job");
 		job.setDockerImage("busybox:1.33");
 		job.setCommand(new String[] {"sh", "-c", "echo \"Hello $WORD\""});
 		
@@ -159,7 +158,6 @@ public class DockerRunServiceTest {
 		run.setJob(job);
 		run.setStatus(RunStatus.IN_PROGRESS);
 		run.setTriggerAt(new Date(0L));
-		run.setCompleteAt(new Date(1000L));
 		
 		InputBean input = new InputBean();
 		input.setName("WORD");
@@ -174,6 +172,7 @@ public class DockerRunServiceTest {
 		ArgumentCaptor<RunBean> runCaptor = ArgumentCaptor.forClass(RunBean.class);
 		verify(runRepository, times(1)).saveAndFlush(runCaptor.capture());
 		assertTrue(runCaptor.getValue() instanceof FreestyleRunBean);
+		assertNotNull(runCaptor.getValue().getCompleteAt());
 		assertEquals(runCaptor.getValue().getStatus(), RunStatus.SUCCEED);
 		
 		ArgumentCaptor<InputStream> inputStreamCaptor = ArgumentCaptor.forClass(InputStream.class);
@@ -182,6 +181,40 @@ public class DockerRunServiceTest {
 		assertEquals(
 				IOUtils.toString(inputStreamCaptor.getValue(), StandardCharsets.UTF_8.name()), 
 				"Hello customized input\n");
+	}
+	
+	@Test
+	public void testRunFreestyleJobWithInvalidImage() throws Exception{
+		
+		RunMessageBean runMessage = new RunMessageBean();
+		runMessage.setJobId(123);
+		runMessage.setRunId(456);
+		
+		FreestyleJobBean job = new FreestyleJobBean();
+		job.setId(123);
+		job.setDockerImage("notexistbox:1.2345");
+		job.setCommand(new String[] {"sh", "-c", "echo \"Hello world\""});
+		
+		FreestyleRunBean run = new FreestyleRunBean();
+		run.setId(456);
+		run.setJob(job);
+		run.setStatus(RunStatus.IN_PROGRESS);
+		run.setTriggerAt(new Date(0L));
+		
+		Optional<RunBean> maybeRun = Optional.of(run);
+		given(runRepository.findById(456)).willReturn(maybeRun);
+		
+		service.runByMessage(runMessage);
+		
+		ArgumentCaptor<RunBean> runCaptor = ArgumentCaptor.forClass(RunBean.class);
+		verify(runRepository, times(1)).saveAndFlush(runCaptor.capture());
+		assertTrue(runCaptor.getValue() instanceof FreestyleRunBean);
+		assertNotNull(runCaptor.getValue().getCompleteAt());
+		assertEquals(runCaptor.getValue().getStatus(), RunStatus.FAIL);
+		assertTrue(runCaptor.getValue().getErrorMessage().contains("notexistbox"));
+		
+		verify(minioRepository, never()).putRunOutputAndReturnObjectName(
+				any(InputStream.class), any(String.class));
 	}
 	
 	@Test
@@ -229,6 +262,7 @@ public class DockerRunServiceTest {
 		ArgumentCaptor<RunBean> runCaptor = ArgumentCaptor.forClass(RunBean.class);
 		verify(runRepository, times(1)).saveAndFlush(runCaptor.capture());
 		assertTrue(runCaptor.getValue() instanceof GitRunBean);
+		assertNotNull(runCaptor.getValue().getCompleteAt());
 		assertEquals(runCaptor.getValue().getStatus(), RunStatus.SUCCEED);
 		
 		ArgumentCaptor<InputStream> inputStreamCaptor = ArgumentCaptor.forClass(InputStream.class);
@@ -269,6 +303,7 @@ public class DockerRunServiceTest {
 		ArgumentCaptor<RunBean> runCaptor = ArgumentCaptor.forClass(RunBean.class);
 		verify(runRepository, times(1)).saveAndFlush(runCaptor.capture());
 		assertTrue(runCaptor.getValue() instanceof GitRunBean);
+		assertNotNull(runCaptor.getValue().getCompleteAt());
 		assertEquals(runCaptor.getValue().getStatus(), RunStatus.SUCCEED);
 		
 		ArgumentCaptor<InputStream> inputStreamCaptor = ArgumentCaptor.forClass(InputStream.class);
@@ -313,6 +348,7 @@ public class DockerRunServiceTest {
 		ArgumentCaptor<RunBean> runCaptor = ArgumentCaptor.forClass(RunBean.class);
 		verify(runRepository, times(1)).saveAndFlush(runCaptor.capture());
 		assertTrue(runCaptor.getValue() instanceof GitRunBean);
+		assertNotNull(runCaptor.getValue().getCompleteAt());
 		assertEquals(runCaptor.getValue().getStatus(), RunStatus.SUCCEED);
 		
 		ArgumentCaptor<InputStream> inputStreamCaptor = ArgumentCaptor.forClass(InputStream.class);
@@ -358,6 +394,7 @@ public class DockerRunServiceTest {
 		ArgumentCaptor<RunBean> runCaptor = ArgumentCaptor.forClass(RunBean.class);
 		verify(runRepository, times(1)).saveAndFlush(runCaptor.capture());
 		assertTrue(runCaptor.getValue() instanceof GitRunBean);
+		assertNotNull(runCaptor.getValue().getCompleteAt());
 		assertEquals(runCaptor.getValue().getStatus(), RunStatus.SUCCEED);
 		assertEquals(runCaptor.getValue().getRunResults().size(), 1);
 		RunResultBean runResult = new ArrayList<>(runCaptor.getValue().getRunResults()).get(0);
@@ -392,7 +429,7 @@ public class DockerRunServiceTest {
 	}
 	
 	@Test
-	public void testFailedExecutorWillCleanupContainers() throws Exception {
+	public void testRunGitJobFailedExecutorWillCleanupContainers() throws Exception {
 		
 		final String resourceName = "git-failed";
 		
@@ -409,7 +446,41 @@ public class DockerRunServiceTest {
 		ArgumentCaptor<RunBean> runCaptor = ArgumentCaptor.forClass(RunBean.class);
 		verify(runRepository, times(1)).saveAndFlush(runCaptor.capture());
 		assertTrue(runCaptor.getValue() instanceof GitRunBean);
+		assertNotNull(runCaptor.getValue().getCompleteAt());
 		assertEquals(runCaptor.getValue().getStatus(), RunStatus.FAIL);
+	}
+	
+	@Test
+	public void testRunGitJobInvalidMainImage() throws Exception {
+		testRunGitJobInvalidImage("git-invalid-main-image");
+	}
+	
+	@Test
+	public void testRunGitJobInvalidSidecarImage() throws Exception {
+		testRunGitJobInvalidImage("git-invalid-sidecar-image");
+	}
+	
+	private void testRunGitJobInvalidImage(String resourceName) throws Exception {
+
+		RunMessageBean runMessage = getMockRunMessage();
+		GitRunBean run = getMockGitRun();
+		
+		Optional<RunBean> maybeRun = Optional.of(run);
+		given(runRepository.findById(456)).willReturn(maybeRun);
+		
+		mockGit(resourceName);
+		
+		service.runByMessage(runMessage);
+		
+		ArgumentCaptor<RunBean> runCaptor = ArgumentCaptor.forClass(RunBean.class);
+		verify(runRepository, times(1)).saveAndFlush(runCaptor.capture());
+		assertTrue(runCaptor.getValue() instanceof GitRunBean);
+		assertNotNull(runCaptor.getValue().getCompleteAt());
+		assertEquals(runCaptor.getValue().getStatus(), RunStatus.FAIL);
+		assertTrue(runCaptor.getValue().getErrorMessage().contains("notexistbox"));
+		
+		verify(minioRepository, never()).putRunOutputAndReturnObjectName(
+				any(InputStream.class), any(String.class));
 	}
 	
 	private RunMessageBean getMockRunMessage() {
@@ -434,7 +505,6 @@ public class DockerRunServiceTest {
 		run.setBranchName("master");
 		run.setStatus(RunStatus.IN_PROGRESS);
 		run.setTriggerAt(new Date(0L));
-		run.setCompleteAt(new Date(1000L));
 		
 		return run;
 	}

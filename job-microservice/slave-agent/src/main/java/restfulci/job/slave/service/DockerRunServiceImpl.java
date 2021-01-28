@@ -17,6 +17,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.zeroturnaround.zip.ZipUtil;
 
+import com.github.dockerjava.api.exception.NotFoundException;
+
 import io.minio.errors.MinioException;
 import lombok.extern.slf4j.Slf4j;
 import restfulci.job.shared.dao.MinioRepository;
@@ -77,20 +79,14 @@ public class DockerRunServiceImpl implements DockerRunService {
 			throw new IOException("Input run with wrong type");
 		}
 		
-		if (run.getExitCode().equals(0)) {
-			run.setStatus(RunStatus.SUCCEED);
-		}
-		else {
-			/*
-			 * TODO:
-			 * Handle `com.github.dockerjava.exception.BadRequestException`
-			 * while run the job.
-			 * It should fail the job instead of exception out.
-			 * It is for `cmdnotexist` instead of `bash -c "cmdnotexist"`. The
-			 * later one returns 127 and fail.
-			 */
-			run.setStatus(RunStatus.FAIL);
-		}
+		/*
+		 * TODO:
+		 * Handle `com.github.dockerjava.exception.BadRequestException`
+		 * while run the job.
+		 * It should fail the job instead of exception out.
+		 * It is for `cmdnotexist` instead of `bash -c "cmdnotexist"`. The
+		 * later one returns 127 and fail.
+		 */
 		
 		run.setCompleteAt(new Date());
 		runRepository.saveAndFlush(run);
@@ -118,7 +114,16 @@ public class DockerRunServiceImpl implements DockerRunService {
 		
 		FreestyleJobBean job = run.getJob();
 		
-		dockerExec.pullImage(job.getDockerImage());
+		try {
+			dockerExec.pullImage(job.getDockerImage());
+		}
+		catch (NotFoundException e) {
+			log.info("Freestyle job pulling image error: {}", e.getMessage());
+			run.setStatus(RunStatus.FAIL);
+			run.setErrorMessage("Pulling image error: \n"+e.getMessage());
+			return;
+		}
+		
 		RunCommandDTO runDTO = dockerExec.runCommand(
 				job.getDockerImage(), 
 				mainContainerName,
@@ -219,7 +224,17 @@ public class DockerRunServiceImpl implements DockerRunService {
 		List<String> sidecarIds = new ArrayList<String>();	
 		try {
 			for (RunConfigBean.RunConfigSidecarBean sidecar : runConfig.getSidecars()) {
-				dockerExec.pullImage(sidecar.getImage());
+				
+				try {
+					dockerExec.pullImage(sidecar.getImage());
+				}
+				catch (NotFoundException e) {
+					log.info("Git job pulling sidecar image error: {}", e.getMessage());
+					run.setStatus(RunStatus.FAIL);
+					run.setErrorMessage("Pulling sidecar image error: \n"+e.getMessage());
+					return;
+				}
+				
 				sidecarIds.add(
 						dockerExec.createSidecar(
 								sidecar.getImage(), 
@@ -230,7 +245,17 @@ public class DockerRunServiceImpl implements DockerRunService {
 			}
 			
 			if (runConfig.getExecutor().getImage() != null) {
-				dockerExec.pullImage(runConfig.getExecutor().getImage());
+				
+				try {
+					dockerExec.pullImage(runConfig.getExecutor().getImage());
+				}
+				catch (NotFoundException e) {
+					log.info("Git job pulling main image error: {}", e.getMessage());
+					run.setStatus(RunStatus.FAIL);
+					run.setErrorMessage("Pulling main image error: \n"+e.getMessage());
+					return;
+				}
+				
 				RunCommandDTO runDTO = dockerExec.runCommand(
 						runConfig.getExecutor().getImage(),
 						mainContainerName,

@@ -31,6 +31,7 @@ import com.github.dockerjava.api.model.Network;
 import restfulci.job.shared.dao.MinioRepository;
 import restfulci.job.shared.dao.RunRepository;
 import restfulci.job.shared.domain.RunConfigBean;
+import restfulci.job.shared.domain.RunStatus;
 import restfulci.job.slave.dto.RunCommandDTO;
 
 @ExtendWith(SpringExtension.class)
@@ -64,6 +65,10 @@ public class DockerExecTest {
 	public void testPullInvalidImage() throws Exception {
 		assertThrows(NotFoundException.class, () -> {
 			exec.pullImage("notexistbox:1.2345");
+		});
+		
+		assertThrows(NotFoundException.class, () -> {
+			exec.pullImage("busybox:1234.5");
 		});
 	}
 	
@@ -154,6 +159,7 @@ public class DockerExecTest {
 		 * Cannot assert this, as the set logic is in `minioRepository`
 		 * which is mocked here.
 		 */
+		assertEquals(runDTO.getStatus(), RunStatus.SUCCEED);
 		assertEquals(runDTO.getExitCode(), 0);
 //		assertNotNull(runDTO.getRunOutputObjectReferral());
 		
@@ -212,6 +218,7 @@ public class DockerExecTest {
 				"mockRunResultObjectReferral");
 		
 		assertEquals(runDTO.getExitCode(), 0);
+		assertEquals(runDTO.getStatus(), RunStatus.SUCCEED);
 //		assertNotNull(run.getRunOutputObjectReferral());
 		
 		ArgumentCaptor<InputStream> inputStreamCaptor = ArgumentCaptor.forClass(InputStream.class);
@@ -239,6 +246,7 @@ public class DockerExecTest {
 				"mockRunResultObjectReferral");
 		
 		assertEquals(runDTO.getExitCode(), 1);
+		assertEquals(runDTO.getStatus(), RunStatus.FAIL);
 	}
 	
 	@Test
@@ -255,6 +263,7 @@ public class DockerExecTest {
 				"mockRunResultObjectReferral");
 		
 		assertEquals(runDTO.getExitCode(), 127);
+		assertEquals(runDTO.getStatus(), RunStatus.FAIL);
 		
 		ArgumentCaptor<InputStream> inputStreamCaptor = ArgumentCaptor.forClass(InputStream.class);
 		verify(minioRepository, times(1)).putRunOutputAndReturnObjectName(
