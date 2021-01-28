@@ -88,19 +88,10 @@ public class DockerRunServiceTest {
 		
 		service.runByMessage(runMessage);
 		
-		ArgumentCaptor<RunBean> runCaptor = ArgumentCaptor.forClass(RunBean.class);
-		verify(runRepository, times(1)).saveAndFlush(runCaptor.capture());
-		assertTrue(runCaptor.getValue() instanceof FreestyleRunBean);
-		assertNotNull(runCaptor.getValue().getCompleteAt());
-		assertEquals(runCaptor.getValue().getStatus(), RunStatus.SUCCEED);
-//		assertNotNull(runCaptor.getValue().getRunOutputObjectReferral());
+		validateAndReturnSuccessfulFreestyleRun();
 		
-		ArgumentCaptor<InputStream> inputStreamCaptor = ArgumentCaptor.forClass(InputStream.class);
-		verify(minioRepository, times(1)).putRunOutputAndReturnObjectName(
-				inputStreamCaptor.capture(), eq(run.getDefaultRunOutputObjectReferral()));
-		assertEquals(
-				IOUtils.toString(inputStreamCaptor.getValue(), StandardCharsets.UTF_8.name()), 
-				"Hello world\n");
+		String consoleOutput = validateAndReturnConsoleOutput(run);
+		assertEquals(consoleOutput, "Hello world\n");
 	}
 	
 	@Test
@@ -124,18 +115,10 @@ public class DockerRunServiceTest {
 		
 		service.runByMessage(runMessage);
 		
-		ArgumentCaptor<RunBean> runCaptor = ArgumentCaptor.forClass(RunBean.class);
-		verify(runRepository, times(1)).saveAndFlush(runCaptor.capture());
-		assertTrue(runCaptor.getValue() instanceof FreestyleRunBean);
-		assertNotNull(runCaptor.getValue().getCompleteAt());
-		assertEquals(runCaptor.getValue().getStatus(), RunStatus.FAIL);
+		validateAndReturnFailedFreestyleRun();
 		
-		ArgumentCaptor<InputStream> inputStreamCaptor = ArgumentCaptor.forClass(InputStream.class);
-		verify(minioRepository, times(1)).putRunOutputAndReturnObjectName(
-				inputStreamCaptor.capture(), eq(run.getDefaultRunOutputObjectReferral()));
-		assertEquals(
-				IOUtils.toString(inputStreamCaptor.getValue(), StandardCharsets.UTF_8.name()), 
-				"sh: echx: not found\n");
+		String consoleOutput = validateAndReturnConsoleOutput(run);
+		assertEquals(consoleOutput, "sh: echx: not found\n");
 	}
 	
 	@Test
@@ -170,18 +153,10 @@ public class DockerRunServiceTest {
 		
 		service.runByMessage(runMessage);
 		
-		ArgumentCaptor<RunBean> runCaptor = ArgumentCaptor.forClass(RunBean.class);
-		verify(runRepository, times(1)).saveAndFlush(runCaptor.capture());
-		assertTrue(runCaptor.getValue() instanceof FreestyleRunBean);
-		assertNotNull(runCaptor.getValue().getCompleteAt());
-		assertEquals(runCaptor.getValue().getStatus(), RunStatus.SUCCEED);
+		validateAndReturnSuccessfulFreestyleRun();
 		
-		ArgumentCaptor<InputStream> inputStreamCaptor = ArgumentCaptor.forClass(InputStream.class);
-		verify(minioRepository, times(1)).putRunOutputAndReturnObjectName(
-				inputStreamCaptor.capture(), eq(run.getDefaultRunOutputObjectReferral()));
-		assertEquals(
-				IOUtils.toString(inputStreamCaptor.getValue(), StandardCharsets.UTF_8.name()), 
-				"Hello customized input\n");
+		String consoleOutput = validateAndReturnConsoleOutput(run);
+		assertEquals(consoleOutput, "Hello customized input\n");
 	}
 	
 	@Test
@@ -207,14 +182,10 @@ public class DockerRunServiceTest {
 		
 		service.runByMessage(runMessage);
 		
-		ArgumentCaptor<RunBean> runCaptor = ArgumentCaptor.forClass(RunBean.class);
-		verify(runRepository, times(1)).saveAndFlush(runCaptor.capture());
-		assertTrue(runCaptor.getValue() instanceof FreestyleRunBean);
-		assertNotNull(runCaptor.getValue().getCompleteAt());
-		assertEquals(runCaptor.getValue().getStatus(), RunStatus.FAIL);
-		assertTrue(runCaptor.getValue().getErrorMessage().contains("Pulling image error"));
-		assertTrue(runCaptor.getValue().getErrorMessage().contains("notexistbox"));
-		assertNull(runCaptor.getValue().getExitCode());
+		RunBean capturedRun = validateAndReturnFailedFreestyleRun();
+		assertTrue(capturedRun.getErrorMessage().contains("Pulling image error"));
+		assertTrue(capturedRun.getErrorMessage().contains("notexistbox"));
+		assertNull(capturedRun.getExitCode());
 		
 		verify(minioRepository, never()).putRunOutputAndReturnObjectName(
 				any(InputStream.class), any(String.class));
@@ -243,17 +214,32 @@ public class DockerRunServiceTest {
 		
 		service.runByMessage(runMessage);
 		
+		RunBean capturedRun = validateAndReturnFailedFreestyleRun();
+		assertTrue(capturedRun.getErrorMessage().contains("Invalid command"));
+		assertTrue(capturedRun.getErrorMessage().contains("invalidcommand"));
+		assertNull(capturedRun.getExitCode());
+		
+		verify(minioRepository, never()).putRunOutputAndReturnObjectName(
+				any(InputStream.class), any(String.class));
+	}
+	
+	private RunBean validateAndReturnSuccessfulFreestyleRun() {
+		ArgumentCaptor<RunBean> runCaptor = ArgumentCaptor.forClass(RunBean.class);
+		verify(runRepository, times(1)).saveAndFlush(runCaptor.capture());
+		assertTrue(runCaptor.getValue() instanceof FreestyleRunBean);
+		assertNotNull(runCaptor.getValue().getCompleteAt());
+		assertEquals(runCaptor.getValue().getStatus(), RunStatus.SUCCEED);
+//		assertNotNull(runCaptor.getValue().getRunOutputObjectReferral());
+		return runCaptor.getValue();
+	}
+	
+	private RunBean validateAndReturnFailedFreestyleRun() {
 		ArgumentCaptor<RunBean> runCaptor = ArgumentCaptor.forClass(RunBean.class);
 		verify(runRepository, times(1)).saveAndFlush(runCaptor.capture());
 		assertTrue(runCaptor.getValue() instanceof FreestyleRunBean);
 		assertNotNull(runCaptor.getValue().getCompleteAt());
 		assertEquals(runCaptor.getValue().getStatus(), RunStatus.FAIL);
-		assertTrue(runCaptor.getValue().getErrorMessage().contains("Invalid command"));
-		assertTrue(runCaptor.getValue().getErrorMessage().contains("invalidcommand"));
-		assertNull(runCaptor.getValue().getExitCode());
-		
-		verify(minioRepository, never()).putRunOutputAndReturnObjectName(
-				any(InputStream.class), any(String.class));
+		return runCaptor.getValue();
 	}
 	
 	@Test
@@ -298,27 +284,12 @@ public class DockerRunServiceTest {
 		
 		service.runByMessage(runMessage);
 		
-		ArgumentCaptor<RunBean> runCaptor = ArgumentCaptor.forClass(RunBean.class);
-		verify(runRepository, times(1)).saveAndFlush(runCaptor.capture());
-		assertTrue(runCaptor.getValue() instanceof GitRunBean);
-		assertNotNull(runCaptor.getValue().getCompleteAt());
-		assertEquals(runCaptor.getValue().getStatus(), RunStatus.SUCCEED);
+		validateAndReturnSuccessfulGitRun();
 		
-		ArgumentCaptor<InputStream> runConfigurationStreamCaptor = ArgumentCaptor.forClass(InputStream.class);
-		verify(minioRepository, times(1)).putRunConfigurationAndReturnObjectName(
-				runConfigurationStreamCaptor.capture(), eq(run.getDefaultRunConfigurationObjectReferral()));
-		assertEquals(
-				IOUtils.toString(runConfigurationStreamCaptor.getValue(), StandardCharsets.UTF_8.name()),
-				FileUtils.readFileToString(
-						new File(getClass().getClassLoader().getResource("docker-run-service-test/"+resourceName+"/restfulci.yml").getFile()), 
-						StandardCharsets.UTF_8));
+		validateRunConfiguration(run, resourceName);
 		
-		ArgumentCaptor<InputStream> consoleOutputStreamCaptor = ArgumentCaptor.forClass(InputStream.class);
-		verify(minioRepository, times(1)).putRunOutputAndReturnObjectName(
-				consoleOutputStreamCaptor.capture(), eq(run.getDefaultRunOutputObjectReferral()));
-		assertEquals(
-				IOUtils.toString(consoleOutputStreamCaptor.getValue(), StandardCharsets.UTF_8.name()), 
-				"Hello world\n");
+		String consoleOutput = validateAndReturnConsoleOutput(run);
+		assertEquals(consoleOutput, "Hello world\n");
 	}
 	
 	@Test
@@ -341,27 +312,12 @@ public class DockerRunServiceTest {
 		
 		service.runByMessage(runMessage);
 		
-		ArgumentCaptor<RunBean> runCaptor = ArgumentCaptor.forClass(RunBean.class);
-		verify(runRepository, times(1)).saveAndFlush(runCaptor.capture());
-		assertTrue(runCaptor.getValue() instanceof GitRunBean);
-		assertNotNull(runCaptor.getValue().getCompleteAt());
-		assertEquals(runCaptor.getValue().getStatus(), RunStatus.SUCCEED);
+		validateAndReturnSuccessfulGitRun();
 		
-		ArgumentCaptor<InputStream> runConfigurationStreamCaptor = ArgumentCaptor.forClass(InputStream.class);
-		verify(minioRepository, times(1)).putRunConfigurationAndReturnObjectName(
-				runConfigurationStreamCaptor.capture(), eq(run.getDefaultRunConfigurationObjectReferral()));
-		assertEquals(
-				IOUtils.toString(runConfigurationStreamCaptor.getValue(), StandardCharsets.UTF_8.name()),
-				FileUtils.readFileToString(
-						new File(getClass().getClassLoader().getResource("docker-run-service-test/"+resourceName+"/restfulci.yml").getFile()), 
-						StandardCharsets.UTF_8));
+		validateRunConfiguration(run, resourceName);
 		
-		ArgumentCaptor<InputStream> consoleOutputStreamCaptor = ArgumentCaptor.forClass(InputStream.class);
-		verify(minioRepository, times(1)).putRunOutputAndReturnObjectName(
-				consoleOutputStreamCaptor.capture(), eq(run.getDefaultRunOutputObjectReferral()));
-		assertEquals(
-				IOUtils.toString(consoleOutputStreamCaptor.getValue(), StandardCharsets.UTF_8.name()), 
-				"Hello customized input\n");
+		String consoleOutput = validateAndReturnConsoleOutput(run);
+		assertEquals(consoleOutput, "Hello customized input\n");
 	}
 	
 	@Test
@@ -388,26 +344,11 @@ public class DockerRunServiceTest {
 		
 		service.runByMessage(runMessage);
 		
-		ArgumentCaptor<RunBean> runCaptor = ArgumentCaptor.forClass(RunBean.class);
-		verify(runRepository, times(1)).saveAndFlush(runCaptor.capture());
-		assertTrue(runCaptor.getValue() instanceof GitRunBean);
-		assertNotNull(runCaptor.getValue().getCompleteAt());
-		assertEquals(runCaptor.getValue().getStatus(), RunStatus.SUCCEED);
+		validateAndReturnSuccessfulGitRun();
 		
-		ArgumentCaptor<InputStream> runConfigurationStreamCaptor = ArgumentCaptor.forClass(InputStream.class);
-		verify(minioRepository, times(1)).putRunConfigurationAndReturnObjectName(
-				runConfigurationStreamCaptor.capture(), eq(run.getDefaultRunConfigurationObjectReferral()));
-		assertEquals(
-				IOUtils.toString(runConfigurationStreamCaptor.getValue(), StandardCharsets.UTF_8.name()),
-				FileUtils.readFileToString(
-						new File(getClass().getClassLoader().getResource("docker-run-service-test/"+resourceName+"/restfulci.yml").getFile()), 
-						StandardCharsets.UTF_8));
+		validateRunConfiguration(run, resourceName);
 		
-		ArgumentCaptor<InputStream> consoleOutputStreamCaptor = ArgumentCaptor.forClass(InputStream.class);
-		verify(minioRepository, times(1)).putRunOutputAndReturnObjectName(
-				consoleOutputStreamCaptor.capture(), eq(run.getDefaultRunOutputObjectReferral()));
-		String consoleOutput = IOUtils.toString(
-				consoleOutputStreamCaptor.getValue(), StandardCharsets.UTF_8.name());
+		String consoleOutput = validateAndReturnConsoleOutput(run);
 		assertTrue(consoleOutput.contains("PING lazybox"));
 		assertTrue(consoleOutput.contains("lazybox ping statistics"));
 		assertTrue(consoleOutput.contains("packets transmitted"));
@@ -436,31 +377,16 @@ public class DockerRunServiceTest {
 		
 		service.runByMessage(runMessage);
 		
-		ArgumentCaptor<RunBean> runCaptor = ArgumentCaptor.forClass(RunBean.class);
-		verify(runRepository, times(1)).saveAndFlush(runCaptor.capture());
-		assertTrue(runCaptor.getValue() instanceof GitRunBean);
-		assertNotNull(runCaptor.getValue().getCompleteAt());
-		assertEquals(runCaptor.getValue().getStatus(), RunStatus.SUCCEED);
-		assertEquals(runCaptor.getValue().getRunResults().size(), 1);
-		RunResultBean runResult = new ArrayList<>(runCaptor.getValue().getRunResults()).get(0);
+		RunBean capturedRun = validateAndReturnSuccessfulGitRun();
+		assertEquals(capturedRun.getRunResults().size(), 1);
+		RunResultBean runResult = new ArrayList<>(capturedRun.getRunResults()).get(0);
 		assertEquals(runResult.getType(), "plain-text");
 		assertEquals(runResult.getContainerPath(), "/result");
 	
-		ArgumentCaptor<InputStream> runConfigurationStreamCaptor = ArgumentCaptor.forClass(InputStream.class);
-		verify(minioRepository, times(1)).putRunConfigurationAndReturnObjectName(
-				runConfigurationStreamCaptor.capture(), eq(run.getDefaultRunConfigurationObjectReferral()));
-		assertEquals(
-				IOUtils.toString(runConfigurationStreamCaptor.getValue(), StandardCharsets.UTF_8.name()),
-				FileUtils.readFileToString(
-						new File(getClass().getClassLoader().getResource("docker-run-service-test/"+resourceName+"/restfulci.yml").getFile()), 
-						StandardCharsets.UTF_8));
+		validateRunConfiguration(run, resourceName);
 		
-		ArgumentCaptor<InputStream> consoleOutputStreamCaptor = ArgumentCaptor.forClass(InputStream.class);
-		verify(minioRepository, times(1)).putRunOutputAndReturnObjectName(
-				consoleOutputStreamCaptor.capture(), eq(run.getDefaultRunOutputObjectReferral()));
-		assertEquals(
-				IOUtils.toString(consoleOutputStreamCaptor.getValue(), StandardCharsets.UTF_8.name()), 
-				"this.txt\n");
+		String consoleOutput = validateAndReturnConsoleOutput(run);
+		assertEquals(consoleOutput, "this.txt\n");
 		
 		ArgumentCaptor<InputStream> runResultStreamCaptor = ArgumentCaptor.forClass(InputStream.class);
 		verify(minioRepository, times(1)).putRunResultAndReturnObjectName(
@@ -489,11 +415,8 @@ public class DockerRunServiceTest {
 		
 		service.runByMessage(runMessage);
 		
-		ArgumentCaptor<RunBean> runCaptor = ArgumentCaptor.forClass(RunBean.class);
-		verify(runRepository, times(1)).saveAndFlush(runCaptor.capture());
-		assertTrue(runCaptor.getValue() instanceof GitRunBean);
-		assertNotNull(runCaptor.getValue().getCompleteAt());
-		assertEquals(runCaptor.getValue().getStatus(), RunStatus.FAIL);
+		RunBean capturedRun = validateAndReturnFailedGitRun();
+		assertEquals(capturedRun.getExitCode(), 1);
 	}
 	
 	@Test
@@ -559,17 +482,13 @@ public class DockerRunServiceTest {
 		
 		service.runByMessage(runMessage);
 		
-		ArgumentCaptor<RunBean> runCaptor = ArgumentCaptor.forClass(RunBean.class);
-		verify(runRepository, times(1)).saveAndFlush(runCaptor.capture());
-		assertTrue(runCaptor.getValue() instanceof GitRunBean);
-		assertNotNull(runCaptor.getValue().getCompleteAt());
-		assertEquals(runCaptor.getValue().getStatus(), RunStatus.FAIL);
-		assertNull(runCaptor.getValue().getExitCode());
+		RunBean capturedRun = validateAndReturnFailedGitRun();
+		assertNull(capturedRun.getExitCode());
 		
 		verify(minioRepository, never()).putRunOutputAndReturnObjectName(
 				any(InputStream.class), any(String.class));
 		
-		return runCaptor.getValue().getErrorMessage();
+		return capturedRun.getErrorMessage();
 	}
 	
 	private RunMessageBean getMockRunMessage() {
@@ -612,5 +531,41 @@ public class DockerRunServiceTest {
 				return null;
 			}
 		 }).when(remoteGitRepository).copyToLocal(any(GitRunBean.class), any(Path.class));
+	}
+	
+	private RunBean validateAndReturnSuccessfulGitRun() {
+		ArgumentCaptor<RunBean> runCaptor = ArgumentCaptor.forClass(RunBean.class);
+		verify(runRepository, times(1)).saveAndFlush(runCaptor.capture());
+		assertTrue(runCaptor.getValue() instanceof GitRunBean);
+		assertNotNull(runCaptor.getValue().getCompleteAt());
+		assertEquals(runCaptor.getValue().getStatus(), RunStatus.SUCCEED);
+		return runCaptor.getValue();
+	}
+	
+	private RunBean validateAndReturnFailedGitRun() {
+		ArgumentCaptor<RunBean> runCaptor = ArgumentCaptor.forClass(RunBean.class);
+		verify(runRepository, times(1)).saveAndFlush(runCaptor.capture());
+		assertTrue(runCaptor.getValue() instanceof GitRunBean);
+		assertNotNull(runCaptor.getValue().getCompleteAt());
+		assertEquals(runCaptor.getValue().getStatus(), RunStatus.FAIL);
+		return runCaptor.getValue();
+	}
+	
+	private void validateRunConfiguration(GitRunBean run, String resourceName) throws Exception {
+		ArgumentCaptor<InputStream> runConfigurationStreamCaptor = ArgumentCaptor.forClass(InputStream.class);
+		verify(minioRepository, times(1)).putRunConfigurationAndReturnObjectName(
+				runConfigurationStreamCaptor.capture(), eq(run.getDefaultRunConfigurationObjectReferral()));
+		assertEquals(
+				IOUtils.toString(runConfigurationStreamCaptor.getValue(), StandardCharsets.UTF_8.name()),
+				FileUtils.readFileToString(
+						new File(getClass().getClassLoader().getResource("docker-run-service-test/"+resourceName+"/restfulci.yml").getFile()), 
+						StandardCharsets.UTF_8));
+	}
+	
+	private String validateAndReturnConsoleOutput(RunBean run) throws Exception {
+		ArgumentCaptor<InputStream> consoleOutputStreamCaptor = ArgumentCaptor.forClass(InputStream.class);
+		verify(minioRepository, times(1)).putRunOutputAndReturnObjectName(
+				consoleOutputStreamCaptor.capture(), eq(run.getDefaultRunOutputObjectReferral()));
+		return IOUtils.toString(consoleOutputStreamCaptor.getValue(), StandardCharsets.UTF_8.name());
 	}
 }
