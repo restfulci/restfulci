@@ -1,5 +1,13 @@
 # Contributing
 
+## Architecture
+
+### Components
+
+![Components](components.png)
+
+([View in LucidChart](https://lucid.app/lucidchart/invitations/accept/cfa80c68-9da6-412b-8d77-1e36d3d5fd47))
+
 ## Local development environments
 
 ### `dev`
