@@ -2,6 +2,8 @@ package restfulci.job.shared.dao;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.File;
 import java.io.IOException;
@@ -9,6 +11,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 
 import org.junit.jupiter.api.Test;
+import org.yaml.snakeyaml.error.YAMLException;
 
 import restfulci.job.shared.dao.RunConfigYamlParser;
 import restfulci.job.shared.domain.RunConfigBean;
@@ -116,5 +119,18 @@ public class RunConfigYamlParserTest {
 		assertEquals(runConfig.getCommand().get(1), "-c");
 		assertEquals(runConfig.getCommand().get(2), "\"ping -c 2 lazybox\"");
 		assertEquals(runConfig.getResults().size(), 0);
+	}
+	
+	@Test
+	public void testParseInvalidYamlConfig() throws IOException {
+		
+		File exampleYamlFile = new File(getClass().getClassLoader().getResource("restfulci-invalid.yml").getFile());
+		String yamlContent = String.join("\n", Files.readAllLines(exampleYamlFile.toPath()));
+		
+		YAMLException thrown = assertThrows(YAMLException.class, () -> {
+			RunConfigYamlParser.parse(yamlContent);
+		});
+		
+		assertTrue(thrown.getMessage().contains("vvvvvversion"));
 	}
 }

@@ -172,6 +172,8 @@ class TestGitJob(AuthTestSuite):
             sleep(1)
         self.assertEqual(response_body["status"], "SUCCEED")
         self.assertEqual(response_body["exitCode"], 0)
+        self.assertFalse("errorMessage" in response_body)
+        self.assertIsNotNone(response_body["completeAt"])
         if validate_results:
             run_results = response_body["runResults"]
 

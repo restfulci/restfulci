@@ -1,0 +1,9 @@
+version: 1.0
+
+executor:
+  image: notexistbox:1.2345
+
+command:
+  - sh
+  - -c
+  - "echo \"Hello world\""

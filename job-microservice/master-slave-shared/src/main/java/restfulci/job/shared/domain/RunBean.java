@@ -152,12 +152,28 @@ public abstract class RunBean extends BaseEntity {
 		}
 	}
 	
+	@JsonInclude(Include.NON_NULL)
 	@Column(name="exit_code", updatable=true)
 	private Integer exitCode;
+	
+	@JsonInclude(Include.NON_NULL)
+	@Column(name="error_message")
+	private String errorMessage;
 	
 	@JsonIgnore
 	@Column(name="run_output_object_referral", updatable=true)
 	private String runOutputObjectReferral;
+	
+	@JsonIgnore
+	public String getDefaultRunOutputObjectReferral() {
+		if (runOutputObjectReferral != null) {
+			return runOutputObjectReferral;
+		}
+		if (id != null) {
+			return id.toString();
+		}
+		return null;
+	}
 	
 	@OneToMany(targetEntity=RunResultBean.class, fetch=FetchType.EAGER, cascade=CascadeType.ALL, mappedBy="run")
 	private Set<RunResultBean> runResults = new HashSet<RunResultBean>();

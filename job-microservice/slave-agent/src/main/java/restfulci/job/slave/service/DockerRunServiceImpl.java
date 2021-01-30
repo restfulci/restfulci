@@ -15,7 +15,11 @@ import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.yaml.snakeyaml.error.YAMLException;
 import org.zeroturnaround.zip.ZipUtil;
+
+import com.github.dockerjava.api.exception.BadRequestException;
+import com.github.dockerjava.api.exception.NotFoundException;
 
 import io.minio.errors.MinioException;
 import lombok.extern.slf4j.Slf4j;
@@ -29,8 +33,9 @@ import restfulci.job.shared.domain.InputBean;
 import restfulci.job.shared.domain.RunBean;
 import restfulci.job.shared.domain.RunConfigBean;
 import restfulci.job.shared.domain.RunMessageBean;
-import restfulci.job.shared.domain.RunStatus;
 import restfulci.job.shared.domain.RunResultBean;
+import restfulci.job.shared.domain.RunStatus;
+import restfulci.job.slave.dto.RunCommandDTO;
 import restfulci.job.slave.exec.DockerExec;
 
 @Slf4j
@@ -76,21 +81,6 @@ public class DockerRunServiceImpl implements DockerRunService {
 			throw new IOException("Input run with wrong type");
 		}
 		
-		if (run.getExitCode().equals(0)) {
-			run.setStatus(RunStatus.SUCCEED);
-		}
-		else {
-			/*
-			 * TODO:
-			 * Handle `com.github.dockerjava.exception.BadRequestException`
-			 * while run the job.
-			 * It should fail the job instead of exception out.
-			 * It is for `cmdnotexist` instead of `bash -c "cmdnotexist"`. The
-			 * later one returns 127 and fail.
-			 */
-			run.setStatus(RunStatus.FAIL);
-		}
-		
 		run.setCompleteAt(new Date());
 		runRepository.saveAndFlush(run);
 	}
@@ -117,15 +107,33 @@ public class DockerRunServiceImpl implements DockerRunService {
 		
 		FreestyleJobBean job = run.getJob();
 		
-		dockerExec.pullImage(job.getDockerImage());
-		dockerExec.runCommandAndUpdateRunBean(
-				run, 
-				job.getDockerImage(), 
-				mainContainerName,
-				networkName,
-				Arrays.asList(job.getCommand()),
-				getEnvVars(run),
-				new HashMap<RunConfigBean.RunConfigResultBean, File>());
+		try {
+			dockerExec.pullImage(job.getDockerImage());
+		}
+		catch (NotFoundException e) {
+			log.info("Freestyle job pulling image error: {}", e.getMessage());
+			run.setStatus(RunStatus.FAIL);
+			run.setErrorMessage("Pulling image error: \n"+e.getMessage());
+			return;
+		}
+		
+		try {
+			RunCommandDTO runDTO = dockerExec.runCommand(
+					job.getDockerImage(), 
+					mainContainerName,
+					networkName,
+					Arrays.asList(job.getCommand()),
+					getEnvVars(run),
+					new HashMap<RunConfigBean.RunConfigResultBean, File>(),
+					run.getDefaultRunOutputObjectReferral());
+			
+			runDTO.updateRunBean(run);
+		}
+		catch (BadRequestException e) {
+			log.info("Freestyle job invalid command: {}", e.getMessage());
+			run.setStatus(RunStatus.FAIL);
+			run.setErrorMessage("Invalid command: \n"+e.getMessage());
+		}
 		
 		/*
 		 * TODO:
@@ -145,19 +153,50 @@ public class DockerRunServiceImpl implements DockerRunService {
 		 * (6) Clean up the temporary local folder (TODO).
 		 */
 		Path localRepoPath = Files.createTempDirectory("local-repo");
-		remoteGitRepository.copyToLocal(run, localRepoPath);
+		
+		try {
+			remoteGitRepository.copyToLocal(run, localRepoPath);
+		}
+		catch (IOException e) {
+			log.info("Git clone fails: {}", e.getMessage());
+			run.setStatus(RunStatus.FAIL);
+			run.setErrorMessage("Git clone fails: \n"+e.getMessage());
+			return;
+			/*
+			 * TODO:
+			 * Should we define error code, error short name, and
+			 * then pass in error message?
+			 */
+		}
+		
+		RunConfigBean runConfig;
+		try {
+			runConfig = remoteGitRepository.getConfigFromFilepath(run, localRepoPath);
+		}
+		catch (IOException e) {
+			log.info("Git job error getting config file: {}", e.getMessage());
+			run.setStatus(RunStatus.FAIL);
+			run.setErrorMessage("Error getting config file: \n"+e.getMessage());
+			return;
+		}
+		catch (YAMLException e) {
+			log.info("Git job config YAML parsing error: {}", e.getMessage());
+			run.setStatus(RunStatus.FAIL);
+			run.setErrorMessage("Config YAML parsing error: \n"+e.getMessage());
+			return;
+		}
 		
 		try {
 			log.info("Save configuration file");
 			Path configFilepath = remoteGitRepository.getConfigFilepath(run, localRepoPath);
-			minioRepository.putRunConfigurationAndUpdateRunBean(run, new FileInputStream(configFilepath.toFile()));
+			String runConfigurationObjectReferral = minioRepository.putRunConfigurationAndReturnObjectName(
+					new FileInputStream(configFilepath.toFile()), run.getDefaultRunConfigurationObjectReferral());
+			run.setRunConfigurationObjectReferral(runConfigurationObjectReferral);
 		} 
 		catch (MinioException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		
-		RunConfigBean runConfig = remoteGitRepository.getConfigFromFilepath(run, localRepoPath);
 		
 		/*
 		 * For Docker desktop on Mac, need to edit `Library/Group\ Containers/group.com.docker/settings.json`
@@ -215,7 +254,17 @@ public class DockerRunServiceImpl implements DockerRunService {
 		List<String> sidecarIds = new ArrayList<String>();	
 		try {
 			for (RunConfigBean.RunConfigSidecarBean sidecar : runConfig.getSidecars()) {
-				dockerExec.pullImage(sidecar.getImage());
+				
+				try {
+					dockerExec.pullImage(sidecar.getImage());
+				}
+				catch (NotFoundException e) {
+					log.info("Git job pulling sidecar image error: {}", e.getMessage());
+					run.setStatus(RunStatus.FAIL);
+					run.setErrorMessage("Pulling sidecar image error: \n"+e.getMessage());
+					return;
+				}
+				
 				sidecarIds.add(
 						dockerExec.createSidecar(
 								sidecar.getImage(), 
@@ -225,27 +274,47 @@ public class DockerRunServiceImpl implements DockerRunService {
 								sidecar.getEnvironment()));
 			}
 			
+			String imageId;
 			if (runConfig.getExecutor().getImage() != null) {
-				dockerExec.pullImage(runConfig.getExecutor().getImage());
-				dockerExec.runCommandAndUpdateRunBean(
-						run, 
-						runConfig.getExecutor().getImage(),
-						mainContainerName,
-						networkName,
-						runConfig.getCommand(), 
-						getEnvVars(runConfig, run),
-						mounts);
+				imageId = runConfig.getExecutor().getImage();
+				try {
+					dockerExec.pullImage(imageId);
+				}
+				catch (NotFoundException e) {
+					log.info("Git job pulling main image error: {}", e.getMessage());
+					run.setStatus(RunStatus.FAIL);
+					run.setErrorMessage("Pulling main image error: \n"+e.getMessage());
+					return;
+				}
 			}
 			else {
-				String imageId = dockerExec.buildImageAndGetId(localRepoPath, runConfig);
-				dockerExec.runCommandAndUpdateRunBean(
-						run, 
+				try {
+					imageId = dockerExec.buildImageAndGetId(localRepoPath, runConfig);
+				}
+				catch (BadRequestException | IllegalArgumentException e) {
+					log.info("Git job docker build error: {}", e.getMessage());
+					run.setStatus(RunStatus.FAIL);
+					run.setErrorMessage("Docker build error: \n"+e.getMessage());
+					return;
+				}
+			}
+			
+			try {
+				RunCommandDTO runDTO = dockerExec.runCommand(
 						imageId, 
 						mainContainerName,
 						networkName,
 						runConfig.getCommand(), 
-						getEnvVars(run),
-						mounts);
+						getEnvVars(runConfig, run),
+						mounts,
+						run.getDefaultRunOutputObjectReferral());
+				
+				runDTO.updateRunBean(run);
+			}
+			catch (BadRequestException e) {
+				log.info("Git job invalid command: {}", e.getMessage());
+				run.setStatus(RunStatus.FAIL);
+				run.setErrorMessage("Invalid command: \n"+e.getMessage());
 			}
 		}
 		finally {
@@ -270,8 +339,9 @@ public class DockerRunServiceImpl implements DockerRunService {
 			try {
 				runResult.setContainerPath(entry.getKey().getPath());
 				runResult.setType(entry.getKey().getType());
-				minioRepository.putRunResultAndUpdateRunResultBean(
-						runResult, new FileInputStream(zipFile));
+				String runResultObjectReferral = minioRepository.putRunResultAndReturnObjectName(
+						new FileInputStream(zipFile), runResult.getDefaultObjectReferral());
+				runResult.setObjectReferral(runResultObjectReferral);
 			} 
 			catch (MinioException e) {
 				// TODO Auto-generated catch block

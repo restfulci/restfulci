@@ -44,6 +44,17 @@ public class GitClone extends Executable {
 		
 		commandArray.add(directory.getAbsolutePath());
 		
-		return executeWith(commandArray, directory);
+		CommandResult commandResult = executeWith(commandArray, directory);
+		
+		if (commandResult.getExitCode() == 128) {
+			if (commandResult.getErrorOutput().contains("Repository not found")) {
+				throw new GitRepoNonExistException(commandResult.getErrorOutput());
+			}
+			if (commandResult.getErrorOutput().contains("Could not find remote branch")) {
+				throw new GitBranchNonExistException(commandResult.getErrorOutput());
+			}
+		}
+		
+		return commandResult;
 	}
 }

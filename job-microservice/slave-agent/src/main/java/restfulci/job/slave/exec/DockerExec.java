@@ -7,8 +7,8 @@ import java.util.Map;
 
 import com.github.dockerjava.api.model.Network;
 
-import restfulci.job.shared.domain.RunBean;
 import restfulci.job.shared.domain.RunConfigBean;
+import restfulci.job.slave.dto.RunCommandDTO;
 
 public interface DockerExec {
 	
@@ -25,12 +25,12 @@ public interface DockerExec {
 			Map<String, String> envVars);
 	public void killSidecar(String containerId);
 	
-	public void runCommandAndUpdateRunBean(
-			RunBean run, 
+	public RunCommandDTO runCommand(
 			String imageTag, 
 			String containerName,
 			String networkName,
 			List<String> command, 
 			Map<String, String> envVars,
-			Map<RunConfigBean.RunConfigResultBean, File> mounts) throws InterruptedException;
+			Map<RunConfigBean.RunConfigResultBean, File> mounts,
+			String defaultRunOutputObjectReferral) throws InterruptedException;
 }
