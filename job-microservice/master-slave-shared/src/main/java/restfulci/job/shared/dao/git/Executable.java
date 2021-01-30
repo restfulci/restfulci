@@ -13,6 +13,12 @@ abstract class Executable {
 		CommandResult commandResult = new CommandResult();
 		commandResult.setCommand(String.join(" ", commandArray));
 		
+		/*
+		 * TODO:
+		 * May replace ProcessBuilder to either of the followings
+		 * http://commons.apache.org/proper/commons-cli/ (seems much more popular from maven)
+		 * https://github.com/zeroturnaround/zt-exec
+		 */
 		ProcessBuilder builder = new ProcessBuilder(commandArray);
 		builder.directory(directory);
 //		builder.redirectErrorStream(true);

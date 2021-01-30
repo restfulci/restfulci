@@ -153,7 +153,21 @@ public class DockerRunServiceImpl implements DockerRunService {
 		 * (6) Clean up the temporary local folder (TODO).
 		 */
 		Path localRepoPath = Files.createTempDirectory("local-repo");
-		remoteGitRepository.copyToLocal(run, localRepoPath);
+		
+		try {
+			remoteGitRepository.copyToLocal(run, localRepoPath);
+		}
+		catch (IOException e) {
+			log.info("Git clone fails: {}", e.getMessage());
+			run.setStatus(RunStatus.FAIL);
+			run.setErrorMessage("Git clone fails: \n"+e.getMessage());
+			return;
+			/*
+			 * TODO:
+			 * Should we define error code, error short name, and
+			 * then pass in error message?
+			 */
+		}
 		
 		RunConfigBean runConfig;
 		try {
