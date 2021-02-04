@@ -69,35 +69,41 @@ export default {
     strategies: {
       local: false,
       keycloak: {
-      //   scheme: 'oauth2',
-      //   endpoints: {
-      //     authorization: 'http://localhost:8880/auth/realms/restfulci/protocol/openid-connect/auth',
-      //     token: 'http://localhost:8880/auth/realms/restfulci/protocol/openid-connect/token',
-      //     userInfo: 'http://localhost:8880/auth/realms/restfulci/protocol/openid-connect/userinfo',
-      //     logout: 'https://example.com/logout'
-      //   },
-      //   token: {
-      //     property: 'access_token',
-      //     type: 'Bearer',
-      //     maxAge: 1800
-      //   },
-      //   refreshToken: {
-      //     property: 'refresh_token',
-      //     maxAge: 60 * 60 * 24 * 30
-      //   },
-      //   responseType: 'token',
-      //   grantType: 'authorization_code',
-      //   accessType: undefined,
-      //   redirectUri: undefined,
-      //   logoutRedirectUri: undefined,
-      //   clientId: 'job-frontend',
-      //   scope: ['openid', 'profile', 'email'],
-      //   state: 'UNIQUE_AND_NON_GUESSABLE',
-      //   codeChallengeMethod: '',
-      //   responseMode: '',
-      //   acrValues: '',
-      //   // autoLogout: false
-      // },
+        scheme: 'oauth2',
+        endpoints: {
+          authorization: 'http://localhost:8880/auth/realms/restfulci/protocol/openid-connect/auth',
+          token: 'http://localhost:8880/auth/realms/restfulci/protocol/openid-connect/token',
+          userInfo: 'http://localhost:8880/auth/realms/restfulci/protocol/openid-connect/userinfo',
+          logout: 'http://localhost:8880/auth/realms/restfulci/protocol/openid-connect/logout'
+        },
+        token: {
+          property: 'access_token',
+          type: 'Bearer',
+          name: 'Authorization',
+          maxAge: 1800
+        },
+        refreshToken: {
+          property: 'refresh_token',
+          maxAge: 60 * 60 * 24 * 30
+        },
+        responseType: 'code',
+        grantType: 'authorization_code',
+        clientId: 'job-frontend',
+        scope: ['openid', 'profile', 'email'],
+        codeChallengeMethod: 'S256',
+        // responseType: 'token',
+        // grantType: 'authorization_code',
+        // accessType: undefined,
+        // redirectUri: undefined,
+        // logoutRedirectUri: undefined,
+        // clientId: 'job-frontend',
+        // scope: ['openid', 'profile', 'email'],
+        // state: 'UNIQUE_AND_NON_GUESSABLE',
+        // codeChallengeMethod: '',
+        // responseMode: '',
+        // acrValues: '',
+        // autoLogout: false
+      },
       /*
        * TODO:
        * Attempted universal login.
@@ -109,26 +115,6 @@ export default {
        * a very important resource on how to set it up. I'd just wait until
        * v5 is officially supported, and give it another try.
        */
-        _scheme: 'oauth2',
-        authorization_endpoint: 'http://localhost:8880/auth/realms/restfulci/protocol/openid-connect/auth',
-        userinfo_endpoint: 'http://localhost:8880/auth/realms/restfulci/protocol/openid-connect/userinfo',
-        scope: ['openid', 'profile', 'email'],
-        access_type: undefined,
-        // access_type: 'offline',
-        access_token_endpoint: 'http://localhost:8880/auth/realms/restfulci/protocol/openid-connect/token',
-        // response_type: 'token',
-        response_type: 'code',
-        token_type: 'Bearer',
-        // redirect_uri: 'http://localhost:3000/jobs',
-        client_id: 'job-frontend',
-        token_key: 'access_token',
-        state: 'UNIQUE_AND_NON_GUESSABLE'
-      },
-      redirect: {
-        login: '/jobs',
-        callback: '/callback',
-        home: '/'
-      },
     },
   },
   router: {

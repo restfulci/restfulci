@@ -18,25 +18,23 @@
       </form>
 
       <div class="text">
-        Logged in as {{ username }}
+        Logged in as {{ user.preferred_username }}
       </div>
     </header>
 
     <nuxt />
 
     <footer>
-      Copyright &copy; 2020 RestfulCI {{ token }}
+      Copyright &copy; 2020 RestfulCI
     </footer>
   </div>
 </template>
 
 <script>
-const Cookie = process.client ? require('js-cookie') : undefined;
 export default {
   data() {
     return {
-      username: this.$auth.user,
-      token: this.$auth.getToken('keycloak')
+      user: this.$auth.user,
     };
   },
   methods: {
