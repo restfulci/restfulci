@@ -3,7 +3,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: restfulci-job-slave-executor
-  namespace: job
+  namespace: job-api
 spec:
   replicas: 1
   revisionHistoryLimit: 3
@@ -17,13 +17,25 @@ spec:
     spec:
       containers:
       - name: slave-executor
-        image: restfulci/job-slave-executor:c72dcd06192aeaf7ec45546cbd3da4caf5cc61eb
+        image: restfulci/job-slave-executor:85d65d5882575a554aa605158d16beacae4ba499
         resources:
           requests:
             cpu: 400m
         env:
         - name: SPRING_PROFILES_ACTIVE
           value: kubernetes
+        - name: POSTGRES_USER
+          value: postgres
+        - name: POSTGRES_PASSWORD
+          value: postgres
+        - name: RABBITMQ_DEFAULT_USER
+          value: "restfulci"
+        - name: RABBITMQ_DEFAULT_PASS
+          value: "secretpassword"
+        - name: MINIO_ACCESS_KEY
+          value: "restfulci"
+        - name: MINIO_SECRET_KEY
+          value: "secretpassword"
         # Setting up docker sibling. Refer to
         # https://estl.tech/accessing-docker-from-a-kubernetes-pod-68996709c04b
         # https://devops.stackexchange.com/a/2507

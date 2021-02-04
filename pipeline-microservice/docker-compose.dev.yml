@@ -1,15 +1,14 @@
 version: "3"
 services:
 
-  postgres:
-    image: postgres:12.1
+  pipeline-postgres:
+    image: postgres:13.1
     ports:
       - "5433:5432"
     volumes:
       - ./database/setup.sql:/docker-entrypoint-initdb.d/setup.sql
     environment:
-      # TODO: Change name from `restfulci` to `restfulci-pipeline`
-      - POSTGRES_DB=restfulci
+      - POSTGRES_DB=restfulci-pipeline
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
     restart: always

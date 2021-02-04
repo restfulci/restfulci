@@ -18,7 +18,7 @@ class TestFreestyleJob(AuthTestSuite):
     def test_hello_world(self):
         job_defination_json = {
             "name": self.freestyle_job_name,
-            "dockerImage": "busybox:1.31",
+            "dockerImage": "busybox:1.33",
             "command": [
                 "sh",
                 "-c",
@@ -36,7 +36,7 @@ class TestFreestyleJob(AuthTestSuite):
     def test_subtraction(self):
         job_defination_json = {
             "name": self.freestyle_job_name,
-            "dockerImage": "busybox:1.31",
+            "dockerImage": "busybox:1.33",
             "command": [
                 "sh",
                 "-c",
@@ -125,6 +125,8 @@ class TestFreestyleJob(AuthTestSuite):
             sleep(1)
         self.assertEqual(response_body["status"], "SUCCEED")
         self.assertEqual(response_body["exitCode"], 0)
+        self.assertFalse("errorMessage" in response_body)
+        self.assertIsNotNone(response_body["completeAt"])
 
         if validate_console_log:
             response = requests.get(

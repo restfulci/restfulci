@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: restfulci-pipeline-postgres
-  namespace: pipeline
+  namespace: pipeline-api
 spec:
   replicas: 1
   selector:
@@ -15,13 +15,13 @@ spec:
     spec:
       containers:
         - name: postgres
-          image: restfulci/pipeline-postgres:c72dcd06192aeaf7ec45546cbd3da4caf5cc61eb
+          image: restfulci/pipeline-postgres:85d65d5882575a554aa605158d16beacae4ba499
           imagePullPolicy: "IfNotPresent"
           ports:
           - containerPort: 5432
           env:
           - name: POSTGRES_DB
-            value: restfulci
+            value: restfulci-pipeline
           - name: POSTGRES_USER
             value: postgres
           - name: POSTGRES_PASSWORD

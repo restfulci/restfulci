@@ -89,8 +89,7 @@ class AuthTestSuite(TestCase):
                 "Content-Type": "application/x-www-form-urlencoded"
             },
             data={
-                "client_id": "job-microservice",
-                "client_secret": "dc80857e-b4b7-45ec-ab56-1242ba7600ff",
+                "client_id": "job-frontend",
                 "username": username,
                 "password": password,
                 "grant_type": "password"

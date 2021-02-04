@@ -3,7 +3,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: restfulci-pipeline-api-cron-server
-  namespace: pipeline
+  namespace: pipeline-api
 spec:
   replicas: 1
   revisionHistoryLimit: 3
@@ -17,12 +17,16 @@ spec:
     spec:
       containers:
       - name: api-cron-server
-        image: restfulci/pipeline-api-cron-server:c72dcd06192aeaf7ec45546cbd3da4caf5cc61eb
+        image: restfulci/pipeline-api-cron-server:85d65d5882575a554aa605158d16beacae4ba499
         ports:
         - containerPort: 8080
         env:
         - name: SPRING_PROFILES_ACTIVE
           value: kubernetes
+        - name: POSTGRES_USER
+          value: postgres
+        - name: POSTGRES_PASSWORD
+          value: postgres
         resources:
           requests:
             cpu: 50m

@@ -17,13 +17,13 @@ import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 /*
- * To make downstream boot projects work, this configuration need to stay 
- * in the @ComponentScan path of "capsid". So it should be in here rather
- * than in test.
+ * To make downstream boot projects work, this configuration need to stay
+ * in the @ComponentScan path of the Spring Boot applications. So it should 
+ * be in here rather than in test.
  *
  * TODO:
- * To understand why it is the case. Since "capsid" is a Spring Boot
- * application (for which this configuration is not needed, only
+ * To understand why it is the case. Since `master-api` and `slave-executor` are both
+ * Spring Boot application (for which this configuration is not needed, only
  * "DatabaseConfig" and "GitSourceConfig" is needed), I don't understand why.
  */
 @Configuration
@@ -57,7 +57,7 @@ public class JpaConfig {
 		 * TODO:
 		 * May have duplicated setups in here as while as "jpaVendorAdapter()".
 		 * Need to understand later what is needed and what is absolutely necessary.
-		 * 
+		 *
 		 * TODO:
 		 * Looks like there's no newer version of Hibernate Postgres Dialect beyond 9.5!?
 		 * https://docs.jboss.org/hibernate/orm/current/javadocs/org/hibernate/dialect/package-summary.html

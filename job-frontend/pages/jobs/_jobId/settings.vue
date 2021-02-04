@@ -42,7 +42,7 @@ export default {
   methods: {
     loadJob() {
       this.$axios.get(
-        '/jobs/'+this.jobId, {
+        this.$config.apiServer + '/jobs/' + this.jobId, {
           headers: {
             'Authorization': "Bearer " + this.$store.state.auth.accessToken
           }
@@ -54,7 +54,7 @@ export default {
     },
     deleteJob() {
       this.$axios.delete(
-        '/jobs/'+this.jobId, {
+        this.$config.apiServer + '/jobs/' + this.jobId, {
           headers: {
             'Authorization': "Bearer " + this.$store.state.auth.accessToken
           }

@@ -3,7 +3,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: restfulci-job-master-api-server
-  namespace: job
+  namespace: job-api
 spec:
   replicas: 1
   revisionHistoryLimit: 3
@@ -17,12 +17,27 @@ spec:
     spec:
       containers:
       - name: master-api-server
-        image: restfulci/job-master-api-server:c72dcd06192aeaf7ec45546cbd3da4caf5cc61eb
+        image: restfulci/job-master-api-server:85d65d5882575a554aa605158d16beacae4ba499
         ports:
         - containerPort: 8080
         env:
         - name: SPRING_PROFILES_ACTIVE
           value: kubernetes
+        - name: AUTH_SERVER
+          # value: http://auth-api-url-from-outside
+          value: http://35.190.189.100
+        - name: POSTGRES_USER
+          value: postgres
+        - name: POSTGRES_PASSWORD
+          value: postgres
+        - name: RABBITMQ_DEFAULT_USER
+          value: "restfulci"
+        - name: RABBITMQ_DEFAULT_PASS
+          value: "secretpassword"
+        - name: MINIO_ACCESS_KEY
+          value: "restfulci"
+        - name: MINIO_SECRET_KEY
+          value: "secretpassword"
         resources:
           requests:
-            cpu: 50m
+            cpu: 300m

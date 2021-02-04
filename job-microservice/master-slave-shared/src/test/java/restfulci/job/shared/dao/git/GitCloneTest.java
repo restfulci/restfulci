@@ -1,6 +1,7 @@
 package restfulci.job.shared.dao.git;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.File;
@@ -119,5 +120,35 @@ public class GitCloneTest {
 		lsArray.add("ls");
 		CommandResult lsResult = Executable.executeWith(lsArray, localDirectory);
 		assertTrue(lsResult.getNormalOutput().contains("README.md"));
+	}
+	
+	@Test
+	public void testGitCloneNonexistRepo(@TempDir File tmpFolder) throws Exception {
+		
+		File localDirectory = new File(tmpFolder, "local-repo");
+		localDirectory.mkdir();
+		
+		GitClone gitClone = new GitClone("git@github.com:restfulci/nonexist.git", localDirectory);
+		gitClone.setBranchName("master");
+		gitClone.setDepth(1);
+		
+		assertThrows(GitRepoNonExistException.class, () -> {
+			gitClone.execute();
+		});
+	}
+	
+	@Test
+	public void testGitCloneNonExistBranch(@TempDir File tmpFolder) throws Exception {
+		
+		File localDirectory = new File(tmpFolder, "local-repo");
+		localDirectory.mkdir();
+		
+		GitClone gitClone = new GitClone("git@github.com:restfulci/restfulci.git", localDirectory);
+		gitClone.setBranchName("nonexist");
+		gitClone.setDepth(1);
+		
+		assertThrows(GitBranchNonExistException.class, () -> {
+			gitClone.execute();
+		});
 	}
 }

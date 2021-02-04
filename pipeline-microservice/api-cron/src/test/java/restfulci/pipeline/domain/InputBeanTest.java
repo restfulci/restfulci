@@ -1,8 +1,9 @@
 package restfulci.pipeline.domain;
 
+import static org.junit.jupiter.api.Assertions.assertThrows;
+
 import java.io.IOException;
 
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -48,7 +49,7 @@ public class InputBeanTest {
 		input.setValue("qualified");
 		cycle.addInput(input);
 		
-		Assertions.assertThrows(IOException.class, () -> {
+		assertThrows(IOException.class, () -> {
 			cycle.validateInput();
 		});
 	}
@@ -64,7 +65,7 @@ public class InputBeanTest {
 		input.setValue("not-qualified");
 		cycle.addInput(input);
 		
-		Assertions.assertThrows(IOException.class, () -> {
+		assertThrows(IOException.class, () -> {
 			cycle.validateInput();
 		});
 	}

@@ -1,6 +1,7 @@
 package restfulci.job.shared.domain;
 
 import java.io.IOException;
+import java.time.Duration;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashSet;
@@ -142,20 +143,40 @@ public abstract class RunBean extends BaseEntity {
 	@Temporal(TemporalType.TIMESTAMP)
 	private Date completeAt;
 	
+	public Long getDurationInSecond() {
+		if (completeAt != null) {
+			return Duration.between(triggerAt.toInstant(), completeAt.toInstant()).getSeconds();
+		}
+		else {
+			return null;
+		}
+	}
+	
+	@JsonInclude(Include.NON_NULL)
 	@Column(name="exit_code", updatable=true)
 	private Integer exitCode;
+	
+	@JsonInclude(Include.NON_NULL)
+	@Column(name="error_message")
+	private String errorMessage;
 	
 	@JsonIgnore
 	@Column(name="run_output_object_referral", updatable=true)
 	private String runOutputObjectReferral;
 	
+	@JsonIgnore
+	public String getDefaultRunOutputObjectReferral() {
+		if (runOutputObjectReferral != null) {
+			return runOutputObjectReferral;
+		}
+		if (id != null) {
+			return id.toString();
+		}
+		return null;
+	}
+	
 	@OneToMany(targetEntity=RunResultBean.class, fetch=FetchType.EAGER, cascade=CascadeType.ALL, mappedBy="run")
 	private Set<RunResultBean> runResults = new HashSet<RunResultBean>();
-	
-	/*
-	 * TODO:
-	 * `getDuration()`
-	 */
 	
 	public abstract JobType getType();
 	

@@ -21,4 +21,9 @@ public class GitBranchRunBean extends GitRunBean {
 	@Size(max=128)
 	@Column(name="branch_name")
 	private String branchName;
+	
+	/*
+	 * TODO:
+	 * General commit SHA.
+	 */
 }

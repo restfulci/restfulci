@@ -1,0 +1,11 @@
+version: 1.0
+
+executor:
+  build:
+    context: ./doesnotexist
+    dockerfile: ./Notdockerfile
+
+command:
+  - sh
+  - -c
+  - "echo \"Hello world\""

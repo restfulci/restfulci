@@ -37,7 +37,7 @@
         <dependency>
             <groupId>com.github.docker-java</groupId>
             <artifactId>docker-java</artifactId>
-            <version>3.1.5</version>
+            <version>3.2.7</version>
         </dependency>
         <dependency>
             <groupId>org.zeroturnaround</groupId>

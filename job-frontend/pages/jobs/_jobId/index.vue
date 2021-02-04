@@ -61,7 +61,7 @@ export default {
 
   mounted() {
     this.$axios.get(
-      '/jobs/'+this.jobId, {
+      this.$config.apiServer + '/jobs/' + this.jobId, {
         headers: {
           'Authorization': "Bearer " + this.$store.state.auth.accessToken
         }

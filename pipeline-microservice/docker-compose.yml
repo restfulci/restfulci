@@ -1,13 +1,12 @@
 version: "3"
 services:
 
-  postgres:
+  pipeline-postgres:
     build:
       context: ./database
       dockerfile: ./Dockerfile
     environment:
-      # TODO: Change name from `restfulci` to `restfulci-pipeline`
-      - POSTGRES_DB=restfulci
+      - POSTGRES_DB=restfulci-pipeline
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
     restart: always
@@ -19,17 +18,19 @@ services:
     tty: true
     restart: always
 
-  api-cron-server:
+  pipeline-api-cron-server:
     # image: restfulci/pipeline-api-cron-server:2a346993246acc2d8763b82df878109b253e0e1b-dirty
     build:
       context: ./api-cron
       dockerfile: ./Dockerfile
     environment:
       - SPRING_PROFILES_ACTIVE=docker
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
     ports:
       - "8882:8080"
     depends_on:
-      - postgres
+      - pipeline-postgres
       - job-microservice-mock
     tty: true
     restart: always

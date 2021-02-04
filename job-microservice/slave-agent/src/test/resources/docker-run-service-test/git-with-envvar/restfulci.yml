@@ -1,0 +1,11 @@
+version: 1.0
+
+executor:
+  image: busybox:1.33
+  environment:
+    WORD: world
+
+command:
+  - sh
+  - -c
+  - "echo \"Hello $WORD\""

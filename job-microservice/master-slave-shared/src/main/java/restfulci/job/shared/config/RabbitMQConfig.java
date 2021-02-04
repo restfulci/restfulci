@@ -1,6 +1,7 @@
 package restfulci.job.shared.config;
 
 import org.springframework.amqp.rabbit.connection.CachingConnectionFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
@@ -8,14 +9,20 @@ import org.springframework.context.annotation.Profile;
 @Configuration
 public class RabbitMQConfig {
 	
+	@Value("${RABBITMQ_DEFAULT_USER:foo}")
+	private String rabbitMQDefaultUser;
+	
+	@Value("${RABBITMQ_DEFAULT_PASS:bar}")
+	private String rabbitMQDefaultPass;
+	
 	@Profile("dev")
 	@Bean
 	public CachingConnectionFactory devConnectionFactory() {
 		CachingConnectionFactory connectionFactory = new CachingConnectionFactory();
 		connectionFactory.setHost("localhost");
 		connectionFactory.setPort(5673);
-		connectionFactory.setUsername("guest");
-		connectionFactory.setPassword("guest");
+		connectionFactory.setUsername("restfulci");
+		connectionFactory.setPassword("secretpassword");
 		return connectionFactory;
 	}
 	
@@ -23,10 +30,10 @@ public class RabbitMQConfig {
 	@Bean
 	public CachingConnectionFactory dockerConnectionFactory() {
 		CachingConnectionFactory connectionFactory = new CachingConnectionFactory();
-		connectionFactory.setHost("rabbitmq");
+		connectionFactory.setHost("job-rabbitmq");
 		connectionFactory.setPort(5672);
-		connectionFactory.setUsername("guest");
-		connectionFactory.setPassword("guest");
+		connectionFactory.setUsername(rabbitMQDefaultUser);
+		connectionFactory.setPassword(rabbitMQDefaultPass);
 		return connectionFactory;
 	}
 	
@@ -36,8 +43,8 @@ public class RabbitMQConfig {
 		CachingConnectionFactory connectionFactory = new CachingConnectionFactory();
 		connectionFactory.setHost("restfulci-job-rabbitmq");
 		connectionFactory.setPort(5672);
-		connectionFactory.setUsername("guest");
-		connectionFactory.setPassword("guest");
+		connectionFactory.setUsername(rabbitMQDefaultUser);
+		connectionFactory.setPassword(rabbitMQDefaultPass);
 		return connectionFactory;
 	}
 	

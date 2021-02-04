@@ -1,5 +1,13 @@
 # Contributing
 
+## Architecture
+
+### Components
+
+![Components](components.png)
+
+([View in LucidChart](https://lucid.app/lucidchart/invitations/accept/cfa80c68-9da6-412b-8d77-1e36d3d5fd47))
+
 ## Local development environments
 
 ### `dev`
@@ -9,8 +17,8 @@
 
 In each microservice folder
 
-```
-docker-compose -f docker-compose.dev.yml rm -v -f postgres
+```bash
+docker-compose -f docker-compose.dev.yml rm -v -f job-postgres # job microservice
 docker-compose -f docker-compose.dev.yml up
 ```
 
@@ -25,7 +33,7 @@ Run server:
 
 ### `docker`
 
-```
+```bash
 cd job-microservice
 bash docker_build-mac.sh
 docker-compose up
@@ -33,7 +41,7 @@ docker-compose up
 
 Then you can access job microservice API by `localhost:8881`.
 
-```
+```bash
 cd pipeline-microservice
 bash docker_build-mac.sh
 docker-compose up
@@ -45,19 +53,19 @@ Then you can access pipeline microservice API by `localhost:8882` (with mocked j
 
 ### GKE/Skaffold
 
-```
-gcloud container clusters create restfulci --num-nodes=4
+```bash
+gcloud container clusters create restfulci --num-nodes=6
 gcloud container clusters get-credentials restfulci
 
 gcloud container clusters delete restfulci
 ```
 
-```
+```bash
 skaffold run
 skaffold delete
 ```
 
-```
+```bash
 kubectl create -f kubernetes --save-config
 kubectl apply -f kubernetes
 

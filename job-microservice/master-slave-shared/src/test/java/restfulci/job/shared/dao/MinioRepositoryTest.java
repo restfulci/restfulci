@@ -23,14 +23,15 @@ public class MinioRepositoryTest {
 	@Autowired private MinioRepository repository;
 	
 	@Test
-	public void testPutAndGetRunOutput() throws Exception {
+	public void testPutAndGetRunOutputWithDefaultObjectReferral() throws Exception {
 		
 		FreestyleRunBean run = new FreestyleRunBean();
 		run.setId(123);
 		
 		InputStream contentStream = new ByteArrayInputStream("hello".getBytes(StandardCharsets.UTF_8));
-		repository.putRunOutputAndUpdateRunBean(run, contentStream);
-		assertEquals(run.getRunOutputObjectReferral(), run.getId().toString());
+		String objectId = repository.putRunOutputAndReturnObjectName(contentStream, run.getDefaultRunOutputObjectReferral());
+		assertEquals(objectId, new Integer(123).toString());
+		run.setRunOutputObjectReferral(objectId);
 		
 		InputStream stream = repository.getRunOutput(run);
 		String outputText = IOUtils.toString(stream, StandardCharsets.UTF_8.name());
@@ -40,12 +41,14 @@ public class MinioRepositoryTest {
 	}
 	
 	@Test
-	public void testPutAndGetRunOutputWhenRunIdIsNull() throws Exception {
+	public void testPutAndGetRunOutputWithoutDefaultObjectReferral() throws Exception {
 		
 		FreestyleRunBean run = new FreestyleRunBean();
 		
 		InputStream contentStream = new ByteArrayInputStream("hello".getBytes(StandardCharsets.UTF_8));
-		repository.putRunOutputAndUpdateRunBean(run, contentStream);
+		String objectId = repository.putRunOutputAndReturnObjectName(contentStream, run.getDefaultRunOutputObjectReferral());
+		assertEquals(objectId.length(), 10);
+		run.setRunOutputObjectReferral(objectId);
 		
 		InputStream stream = repository.getRunOutput(run);
 		String outputText = IOUtils.toString(stream, StandardCharsets.UTF_8.name());

@@ -24,6 +24,17 @@ public abstract class GitRunBean extends RunBean {
 	@Column(name="run_configuration_object_referral", updatable=true)
 	private String runConfigurationObjectReferral;
 	
+	@JsonIgnore
+	public String getDefaultRunConfigurationObjectReferral() {
+		if (runConfigurationObjectReferral != null) {
+			return runConfigurationObjectReferral;
+		}
+		if (id != null) {
+			return id.toString();
+		}
+		return null;
+	}
+	
 	public GitJobBean getJob() {
 		return (GitJobBean)super.getJob();
 	}
@@ -31,4 +42,9 @@ public abstract class GitRunBean extends RunBean {
 	public JobType getType() {
 		return JobType.GIT;
 	}
+	
+	/*
+	 * TODO:
+	 * Commit author and message.
+	 */
 }

@@ -1,7 +1,6 @@
 package restfulci.job.master.dto;
 
 import java.io.IOException;
-import java.util.Date;
 import java.util.HashMap;
 
 import restfulci.job.shared.domain.FreestyleRunBean;

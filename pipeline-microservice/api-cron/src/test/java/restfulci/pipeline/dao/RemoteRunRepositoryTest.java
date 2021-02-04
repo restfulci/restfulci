@@ -2,6 +2,7 @@ package restfulci.pipeline.dao;
 
 import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.jsonPath;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.method;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo;
@@ -10,7 +11,6 @@ import static org.springframework.test.web.client.response.MockRestResponseCreat
 import java.util.HashMap;
 import java.util.Map;
 
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -104,7 +104,7 @@ public class RemoteRunRepositoryTest {
 				.andRespond(withStatus(HttpStatus.BAD_REQUEST)
 				);
 		
-		Assertions.assertThrows(RunTriggerException.class, () -> {
+		assertThrows(RunTriggerException.class, () -> {
 			remoteRunRepository.triggerRun(123, new HashMap<String, String>());
 		});
 	}
@@ -119,7 +119,7 @@ public class RemoteRunRepositoryTest {
 				.andRespond(withStatus(HttpStatus.INTERNAL_SERVER_ERROR)
 				);
 		
-		Assertions.assertThrows(RunTriggerException.class, () -> {
+		assertThrows(RunTriggerException.class, () -> {
 			remoteRunRepository.triggerRun(123, new HashMap<String, String>());
 		});
 	}

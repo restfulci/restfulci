@@ -20,7 +20,7 @@ public class FreestyleRunBeanTest {
 		FreestyleJobBean job = new FreestyleJobBean();
 		job.setId(123);
 		job.setName("job");
-		job.setDockerImage("busybox:1.31");
+		job.setDockerImage("busybox:1.33");
 		job.setCommand(new String[] {"echo", "0"});
 		
 		UserBean user = new UserBean();
@@ -41,19 +41,20 @@ public class FreestyleRunBeanTest {
 		assertEquals(
 				mapper.writeValueAsString(run),
 				"{\"id\":456,"
-				+ "\"job\":{\"id\":123,\"name\":\"job\",\"dockerImage\":\"busybox:1.31\",\"command\":[\"echo\",\"0\"],\"type\":\"FREESTYLE\"},"
+				+ "\"job\":{\"id\":123,\"name\":\"job\",\"dockerImage\":\"busybox:1.33\",\"command\":[\"echo\",\"0\"],\"type\":\"FREESTYLE\"},"
 				+ "\"user\":{\"id\":456,\"authId\":\"0000-0000\",\"username\":\"username\"},"
 				+ "\"status\":\"IN_PROGRESS\","
 				+ "\"triggerAt\":\"1970-01-01 12:00:00\","
 				+ "\"completeAt\":\"1970-01-01 12:00:01\","
 				+ "\"exitCode\":0,"
 				+ "\"runResults\":[],"
-				+ "\"type\":\"FREESTYLE\"}");
+				+ "\"type\":\"FREESTYLE\","
+				+ "\"durationInSecond\":1}");
 		assertEquals(
 				mapper.writeValueAsString(job),
 				"{\"id\":123,"
 				+ "\"name\":\"job\","
-				+ "\"dockerImage\":\"busybox:1.31\","
+				+ "\"dockerImage\":\"busybox:1.33\","
 				+ "\"command\":[\"echo\",\"0\"],"
 				+ "\"type\":\"FREESTYLE\"}");
 	}

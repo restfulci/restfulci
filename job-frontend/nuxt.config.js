@@ -1,18 +1,11 @@
 
 export default {
   /*
-  ** Nuxt rendering mode
-  ** See https://nuxtjs.org/api/configuration-mode
-  */
-  mode: 'universal',
-  /*
   ** Nuxt target
   ** See https://nuxtjs.org/api/configuration-target
   */
   target: 'server',
   env: {
-    authServer: process.env.AUTH_SERVER || 'http://localhost:8880',
-    authClientSecret: process.env.AUTH_CLIENT_SECRET || 'dc80857e-b4b7-45ec-ab56-1242ba7600ff'
   },
   /*
   ** Headers of the page
@@ -56,10 +49,21 @@ export default {
   */
   modules: [
     '@nuxtjs/axios',
-    '@nuxtjs/auth',
+    '@nuxtjs/auth-next',
   ],
   axios: {
-    baseURL: process.env.API_URL
+    /*
+     * Can't easily setup axios `browserBaseURL` and `baseUrl`,
+     * either in here or from `publicRuntimeConfig` and
+     * `privateRuntimeConfig`.
+     * https://axios.nuxtjs.org/options/
+     * The reason is because we have multiple APIs, and override
+     * `baseUrl` in code (e.g. for auth server) seems cause the
+     * header to not propogate out (it is a known bug:
+     * https://github.com/axios/axios/issues/466)
+     * People are also discussion to use proxy to support multiple
+     * APIs. Not investigate in that direction yet.
+     */
   },
   auth: {
     strategies: {
@@ -130,15 +134,14 @@ export default {
   router: {
     middleware: ['auth']
   },
+  /*
+   * https://nuxtjs.org/docs/2.x/directory-structure/nuxt-config#runtimeconfig
+   */
   publicRuntimeConfig: {
-    axios: {
-      browserBaseURL: process.env.BROWSER_BASE_URL
-    }
+    authServer: process.env.AUTH_SERVER || 'http://localhost:8080',
+    apiServer: process.env.API_SERVER || 'http://localhost:8080',
   },
   privateRuntimeConfig: {
-    axios: {
-      baseURL: process.env.BASE_URL
-    }
   },
   /*
   ** Build configuration

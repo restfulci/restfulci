@@ -1,8 +1,8 @@
 {
   "devDependencies": {
-    "cypress": "^4.12.1",
+    "cypress": "^6.2.0",
     "cypress-wait-until": "^1.7.1",
-    "eslint": "^7.6.0",
-    "eslint-plugin-cypress": "^2.11.1"
+    "eslint": "^7.16.0",
+    "eslint-plugin-cypress": "^2.11.2"
   }
 }
