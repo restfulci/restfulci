@@ -27,6 +27,8 @@ spec:
         - name: AUTH_SERVER
           # value: http://auth-api-url-from-outside
           value: http://35.190.189.100
+        - name: FRONTEND_URI
+          value: http://frontend-uri-from-outside
         resources:
           requests:
             cpu: 50m

@@ -66,15 +66,33 @@ export default {
      */
   },
   auth: {
+    /*
+     * Currently v4 (https://auth.nuxtjs.org/status) errors out with
+     * > {"error":"invalid_request","error_description":"Missing form parameter: grant_type"}%
+     *
+     * v5 is working. Here uses v5.
+     * https://github.com/nuxt-community/auth-module/issues/559 is a good
+     * resource on how to setup KeyCloak auth on v5.
+     *
+     * Note:
+     * To test locally, we may need to manually go into KeyCload admin console
+     * and change redirectUri there.
+     */
     strategies: {
       local: false,
       keycloak: {
         scheme: 'oauth2',
         endpoints: {
-          authorization: 'http://localhost:8880/auth/realms/restfulci/protocol/openid-connect/auth',
-          token: 'http://localhost:8880/auth/realms/restfulci/protocol/openid-connect/token',
-          userInfo: 'http://localhost:8880/auth/realms/restfulci/protocol/openid-connect/userinfo',
-          logout: 'http://localhost:8880/auth/realms/restfulci/protocol/openid-connect/logout'
+          authorization: process.env.AUTH_SERVER + '/auth/realms/restfulci/protocol/openid-connect/auth',
+          token: process.env.AUTH_SERVER + '/auth/realms/restfulci/protocol/openid-connect/token',
+          userInfo: process.env.AUTH_SERVER + '/auth/realms/restfulci/protocol/openid-connect/userinfo',
+          /*
+           * Using `logoutRedirectUri` in this config doesn't work, as that will end up with
+           * `?logout_uri=...` while KeyCloak expect `redirect_uri=...`. This trick can make
+           * logout working again.
+           * Refer: https://github.com/nuxt-community/auth-module/issues/559#issuecomment-676348616
+           */
+          logout: process.env.AUTH_SERVER + '/auth/realms/restfulci/protocol/openid-connect/logout?redirect_uri=' + process.env.FRONTEND_URI + '/login',
         },
         token: {
           property: 'access_token',
@@ -88,33 +106,16 @@ export default {
         },
         responseType: 'code',
         grantType: 'authorization_code',
+        accessType: undefined,
+        redirectUri: undefined, /* this defaults to `/login` */
+        logoutRedirectUri: undefined,
         clientId: 'job-frontend',
         scope: ['openid', 'profile', 'email'],
+        state: 'UNIQUE_AND_NON_GUESSABLE',
         codeChallengeMethod: 'S256',
-        // responseType: 'token',
-        // grantType: 'authorization_code',
-        // accessType: undefined,
-        // redirectUri: undefined,
-        // logoutRedirectUri: undefined,
-        // clientId: 'job-frontend',
-        // scope: ['openid', 'profile', 'email'],
-        // state: 'UNIQUE_AND_NON_GUESSABLE',
-        // codeChallengeMethod: '',
-        // responseMode: '',
-        // acrValues: '',
-        // autoLogout: false
+        responseMode: '',
+        acrValues: '',
       },
-      /*
-       * TODO:
-       * Attempted universal login.
-       * Currently v4 (see below) errors out with
-       * > {"error":"invalid_request","error_description":"Missing form parameter: grant_type"}%
-       * Above at least has some grantType to setup, but it is under v5/dev,
-       * and people are talking about its problems.
-       * https://github.com/nuxt-community/auth-module/issues/559 should be
-       * a very important resource on how to set it up. I'd just wait until
-       * v5 is officially supported, and give it another try.
-       */
     },
   },
   router: {
