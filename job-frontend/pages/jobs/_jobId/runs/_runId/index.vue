@@ -36,9 +36,26 @@
       <p v-if="run.durationInSecond !== null">
         Duration: {{ run.durationInSecond }} seconds
       </p>
+      <div v-if="run.errorMessage" class="error-log">
+        Error message:<br>
+        {{ run.errorMessage }}
+      </div>
+      <!--
+        TODO:
+        Don't show console log if not exist in response payload.
+        `v-if="run.exitCode"` doesn't work because 0 is also false.
+      -->
       <p v-if="run.exitCode !== null">
         Exit code: {{ run.exitCode }}
       </p>
+      <!--
+        TODO:
+        Make it a component, and pass in both exitCode and consoleLog
+        into it.
+      -->
+      <div v-if="consoleLog" class="console-log">
+        ConsoleLog: {{ consoleLog }}
+      </div>
     </article>
   </div>
 </template>
@@ -55,11 +72,13 @@ export default {
       run: '',
       job: '',
       user: '',
+      consoleLog: '',
     };
   },
 
   mounted() {
     this.loadRun();
+    this.loadConsoleLog();
   },
 
   /*
@@ -82,6 +101,19 @@ export default {
         this.job = this.run.job;
         this.user = this.run.user;
         console.log(this.run);
+      });
+    },
+
+    loadConsoleLog() {
+      this.$axios.get(
+        this.$config.apiServer + '/jobs/' + this.jobId + '/runs/' + this.runId + "/console", {
+          headers: {
+            'Authorization': "Bearer " + this.$store.state.auth.accessToken
+          }
+        }
+      )
+      .then(response => {
+        this.consoleLog = response.data;
       });
     },
   },

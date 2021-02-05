@@ -204,6 +204,22 @@ div.error {
 	color: #ff0000;
 }
 
+div.error-log {
+
+  padding: 5px;
+
+  color: #FFFFFF;
+  background-color: #FF0000;
+}
+
+div.console-log {
+
+  padding: 5px;
+
+  color: #FFFFFF;
+  background-color: #333333;
+}
+
 article input[type=checkbox],
 article input[type=text],
 article input[type=password],

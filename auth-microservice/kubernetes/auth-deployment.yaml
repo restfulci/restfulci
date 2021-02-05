@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
       - name: keycloak
-        image: restfulci/auth-server-kubernetes:85d65d5882575a554aa605158d16beacae4ba499
+        image: restfulci/auth-server-kubernetes:60644c34f3c6cb1ffa31b3ff45aeb36138afeb09
         ports:
         - containerPort: 8080
         env:
