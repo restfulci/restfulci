@@ -23,7 +23,7 @@ spec:
         env:
         - name: SPRING_PROFILES_ACTIVE
           value: kubernetes
-        - name: AUTH_SERVER
+        - name: AUTH_SERVER_URI
           # value: http://auth-api-url-from-outside
           value: http://35.190.189.100
         - name: POSTGRES_USER

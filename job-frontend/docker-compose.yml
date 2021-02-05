@@ -28,7 +28,7 @@ services:
     image: restfulci/job-master-api-server:60644c34f3c6cb1ffa31b3ff45aeb36138afeb09
     environment:
       - SPRING_PROFILES_ACTIVE=docker
-      - AUTH_SERVER=http://localhost:8880
+      - AUTH_SERVER_URI=http://localhost:8880
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
       - RABBITMQ_DEFAULT_USER=restfulci
@@ -103,8 +103,8 @@ services:
       # in docker-compose http://master-api-server:8080/ will not work).
       # It is because this path is in `_nuxt/app.***.js` executed in inside of
       # the browser.
-      API_SERVER: http://localhost:8881
-      AUTH_SERVER: http://localhost:8880
+      API_SERVER_URI: http://localhost:8881
+      AUTH_SERVER_URI: http://localhost:8880
       FRONTEND_URI: http://localhost:5551
     depends_on:
       - job-master-api-server

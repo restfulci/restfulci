@@ -83,16 +83,16 @@ export default {
       keycloak: {
         scheme: 'oauth2',
         endpoints: {
-          authorization: process.env.AUTH_SERVER + '/auth/realms/restfulci/protocol/openid-connect/auth',
-          token: process.env.AUTH_SERVER + '/auth/realms/restfulci/protocol/openid-connect/token',
-          userInfo: process.env.AUTH_SERVER + '/auth/realms/restfulci/protocol/openid-connect/userinfo',
+          authorization: process.env.AUTH_SERVER_URI + '/auth/realms/restfulci/protocol/openid-connect/auth',
+          token: process.env.AUTH_SERVER_URI + '/auth/realms/restfulci/protocol/openid-connect/token',
+          userInfo: process.env.AUTH_SERVER_URI + '/auth/realms/restfulci/protocol/openid-connect/userinfo',
           /*
            * Using `logoutRedirectUri` in this config doesn't work, as that will end up with
            * `?logout_uri=...` while KeyCloak expect `redirect_uri=...`. This trick can make
            * logout working again.
            * Refer: https://github.com/nuxt-community/auth-module/issues/559#issuecomment-676348616
            */
-          logout: process.env.AUTH_SERVER + '/auth/realms/restfulci/protocol/openid-connect/logout?redirect_uri=' + process.env.FRONTEND_URI + '/login',
+          logout: process.env.AUTH_SERVER_URI + '/auth/realms/restfulci/protocol/openid-connect/logout?redirect_uri=' + process.env.FRONTEND_URI + '/login',
         },
         token: {
           property: 'access_token',
@@ -125,8 +125,8 @@ export default {
    * https://nuxtjs.org/docs/2.x/directory-structure/nuxt-config#runtimeconfig
    */
   publicRuntimeConfig: {
-    authServer: process.env.AUTH_SERVER || 'http://localhost:8080',
-    apiServer: process.env.API_SERVER || 'http://localhost:8080',
+    authServer: process.env.AUTH_SERVER_URI || 'http://localhost:8080',
+    apiServer: process.env.API_SERVER_URI || 'http://localhost:8080',
   },
   privateRuntimeConfig: {
   },

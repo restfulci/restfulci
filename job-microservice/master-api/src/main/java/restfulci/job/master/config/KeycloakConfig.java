@@ -10,7 +10,7 @@ import restfulci.job.master.config.source.KeycloakSource;
 @Configuration
 public class KeycloakConfig {
 	
-	@Value("${AUTH_SERVER:http://localhost:8080}")
+	@Value("${AUTH_SERVER_URI:http://localhost:8080}")
 	private String authServer;
 
 	@Profile("dev")
