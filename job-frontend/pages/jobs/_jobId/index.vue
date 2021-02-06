@@ -50,7 +50,6 @@ export default {
   components: {
     RunList
   },
-  middleware: 'authenticated',
   layout: 'auth',
 
   data() {

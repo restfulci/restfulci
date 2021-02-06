@@ -10,6 +10,7 @@
     "serve": "nuxt serve"
   },
   "dependencies": {
+    "@nuxtjs/auth-next": "5.0.0-1611574754.9020f2a",
     "@nuxtjs/axios": "^5.12.4",
     "cookieparser": "^0.1.0",
     "js-cookie": "^2.2.1",

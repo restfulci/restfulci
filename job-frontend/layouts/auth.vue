@@ -18,7 +18,7 @@
       </form>
 
       <div class="text">
-        Logged in as {{ username }}
+        Logged in as {{ user.preferred_username }}
       </div>
     </header>
 
@@ -31,18 +31,15 @@
 </template>
 
 <script>
-const Cookie = process.client ? require('js-cookie') : undefined;
 export default {
   data() {
     return {
-      username: this.$store.state.auth.username
+      user: this.$auth.user,
     };
   },
   methods: {
     logout() {
-      Cookie.remove('auth');
-      this.$store.commit('setAuth', null);
-      this.$router.push('/login');
+      this.$auth.logout(/* .... */);
     }
   }
 };

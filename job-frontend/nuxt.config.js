@@ -49,6 +49,7 @@ export default {
   */
   modules: [
     '@nuxtjs/axios',
+    '@nuxtjs/auth-next',
   ],
   axios: {
     /*
@@ -64,12 +65,68 @@ export default {
      * APIs. Not investigate in that direction yet.
      */
   },
+  auth: {
+    /*
+     * Currently v4 (https://auth.nuxtjs.org/status) errors out with
+     * > {"error":"invalid_request","error_description":"Missing form parameter: grant_type"}%
+     *
+     * v5 is working. Here uses v5.
+     * https://github.com/nuxt-community/auth-module/issues/559 is a good
+     * resource on how to setup KeyCloak auth on v5.
+     *
+     * Note:
+     * To test locally, we may need to manually go into KeyCload admin console
+     * and change redirectUri there.
+     */
+    strategies: {
+      local: false,
+      keycloak: {
+        scheme: 'oauth2',
+        endpoints: {
+          authorization: process.env.AUTH_SERVER_URI + '/auth/realms/restfulci/protocol/openid-connect/auth',
+          token: process.env.AUTH_SERVER_URI + '/auth/realms/restfulci/protocol/openid-connect/token',
+          userInfo: process.env.AUTH_SERVER_URI + '/auth/realms/restfulci/protocol/openid-connect/userinfo',
+          /*
+           * Using `logoutRedirectUri` in this config doesn't work, as that will end up with
+           * `?logout_uri=...` while KeyCloak expect `redirect_uri=...`. This trick can make
+           * logout working again.
+           * Refer: https://github.com/nuxt-community/auth-module/issues/559#issuecomment-676348616
+           */
+          logout: process.env.AUTH_SERVER_URI + '/auth/realms/restfulci/protocol/openid-connect/logout?redirect_uri=' + process.env.FRONTEND_URI + '/login',
+        },
+        token: {
+          property: 'access_token',
+          type: 'Bearer',
+          name: 'Authorization',
+          maxAge: 1800
+        },
+        refreshToken: {
+          property: 'refresh_token',
+          maxAge: 60 * 60 * 24 * 30
+        },
+        responseType: 'code',
+        grantType: 'authorization_code',
+        accessType: undefined,
+        redirectUri: undefined, /* this defaults to `/login` */
+        logoutRedirectUri: undefined,
+        clientId: 'job-frontend',
+        scope: ['openid', 'profile', 'email'],
+        state: 'UNIQUE_AND_NON_GUESSABLE',
+        codeChallengeMethod: 'S256',
+        responseMode: '',
+        acrValues: '',
+      },
+    },
+  },
+  router: {
+    middleware: ['auth']
+  },
   /*
    * https://nuxtjs.org/docs/2.x/directory-structure/nuxt-config#runtimeconfig
    */
   publicRuntimeConfig: {
-    authServer: process.env.AUTH_SERVER || 'http://localhost:8080',
-    apiServer: process.env.API_SERVER || 'http://localhost:8080',
+    authServer: process.env.AUTH_SERVER_URI || 'http://localhost:8080',
+    apiServer: process.env.API_SERVER_URI || 'http://localhost:8080',
   },
   privateRuntimeConfig: {
   },

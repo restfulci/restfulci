@@ -38,7 +38,7 @@ services:
       dockerfile: ./Dockerfile
     environment:
       - SPRING_PROFILES_ACTIVE=docker
-      - AUTH_SERVER=http://localhost:8880
+      - AUTH_SERVER_URI=http://localhost:8880
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
       - RABBITMQ_DEFAULT_USER=restfulci

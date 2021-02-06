@@ -21,12 +21,14 @@ spec:
         ports:
         - containerPort: 5000
         env:
-        - name: API_SERVER
+        - name: API_SERVER_URI
           # value: http://job-api-url-from-outside
           value: http://35.237.234.194
-        - name: AUTH_SERVER
+        - name: AUTH_SERVER_URI
           # value: http://auth-api-url-from-outside
           value: http://35.190.189.100
+        - name: FRONTEND_URI
+          value: http://frontend-uri-from-outside
         resources:
           requests:
             cpu: 50m
