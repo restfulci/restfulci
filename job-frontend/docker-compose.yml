@@ -2,7 +2,7 @@ version: "3"
 services:
 
   job-postgres:
-    image: restfulci/job-postgres:60644c34f3c6cb1ffa31b3ff45aeb36138afeb09
+    image: restfulci/job-postgres:8da072f0160c76d9698c4bd7374644022925d8ab
     environment:
       - POSTGRES_DB=restfulci-job
       - POSTGRES_USER=postgres
@@ -25,7 +25,7 @@ services:
     command: server /data
 
   job-master-api-server:
-    image: restfulci/job-master-api-server:60644c34f3c6cb1ffa31b3ff45aeb36138afeb09
+    image: restfulci/job-master-api-server:8da072f0160c76d9698c4bd7374644022925d8ab
     environment:
       - SPRING_PROFILES_ACTIVE=docker
       - AUTH_SERVER_URI=http://localhost:8880
@@ -46,7 +46,7 @@ services:
     restart: always
 
   job-slave-executor:
-    image: restfulci/job-slave-executor:60644c34f3c6cb1ffa31b3ff45aeb36138afeb09
+    image: restfulci/job-slave-executor:8da072f0160c76d9698c4bd7374644022925d8ab
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - $SSH_AUTH_SOCK:${SSH_AUTH_SOCK}
@@ -67,7 +67,7 @@ services:
     restart: always
 
   keycloak:
-    image: restfulci/auth-server-docker:60644c34f3c6cb1ffa31b3ff45aeb36138afeb09
+    image: restfulci/auth-server-docker:8da072f0160c76d9698c4bd7374644022925d8ab
     ports:
       # TODO:
       # Use 8443 instand for SSL.

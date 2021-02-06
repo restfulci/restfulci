@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: postgres
-          image: restfulci/pipeline-postgres:60644c34f3c6cb1ffa31b3ff45aeb36138afeb09
+          image: restfulci/pipeline-postgres:8da072f0160c76d9698c4bd7374644022925d8ab
           imagePullPolicy: "IfNotPresent"
           ports:
           - containerPort: 5432
