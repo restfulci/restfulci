@@ -20,6 +20,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -53,6 +54,7 @@ public class PipelineUserJourneyIT {
 	}
 	
 	@Test
+	@WithMockUser
 	public void testUserJourney() throws Exception {
 		
 		final String pipelineName = "it_pipeline_name";
@@ -206,6 +208,7 @@ public class PipelineUserJourneyIT {
 	}
 	
 	@Test
+	@WithMockUser
 	public void testGetPipelineWithNonExistenceIdReturnsNotFound() throws Exception {
 		
 		mockMvc.perform(get("/pipelines/123")

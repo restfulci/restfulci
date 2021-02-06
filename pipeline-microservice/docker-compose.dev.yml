@@ -21,3 +21,28 @@ services:
       - "5000:5000"
     tty: true
     restart: always
+
+  keycloak:
+    image: restfulci/auth-server-local:8da072f0160c76d9698c4bd7374644022925d8ab
+    ports:
+      # TODO:
+      # Use 8443 instand for SSL.
+      - "8880:8080"
+    environment:
+      KEYCLOAK_USER: restfulci
+      KEYCLOAK_PASSWORD: secretpassword
+      DB_VENDOR: POSTGRES
+      DB_ADDR: keycloak-postgres
+      DB_DATABASE: keycloak
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+    depends_on:
+      - keycloak-postgres
+
+  keycloak-postgres:
+    image: postgres:13.1
+    environment:
+      - POSTGRES_DB=keycloak
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    restart: always
