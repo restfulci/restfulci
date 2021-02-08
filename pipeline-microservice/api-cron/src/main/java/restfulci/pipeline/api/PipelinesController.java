@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -62,9 +63,16 @@ public class PipelinesController {
 	@PutMapping("/{pipelineId}/referred-jobs/{referredJobId}")
 	public ReferredJobBean updateReferredJobParameters(
 			@PathVariable @Min(1) Integer pipelineId,
-			@PathVariable @Min(1) Integer referredJobId) throws Exception {
+			@PathVariable @Min(1) Integer referredJobId,
+			@RequestHeader(name="Authorization") String token) throws Exception {
 		
-		return pipelineService.updateReferredJobParameters(referredJobId);
+		/*
+		 * TODO:
+		 * Not only embed the user identity but the identity of the 
+		 * upstream microservice as well in the JWT token.
+		 * https://medium.facilelogin.com/securing-microservices-with-oauth-2-0-jwt-and-xacml-d03770a9a838#d912
+		 */
+		return pipelineService.updateReferredJobParameters(referredJobId, token);
 	}
 	
 	@PutMapping("/{pipelineId}/referred-jobs/{referredJobId}/parameter-maps/{parameterMapId}")

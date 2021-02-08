@@ -89,11 +89,13 @@ public class PipelineServiceImpl implements PipelineService {
 	}
 	
 	@Override
-	public ReferredJobBean updateReferredJobParameters(Integer referredJobId) throws IOException {
+	public ReferredJobBean updateReferredJobParameters(
+			Integer referredJobId, 
+			String token) throws IOException {
 		
 		ReferredJobBean referredJob = getReferredJob(referredJobId);
 		
-		RemoteJobBean remoteJob = remoteJobRepository.getJob(referredJob.getOriginalJobId());
+		RemoteJobBean remoteJob = remoteJobRepository.getJob(referredJob.getOriginalJobId(), token);
 		for (RemoteJobBean.Parameter remoteParameter : remoteJob.getParameters()) {
 			ParameterMapBean parameterMap = referredJob.getParameterMap(remoteParameter.getName());
 			if (parameterMap == null) {

@@ -6,12 +6,15 @@ import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Repository;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
 
+import restfulci.pipeline.domain.RemoteJobBean;
 import restfulci.pipeline.domain.RemoteRunBean;
 import restfulci.pipeline.exception.RunGetterException;
 import restfulci.pipeline.exception.RunTriggerException;
@@ -22,9 +25,13 @@ public class RemoteRunRepositoryImpl implements RemoteRunRepository {
 	@Autowired private RestTemplate restTemplate;
 	
 	@Override
-	public RemoteRunBean triggerRun(Integer jobId, Map<String, String> parameterValuePair) throws IOException {
+	public RemoteRunBean triggerRun(
+			Integer jobId, 
+			Map<String, String> parameterValuePair,
+			String token) throws IOException {
 		
 		HttpHeaders headers = new HttpHeaders();
+		headers.set(HttpHeaders.AUTHORIZATION, token);
 		headers.setContentType(MediaType.APPLICATION_JSON);
 
 		HttpEntity<Map<String, String>> request = new HttpEntity<>(parameterValuePair, headers);
@@ -41,9 +48,25 @@ public class RemoteRunRepositoryImpl implements RemoteRunRepository {
 	}
 
 	@Override
-	public RemoteRunBean getRun(Integer jobId, Integer runId) throws IOException {
+	public RemoteRunBean getRun(
+			Integer jobId, 
+			Integer runId,
+			String token) throws IOException {
 		try {
-			return restTemplate.getForObject("/jobs/{jobId}/runs/{runId}", RemoteRunBean.class, jobId, runId);
+			
+			HttpHeaders headers = new HttpHeaders();
+			headers.set(HttpHeaders.AUTHORIZATION, token);
+			
+			HttpEntity<Object> request = new HttpEntity<>(null, headers);
+			
+			ResponseEntity<RemoteRunBean> response = restTemplate.exchange(
+					"/jobs/{jobId}/runs/{runId}", 
+					HttpMethod.GET, 
+					request, 
+					RemoteRunBean.class, 
+					jobId, runId);
+			
+			return response.getBody();
 		}
 		catch (HttpClientErrorException e) {
 			throw new RunGetterException(e.getMessage());

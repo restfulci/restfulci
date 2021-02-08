@@ -3,6 +3,7 @@ package restfulci.pipeline.service;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -35,6 +36,8 @@ public class PipelineServiceTest {
 	@MockBean private RemoteJobRepository remoteJobRepository;
 	@MockBean private ReferredJobRepository referredJobRepository;
 	
+	private final String token = "foo";
+	
 	@Test
 	public void testUpdateReferredJobParameters() throws Exception {
 		
@@ -57,9 +60,9 @@ public class PipelineServiceTest {
 		RemoteJobBean remoteJob = new RemoteJobBean();
 		remoteJob.setType("FREESTYLE");
 		remoteJob.setParameters(remoteParameters);
-		given(remoteJobRepository.getJob(456)).willReturn(remoteJob);
+		given(remoteJobRepository.getJob(456, token)).willReturn(remoteJob);
 		
-		service.updateReferredJobParameters(123);
+		service.updateReferredJobParameters(123, token);
 		
 		ArgumentCaptor<ReferredJobBean> referredJobCaptor = ArgumentCaptor.forClass(ReferredJobBean.class);
 		verify(referredJobRepository, times(1)).saveAndFlush(referredJobCaptor.capture());
@@ -99,9 +102,9 @@ public class PipelineServiceTest {
 		List<RemoteJobBean.Parameter> remoteParameters = new ArrayList<RemoteJobBean.Parameter>();
 		remoteParameters.add(remoteParameter);
 		remoteJob.setParameters(remoteParameters);
-		given(remoteJobRepository.getJob(456)).willReturn(remoteJob);
+		given(remoteJobRepository.getJob(456, token)).willReturn(remoteJob);
 		
-		service.updateReferredJobParameters(123);
+		service.updateReferredJobParameters(123, token);
 		
 		ArgumentCaptor<ReferredJobBean> referredJobCaptor = ArgumentCaptor.forClass(ReferredJobBean.class);
 		verify(referredJobRepository, times(1)).saveAndFlush(referredJobCaptor.capture());
@@ -130,9 +133,9 @@ public class PipelineServiceTest {
 		RemoteJobBean remoteJob = new RemoteJobBean();
 		remoteJob.setType("FREESTYLE");
 		remoteJob.setParameters(new ArrayList<RemoteJobBean.Parameter>());
-		given(remoteJobRepository.getJob(456)).willReturn(remoteJob);
+		given(remoteJobRepository.getJob(456, token)).willReturn(remoteJob);
 		
-		service.updateReferredJobParameters(123);
+		service.updateReferredJobParameters(123, token);
 		
 		ArgumentCaptor<ReferredJobBean> referredJobCaptor = ArgumentCaptor.forClass(ReferredJobBean.class);
 		verify(referredJobRepository, times(1)).saveAndFlush(referredJobCaptor.capture());
@@ -152,10 +155,10 @@ public class PipelineServiceTest {
 		RemoteJobBean remoteJob = new RemoteJobBean();
 		remoteJob.setType("GIT");
 		remoteJob.setParameters(remoteParameters);
-		given(remoteJobRepository.getJob(456)).willReturn(remoteJob);
+		given(remoteJobRepository.getJob(456, token)).willReturn(remoteJob);
 		
-		service.updateReferredJobParameters(123);
-		service.updateReferredJobParameters(123);
+		service.updateReferredJobParameters(123, token);
+		service.updateReferredJobParameters(123, token);
 		
 		ArgumentCaptor<ReferredJobBean> referredJobCaptor = ArgumentCaptor.forClass(ReferredJobBean.class);
 		verify(referredJobRepository, times(2)).saveAndFlush(referredJobCaptor.capture());

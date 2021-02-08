@@ -7,6 +7,12 @@ import restfulci.pipeline.domain.RemoteRunBean;
 
 public interface RemoteRunRepository {
 
-	public RemoteRunBean triggerRun(Integer jobId, Map<String, String> parameterValuePair) throws IOException;
-	public RemoteRunBean getRun(Integer jobId, Integer runId) throws IOException;
+	public RemoteRunBean triggerRun(
+			Integer jobId, 
+			Map<String, String> parameterValuePair,
+			String token) throws IOException;
+	public RemoteRunBean getRun(
+			Integer jobId, 
+			Integer runId,
+			String token) throws IOException;
 }

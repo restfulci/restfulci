@@ -130,7 +130,7 @@ public class CycleServiceImpl implements CycleService {
 	 * We should probably decide which is a better approach.
 	 */
 	@Override
-	public CycleBean updateCycle(CycleBean cycle) throws IOException {
+	public CycleBean updateCycle(CycleBean cycle, String token) throws IOException {
 
 		boolean allDone = true;
 		for (ReferredRunBean referredRun : cycle.getReferredRuns()) {
@@ -141,8 +141,10 @@ public class CycleServiceImpl implements CycleService {
 			 */
 			if (referredRun.getStatus().equals(ReferredRunStatus.IN_PROGRESS)) {
 				try {
-					RemoteRunBean remoteRun = remoteRunRepository.getRun(referredRun.getOriginalJobId(),
-							referredRun.getOriginalRunId());
+					RemoteRunBean remoteRun = remoteRunRepository.getRun(
+							referredRun.getOriginalJobId(),
+							referredRun.getOriginalRunId(),
+							token);
 					referredRun.updateFromRemoteRun(remoteRun);
 				}
 				catch (RunGetterException e) {
@@ -199,7 +201,10 @@ public class CycleServiceImpl implements CycleService {
 							parameterValuePair.put(inputMap.getRemoteName(), inputMap.getInput().getValue());
 						}
 						
-						RemoteRunBean remoteRun = remoteRunRepository.triggerRun(referredRun.getOriginalJobId(), parameterValuePair);
+						RemoteRunBean remoteRun = remoteRunRepository.triggerRun(
+								referredRun.getOriginalJobId(), 
+								parameterValuePair,
+								token);
 						referredRun.updateFromRemoteRun(remoteRun);
 						if (remoteRun.getStatus().equals("IN_PROGRESS")) {
 							allDone = false;

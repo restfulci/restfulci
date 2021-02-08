@@ -4,5 +4,5 @@ import restfulci.pipeline.domain.RemoteJobBean;
 
 public interface RemoteJobRepository {
 
-	public RemoteJobBean getJob(Integer jobId);
+	public RemoteJobBean getJob(Integer jobId, String token);
 }

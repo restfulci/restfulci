@@ -11,6 +11,8 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.anyMap;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -52,6 +54,8 @@ public class CycleServiceTest {
 	@MockBean private CycleRepository cycleRepository;
 	@MockBean private RemoteRunRepository remoteRunRepository;
 	@MockBean private PipelineService pipelineService;
+	
+	private final String token = "foo";
 	
 	@Test
 	public void testTriggerCycleWithCorrectParameter() throws Exception {
@@ -216,13 +220,17 @@ public class CycleServiceTest {
 		RemoteRunBean remoteRun = new RemoteRunBean();
 		remoteRun.setId(789);
 		remoteRun.setStatus("IN_PROGRESS");
-		given(remoteRunRepository.triggerRun(123, new HashMap<String, String>())).willReturn(remoteRun);
+		given(remoteRunRepository.triggerRun(
+				123, 
+				new HashMap<String, String>(),
+				token
+				)).willReturn(remoteRun);
 		
-		service.updateCycle(cycle);
+		service.updateCycle(cycle, token);
 		
 		assertEquals(referredRun.getStatus(), ReferredRunStatus.IN_PROGRESS);
 		assertEquals(cycle.getStatus(), CycleStatus.IN_PROGRESS);
-		verify(remoteRunRepository, never()).getRun(123, 789);
+		verify(remoteRunRepository, never()).getRun(123, 789, token);
 	}
 	
 	@Test
@@ -237,9 +245,12 @@ public class CycleServiceTest {
 		cycle.setStatus(CycleStatus.IN_PROGRESS);
 		cycle.addReferredRun(referredRun);
 		
-		when(remoteRunRepository.triggerRun(123, new HashMap<String, String>())).thenThrow(RunTriggerException.class);
+		when(remoteRunRepository.triggerRun(
+				123, 
+				new HashMap<String, String>(),
+				token)).thenThrow(RunTriggerException.class);
 		
-		service.updateCycle(cycle);
+		service.updateCycle(cycle, token);
 		
 		assertEquals(referredRun.getStatus(), ReferredRunStatus.ERROR);
 		assertEquals(cycle.getStatus(), CycleStatus.FAIL);
@@ -262,9 +273,9 @@ public class CycleServiceTest {
 		RemoteRunBean remoteRun = new RemoteRunBean();
 		remoteRun.setId(789);
 		remoteRun.setStatus("SUCCEED");
-		given(remoteRunRepository.getRun(123, 789)).willReturn(remoteRun);
+		given(remoteRunRepository.getRun(123, 789, token)).willReturn(remoteRun);
 		
-		service.updateCycle(cycle);
+		service.updateCycle(cycle, token);
 		
 		assertEquals(referredRun.getStatus(), ReferredRunStatus.SUCCEED);
 		assertEquals(cycle.getStatus(), CycleStatus.SUCCEED);
@@ -287,9 +298,9 @@ public class CycleServiceTest {
 		RemoteRunBean remoteRun = new RemoteRunBean();
 		remoteRun.setId(789);
 		remoteRun.setStatus("FAIL");
-		given(remoteRunRepository.getRun(123, 789)).willReturn(remoteRun);
+		given(remoteRunRepository.getRun(123, 789, token)).willReturn(remoteRun);
 		
-		service.updateCycle(cycle);
+		service.updateCycle(cycle, token);
 		
 		assertEquals(referredRun.getStatus(), ReferredRunStatus.FAIL);
 		assertEquals(cycle.getStatus(), CycleStatus.FAIL);
@@ -318,14 +329,15 @@ public class CycleServiceTest {
 		RemoteRunBean remoteUpstreamRun = new RemoteRunBean();
 		remoteUpstreamRun.setId(789);
 		remoteUpstreamRun.setStatus("IN_PROGRESS");
-		given(remoteRunRepository.getRun(123, 789)).willReturn(remoteUpstreamRun);
+		given(remoteRunRepository.getRun(123, 789, token)).willReturn(remoteUpstreamRun);
 		
-		service.updateCycle(cycle);
+		service.updateCycle(cycle, token);
 		
 		assertEquals(upstreamRun.getStatus(), ReferredRunStatus.IN_PROGRESS);
 		assertEquals(downstreamRun.getStatus(), ReferredRunStatus.NOT_STARTED_YET);
 		assertEquals(cycle.getStatus(), CycleStatus.IN_PROGRESS);
-		verify(remoteRunRepository, never()).triggerRun(234, new HashMap<String, String>());
+		verify(remoteRunRepository, never()).triggerRun(
+				eq(234), anyMap(), any(String.class));
 	}
 	
 	@Test
@@ -350,13 +362,16 @@ public class CycleServiceTest {
 		RemoteRunBean remoteUpstreamRun = new RemoteRunBean();
 		remoteUpstreamRun.setId(789);
 		remoteUpstreamRun.setStatus("SUCCEED");
-		given(remoteRunRepository.getRun(123, 789)).willReturn(remoteUpstreamRun);
+		given(remoteRunRepository.getRun(123, 789, token)).willReturn(remoteUpstreamRun);
 		
 		RemoteRunBean remoteDownstreamRun = new RemoteRunBean();
 		remoteDownstreamRun.setId(890);
 		remoteDownstreamRun.setStatus("IN_PROGRESS");
-		given(remoteRunRepository.triggerRun(234, new HashMap<String, String>())).willReturn(remoteDownstreamRun);
-		given(remoteRunRepository.getRun(234, 890)).willReturn(remoteDownstreamRun);
+		given(remoteRunRepository.triggerRun(
+				234, 
+				new HashMap<String, String>(),
+				token)).willReturn(remoteDownstreamRun);
+		given(remoteRunRepository.getRun(234, 890, token)).willReturn(remoteDownstreamRun);
 		
 		/*
 		 * It is unpredictable weather upstream or downstream run is iterated first
@@ -365,8 +380,8 @@ public class CycleServiceTest {
 		 * comes first, 2 loops is needed, and `remoteRunRepository.getRun(123, 890)`
 		 * will not be called.
 		 */
-		service.updateCycle(cycle);
-		service.updateCycle(cycle);
+		service.updateCycle(cycle, token);
+		service.updateCycle(cycle, token);
 		
 		assertEquals(upstreamRun.getStatus(), ReferredRunStatus.SUCCEED);
 		assertEquals(downstreamRun.getStatus(), ReferredRunStatus.IN_PROGRESS);
@@ -391,10 +406,11 @@ public class CycleServiceTest {
 		cycle.addReferredRun(upstreamRun);
 		cycle.addReferredRun(downstreamRun);
 		
-		service.updateCycle(cycle);
+		service.updateCycle(cycle, token);
 		
 		assertEquals(downstreamRun.getStatus(), ReferredRunStatus.SKIP);
-		verify(remoteRunRepository, never()).triggerRun(234, new HashMap<String, String>());
+		verify(remoteRunRepository, never()).triggerRun(
+				eq(234), anyMap(), any(String.class));
 	}
 	
 	@Test
@@ -433,13 +449,14 @@ public class CycleServiceTest {
 		RemoteRunBean remoteUpstreamRun = new RemoteRunBean();
 		remoteUpstreamRun.setId(789);
 		remoteUpstreamRun.setStatus(upstreamRemoteStatus);
-		given(remoteRunRepository.getRun(123, 789)).willReturn(remoteUpstreamRun);
+		given(remoteRunRepository.getRun(123, 789, token)).willReturn(remoteUpstreamRun);
 		
-		service.updateCycle(cycle);
-		service.updateCycle(cycle);
+		service.updateCycle(cycle, token);
+		service.updateCycle(cycle, token);
 		
 		assertEquals(downstreamRun.getStatus(), ReferredRunStatus.SKIP);
-		verify(remoteRunRepository, never()).triggerRun(234, new HashMap<String, String>());
+		verify(remoteRunRepository, never()).triggerRun(
+				eq(234), anyMap(), any(String.class));
 	}
 	
 	@Test
@@ -492,21 +509,24 @@ public class CycleServiceTest {
 		RemoteRunBean remoteUpstreamRun1 = new RemoteRunBean();
 		remoteUpstreamRun1.setId(789);
 		remoteUpstreamRun1.setStatus(remoteStatus1);
-		given(remoteRunRepository.getRun(123, 789)).willReturn(remoteUpstreamRun1);
+		given(remoteRunRepository.getRun(123, 789, token)).willReturn(remoteUpstreamRun1);
 		
 		RemoteRunBean remoteUpstreamRun2 = new RemoteRunBean();
 		remoteUpstreamRun2.setId(790);
 		remoteUpstreamRun2.setStatus(remoteStatus2);
-		given(remoteRunRepository.getRun(124, 790)).willReturn(remoteUpstreamRun2);
+		given(remoteRunRepository.getRun(124, 790, token)).willReturn(remoteUpstreamRun2);
 		
 		RemoteRunBean remoteDownstreamRun = new RemoteRunBean();
 		remoteDownstreamRun.setId(890);
 		remoteDownstreamRun.setStatus("IN_PROGRESS");
-		given(remoteRunRepository.triggerRun(234, new HashMap<String, String>())).willReturn(remoteDownstreamRun);
-		given(remoteRunRepository.getRun(234, 890)).willReturn(remoteDownstreamRun);
+		given(remoteRunRepository.triggerRun(
+				234, 
+				new HashMap<String, String>(),
+				token)).willReturn(remoteDownstreamRun);
+		given(remoteRunRepository.getRun(234, 890, token)).willReturn(remoteDownstreamRun);
 		
-		service.updateCycle(cycle);
-		service.updateCycle(cycle);
+		service.updateCycle(cycle, token);
+		service.updateCycle(cycle, token);
 		
 		return downstreamRun.getStatus();
 	}
@@ -541,12 +561,18 @@ public class CycleServiceTest {
 		RemoteRunBean remoteRun = new RemoteRunBean();
 		remoteRun.setId(789);
 		remoteRun.setStatus("IN_PROGRESS");
-		given(remoteRunRepository.triggerRun(eq(123), ArgumentMatchers.<Map<String, String>>any())).willReturn(remoteRun);
+		given(remoteRunRepository.triggerRun(
+				eq(123), 
+				ArgumentMatchers.<Map<String, String>>any(),
+				eq(token))).willReturn(remoteRun);
 		
-		service.updateCycle(cycle);
+		service.updateCycle(cycle, token);
 		
 		ArgumentCaptor<HashMap<String, String>> parameterValuePairCaptor = ArgumentCaptor.forClass(HashMap.class);
-		verify(remoteRunRepository, times(1)).triggerRun(any(Integer.class), parameterValuePairCaptor.capture());
+		verify(remoteRunRepository, times(1)).triggerRun(
+				any(Integer.class), 
+				parameterValuePairCaptor.capture(),
+				any(String.class));
 		
 		HashMap<String, String> parameterValuePair = parameterValuePairCaptor.getValue();
 		assertEquals(parameterValuePair.size(), 1);

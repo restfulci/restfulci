@@ -3,6 +3,7 @@ package restfulci.pipeline.dao;
 import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.springframework.test.web.client.match.MockRestRequestMatchers.header;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.jsonPath;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.method;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo;
@@ -16,6 +17,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.client.AutoConfigureWebClient;
 import org.springframework.boot.test.autoconfigure.web.client.RestClientTest;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -37,6 +39,8 @@ public class RemoteRunRepositoryTest {
 	@Autowired private MockRestServiceServer mockServer;
 	
 	private ObjectMapper objectMapper = new ObjectMapper();
+	
+	private final String token = "foo";
 
 	@Test
 	public void testTriggerRun() throws Exception {
@@ -50,6 +54,7 @@ public class RemoteRunRepositoryTest {
 				ExpectedCount.once(), 
 				requestTo("/jobs/123/runs"))
 				.andExpect(method(HttpMethod.POST))
+				.andExpect(header(HttpHeaders.AUTHORIZATION, token))
 				.andExpect(jsonPath("$.ENV", is("stage")))
 				.andRespond(withStatus(HttpStatus.OK)
 				.contentType(MediaType.APPLICATION_JSON)
@@ -59,7 +64,10 @@ public class RemoteRunRepositoryTest {
 		Map<String, String> parameterValuePair = new HashMap<String, String>();
 		parameterValuePair.put("ENV", "stage");
 		
-		RemoteRunBean triggeredRun = remoteRunRepository.triggerRun(123, parameterValuePair);
+		RemoteRunBean triggeredRun = remoteRunRepository.triggerRun(
+				123, 
+				parameterValuePair,
+				token);
 		
 		mockServer.verify();
 		
@@ -80,12 +88,16 @@ public class RemoteRunRepositoryTest {
 				ExpectedCount.once(), 
 				requestTo("/jobs/123/runs/456"))
 				.andExpect(method(HttpMethod.GET))
+				.andExpect(header(HttpHeaders.AUTHORIZATION, token))
 				.andRespond(withStatus(HttpStatus.OK)
 				.contentType(MediaType.APPLICATION_JSON)
 				.body(objectMapper.writeValueAsString(returnedRun))
 				);
 		
-		RemoteRunBean queriedRun = remoteRunRepository.getRun(123, 456);
+		RemoteRunBean queriedRun = remoteRunRepository.getRun(
+				123, 
+				456,
+				token);
 		
 		mockServer.verify();
 		
@@ -101,11 +113,15 @@ public class RemoteRunRepositoryTest {
 				ExpectedCount.once(), 
 				requestTo("/jobs/123/runs"))
 				.andExpect(method(HttpMethod.POST))
+				.andExpect(header(HttpHeaders.AUTHORIZATION, token))
 				.andRespond(withStatus(HttpStatus.BAD_REQUEST)
 				);
 		
 		assertThrows(RunTriggerException.class, () -> {
-			remoteRunRepository.triggerRun(123, new HashMap<String, String>());
+			remoteRunRepository.triggerRun(
+					123, 
+					new HashMap<String, String>(),
+					token);
 		});
 	}
 	
@@ -116,11 +132,15 @@ public class RemoteRunRepositoryTest {
 				ExpectedCount.once(), 
 				requestTo("/jobs/123/runs"))
 				.andExpect(method(HttpMethod.POST))
+				.andExpect(header(HttpHeaders.AUTHORIZATION, token))
 				.andRespond(withStatus(HttpStatus.INTERNAL_SERVER_ERROR)
 				);
 		
 		assertThrows(RunTriggerException.class, () -> {
-			remoteRunRepository.triggerRun(123, new HashMap<String, String>());
+			remoteRunRepository.triggerRun(
+					123, 
+					new HashMap<String, String>(),
+					token);
 		});
 	}
 }

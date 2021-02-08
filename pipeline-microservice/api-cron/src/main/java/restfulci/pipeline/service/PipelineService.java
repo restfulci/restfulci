@@ -19,7 +19,9 @@ public interface PipelineService {
 	 * removeReferredJob
 	 */
 	
-	public ReferredJobBean updateReferredJobParameters(Integer referredJobId) throws IOException;
+	public ReferredJobBean updateReferredJobParameters(
+			Integer referredJobId,
+			String token) throws IOException;
 	public PipelineBean linkReferredJobParameter(
 			Integer pipelineId, Integer referredJobId, Integer parameterMapId, Integer parameterId) throws IOException;
 	
