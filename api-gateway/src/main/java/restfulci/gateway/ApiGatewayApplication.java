@@ -8,7 +8,7 @@ import org.springframework.context.annotation.Bean;
 import restfulci.gateway.filters.pre.SimpleFilter;
 
 @EnableZuulProxy
-@SpringBootApplication
+@SpringBootApplication(scanBasePackages= {"restfulci.gateway"})
 public class ApiGatewayApplication {
 
 	public static void main(String[] args) {
