@@ -191,6 +191,33 @@ jobs:
             echo $DOCKER_PWD | docker login -u $DOCKER_ID --password-stdin
             docker push restfulci/pipeline-postgres:$CIRCLE_SHA1
 
+  java-api-gateway-unittest:
+    executor: java-with-sidecar-executor
+    steps:
+      - checkout
+
+      - run: cd api-gateway && mvn test
+
+      - store_test_results:
+          path: api-gateway/target/surefire-reports/
+
+  java-api-gateway-build-docker-push:
+    executor: java-executor
+    steps:
+      - checkout
+
+      - setup_remote_docker:
+          docker_layer_caching: false
+
+      - run: cd api-gateway && mvn package -Dskip.unittest=true -Dskip.it=true
+
+      - run:
+          name: Build and push api-gateway docker image
+          command: |
+            cd api-gateway && docker build -t restfulci/api-gateway:$CIRCLE_SHA1 .
+            echo $DOCKER_PWD | docker login -u $DOCKER_ID --password-stdin
+            docker push restfulci/api-gateway:$CIRCLE_SHA1
+
   python-linter:
     executor: python-executor
     steps:
@@ -303,6 +330,14 @@ workflows:
           filters:
             branches:
               only: master
+
+      - java-api-gateway-unittest
+      - java-api-gateway-build-docker-push:
+          requires:
+            - java-api-gateway-unittest
+          # filters:
+          #   branches:
+          #     only: master
 
       - python-linter
       - js-vue-linter
