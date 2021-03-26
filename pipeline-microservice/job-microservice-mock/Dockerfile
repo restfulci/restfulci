@@ -1,4 +1,4 @@
-from python:3.8.3-alpine
+from python:3.8.7-alpine
 
 RUN pip install flask
 
