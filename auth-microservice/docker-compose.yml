@@ -28,7 +28,7 @@ services:
       - keycloak-postgres
 
   keycloak-postgres:
-    image: postgres:13.1
+    image: postgres:14.2
     environment:
       - POSTGRES_DB=keycloak
       - POSTGRES_USER=postgres

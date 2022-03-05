@@ -124,9 +124,9 @@ public class DockerExecTest {
 	@Test
 	public void testCreateAndKillSidecarWithNullCommand() throws Exception {
 		
-		exec.pullImage("postgres:13.1");
+		exec.pullImage("postgres:14.2");
 		String containerId = exec.createSidecar(
-				"postgres:13.1", 
+				"postgres:14.2", 
 				containerName, 
 				"bridge",
 				null,
