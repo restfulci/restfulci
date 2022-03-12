@@ -31,25 +31,8 @@ services:
       - MINIO_SECRET_KEY=secretpassword
     command: server /data
 
-  keycloak:
-    image: restfulci/auth-server-local:60644c34f3c6cb1ffa31b3ff45aeb36138afeb09
-    ports:
-      # TODO:
-      # Use 8443 instand for SSL.
-      - "8880:8080"
-    environment:
-      KEYCLOAK_USER: restfulci
-      KEYCLOAK_PASSWORD: secretpassword
-      DB_VENDOR: POSTGRES
-      DB_ADDR: keycloak-postgres
-      DB_DATABASE: keycloak
-      DB_USER: postgres
-      DB_PASSWORD: postgres
-    depends_on:
-      - keycloak-postgres
-
   # keycloak:
-  #   image: quay.io/keycloak/keycloak:17.0.0-legacy
+  #   image: restfulci/auth-server-local:60644c34f3c6cb1ffa31b3ff45aeb36138afeb09
   #   ports:
   #     # TODO:
   #     # Use 8443 instand for SSL.
@@ -57,18 +40,35 @@ services:
   #   environment:
   #     KEYCLOAK_USER: restfulci
   #     KEYCLOAK_PASSWORD: secretpassword
-  #     # https://keycloak.discourse.group/t/cant-import-realm-using-docker-image/259/8
-  #     # otherwise see error "Script upload is disabled"
-  #     KEYCLOAK_IMPORT: "/tmp/realm.json -Dkeycloak.profile.feature.upload_scripts=enabled"
   #     DB_VENDOR: POSTGRES
   #     DB_ADDR: keycloak-postgres
   #     DB_DATABASE: keycloak
   #     DB_USER: postgres
   #     DB_PASSWORD: postgres
-  #   volumes:
-  #     - ../auth-microservice/realm.json:/tmp/realm.json
   #   depends_on:
   #     - keycloak-postgres
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:17.0.0-legacy
+    ports:
+      # TODO:
+      # Use 8443 instand for SSL.
+      - "8880:8080"
+    environment:
+      KEYCLOAK_USER: restfulci
+      KEYCLOAK_PASSWORD: secretpassword
+      # https://keycloak.discourse.group/t/cant-import-realm-using-docker-image/259/8
+      # otherwise see error "Script upload is disabled"
+      KEYCLOAK_IMPORT: "/tmp/realm.json -Dkeycloak.profile.feature.upload_scripts=enabled"
+      DB_VENDOR: POSTGRES
+      DB_ADDR: keycloak-postgres
+      DB_DATABASE: keycloak
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+    volumes:
+      - ../auth-microservice/realm.json:/tmp/realm.json
+    depends_on:
+      - keycloak-postgres
 
   keycloak-postgres:
     image: postgres:14.2
