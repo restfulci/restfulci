@@ -112,7 +112,7 @@ public class RunConfigYamlParserTest {
 		assertEquals(runConfig.getSidecars().get(1).getEnvironment().size(), 1);
 		assertEquals(runConfig.getSidecars().get(1).getEnvironment().get("FOO"), "bar");
 		assertEquals(runConfig.getSidecars().get(2).getName(), "postgresbox");
-		assertEquals(runConfig.getSidecars().get(2).getImage(), "postgres:13.1");
+		assertEquals(runConfig.getSidecars().get(2).getImage(), "postgres:14.2");
 		assertNull(runConfig.getSidecars().get(2).getCommand());
 		assertEquals(runConfig.getCommand().size(), 3);
 		assertEquals(runConfig.getCommand().get(0), "bash");

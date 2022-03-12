@@ -14,7 +14,7 @@ sidecars:
     environment:
       FOO: bar
   - name: postgresbox
-    image: postgres:13.1
+    image: postgres:14.2
 
 command:
   - bash
