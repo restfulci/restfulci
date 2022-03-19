@@ -1,5 +1,8 @@
 # PIPELINE_HOST=localhost:8882
+PIPELINE_HOST=localhost:8080
 PIPELINE_HOST=34.74.148.55
+
+curl -i -X GET $PIPELINE_HOST/actuator/health
 
 curl -X POST -H "Content-Type: application/json" --data '{"name": "manual_pipeline_name"}' $PIPELINE_HOST/pipelines
 curl -X GET $PIPELINE_HOST/pipelines/1
