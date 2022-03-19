@@ -292,7 +292,7 @@ workflows:
             - java-job-integration-test
           filters:
             branches:
-              only: master
+              only: main
 
       - java-pipeline-unittest
       - java-pipeline-integration-test
@@ -302,7 +302,7 @@ workflows:
             - java-pipeline-integration-test
           filters:
             branches:
-              only: master
+              only: main
 
       - python-linter
       - js-vue-linter
@@ -312,12 +312,12 @@ workflows:
             - js-vue-linter
           filters:
             branches:
-              only: master
+              only: main
 
       - keycloak-build-docker-push:
           filters:
             branches:
-              only: master
+              only: main
 
       - hugo/build:
           html-proofer: true
