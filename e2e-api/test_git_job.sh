@@ -6,7 +6,7 @@ JOB_HOST=localhost:8080
 
 curl -i -X GET $JOB_HOST/actuator/health
 
-curl -X POST -H "Authorization: Bearer ${TEST_USER_TOKEN}" -H "Content-Type: application/json" --data '{"name": "manual_git_job_name", "remoteOrigin": "https://github.com/restfulci/restfulci-examples.git", "configFilepath": "python-pytest/restfulci.yml"}' $JOB_HOST/jobs
+curl -i -X POST -H "Authorization: Bearer ${TEST_USER_TOKEN}" -H "Content-Type: application/json" --data '{"name": "manual_git_job_name", "remoteOrigin": "https://github.com/restfulci/restfulci-examples.git", "configFilepath": "python-pytest/restfulci.yml"}' $JOB_HOST/jobs
 curl -X GET -H "Authorization: Bearer ${TEST_USER_TOKEN}" $JOB_HOST/jobs/1
 curl -X POST -H "Authorization: Bearer ${TEST_USER_TOKEN}" -H "Content-Type: application/json" --data '{"branchName": "master"}' $JOB_HOST/jobs/1/runs
 curl -X GET -H "Authorization: Bearer ${TEST_USER_TOKEN}" $JOB_HOST/jobs/1/runs/1

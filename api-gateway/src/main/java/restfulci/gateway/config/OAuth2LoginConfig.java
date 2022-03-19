@@ -27,6 +27,7 @@ public class OAuth2LoginConfig extends WebSecurityConfigurerAdapter {
 		http
 			.authorizeRequests(authorize -> authorize
 //					.antMatchers("/", "/error").permitAll()
+					.antMatchers("/actuator/**").permitAll()
 					.antMatchers(HttpMethod.OPTIONS).permitAll()
 					.antMatchers("/auth/**").permitAll()
 					.anyRequest().authenticated()
