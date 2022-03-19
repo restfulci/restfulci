@@ -1,3 +1,43 @@
 # a very minimal declarative config file
 _format_version: "2.1"
 _transform: true
+
+services:
+- name: job-microservice
+  host: job-master-api-server
+  port: 8080
+  protocol: http
+  routes:
+  - name: jobs
+    paths:
+    - /jobs
+    strip_path: true
+  - name: actuator
+    paths:
+    - /actuator
+    strip_path: true
+- host: mockbin.org
+  name: example_service
+  port: 80
+  protocol: http
+  routes:
+  - name: mocking
+    paths:
+    - /mock
+    strip_path: true
+  plugins:
+  - name: jwt
+
+# plugins:
+# - name: jwt
+#   config:
+#     secret_is_base64: false
+#     run_on_preflight: true
+#
+# consumers:
+# - custom_id: oauth
+#   username: oauth
+#
+# jwt_secrets:
+# - consumer: oauth
+# - key:

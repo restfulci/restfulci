@@ -3,6 +3,7 @@
 JOB_HOST=35.231.89.206
 JOB_HOST=localhost:8881
 JOB_HOST=localhost:8080
+JOB_HOST=localhost:8000
 
 curl -i -X GET $JOB_HOST/actuator/health
 
