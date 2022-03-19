@@ -1,4 +1,4 @@
-FROM quay.io/keycloak/keycloak:11.0.2
+FROM quay.io/keycloak/keycloak:17.0.0-legacy
 
 ARG AUTH_ENV
 

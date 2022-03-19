@@ -1,7 +1,7 @@
 FROM docker:19.03
 
 RUN apk update && \
-    apk add --update openjdk8-jre && \
+    apk add --update openjdk11-jre && \
     apk add --update git && \
     apk add --update openssh
 

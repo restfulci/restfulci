@@ -137,9 +137,9 @@ public class DockerExecImpl implements DockerExec {
 		 * For long live containers (e.g. postgres) there's no need to do so.
 		 * 
 		 * We can't just `sleep infinity` for all containers by default, because 
-		 * > docker run postgres:13.1
+		 * > docker run postgres:14.2
 		 * will create a real functional postgres, while
-		 * > docker run postgres:13.1 sleep infinity
+		 * > docker run postgres:14.2 sleep infinity
 		 * will not, and `psql` to it will cause
 		 * > psql: could not connect to server: Connection refused
 		 * > Is the server running on host "postgres1" (192.168.0.2) and accepting

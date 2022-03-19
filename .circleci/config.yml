@@ -17,7 +17,7 @@ executors:
         environment:
           TEST_DATABASE_URL: postgresql://postgres@localhost/restfulci
 
-      - image: postgres:13.1
+      - image: postgres:14.2
         environment:
           POSTGRES_DB: restfulci
           POSTGRES_USER: postgres
@@ -319,7 +319,7 @@ workflows:
             - java-job-integration-test
           filters:
             branches:
-              only: master
+              only: main
 
       - java-pipeline-unittest
       - java-pipeline-integration-test
@@ -329,7 +329,7 @@ workflows:
             - java-pipeline-integration-test
           filters:
             branches:
-              only: master
+              only: main
 
       - java-api-gateway-unittest
       - java-api-gateway-build-docker-push:
@@ -347,12 +347,12 @@ workflows:
             - js-vue-linter
           filters:
             branches:
-              only: master
+              only: main
 
       - keycloak-build-docker-push:
           filters:
             branches:
-              only: master
+              only: main
 
       - hugo/build:
           html-proofer: true
