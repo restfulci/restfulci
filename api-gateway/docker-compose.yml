@@ -1,6 +1,31 @@
 version: "3"
 services:
 
+  keycloak:
+    image: restfulci/auth-server-docker:8d55b5032a2ab9cfe01bf02bebe0f122b045b0ed
+    ports:
+      # TODO:
+      # Use 8443 instand for SSL.
+      - "8880:8080"
+    environment:
+      KEYCLOAK_USER: restfulci
+      KEYCLOAK_PASSWORD: secretpassword
+      DB_VENDOR: POSTGRES
+      DB_ADDR: keycloak-postgres
+      DB_DATABASE: keycloak
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+    depends_on:
+      - keycloak-postgres
+
+  keycloak-postgres:
+    image: postgres:14.2
+    environment:
+      - POSTGRES_DB=keycloak
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    restart: always
+
   job-postgres:
     image: restfulci/job-postgres:8d55b5032a2ab9cfe01bf02bebe0f122b045b0ed
     environment:
@@ -10,7 +35,7 @@ services:
     restart: always
 
   job-rabbitmq:
-    image: rabbitmq:3.9.13-management
+    image: rabbitmq:3.8.9-management
     environment:
       - RABBITMQ_DEFAULT_USER=restfulci
       - RABBITMQ_DEFAULT_PASS=secretpassword
@@ -18,7 +43,7 @@ services:
       - "15673:15672"
 
   job-minio:
-    image: minio/minio:RELEASE.2022-03-05T06-32-39Z
+    image: minio/minio:RELEASE.2020-12-26T01-35-54Z
     environment:
       - MINIO_ACCESS_KEY=restfulci
       - MINIO_SECRET_KEY=secretpassword
@@ -66,47 +91,24 @@ services:
     tty: true
     restart: always
 
-  keycloak:
-    image: restfulci/auth-server-docker:8d55b5032a2ab9cfe01bf02bebe0f122b045b0ed
-    ports:
-      # TODO:
-      # Use 8443 instand for SSL.
-      - "8880:8080"
+  pipeline-postgres:
+    image: restfulci/pipeline-postgres:8d55b5032a2ab9cfe01bf02bebe0f122b045b0ed
     environment:
-      KEYCLOAK_USER: restfulci
-      KEYCLOAK_PASSWORD: secretpassword
-      DB_VENDOR: POSTGRES
-      DB_ADDR: keycloak-postgres
-      DB_DATABASE: keycloak
-      DB_USER: postgres
-      DB_PASSWORD: postgres
-    depends_on:
-      - keycloak-postgres
-
-  keycloak-postgres:
-    image: postgres:14.2
-    environment:
-      - POSTGRES_DB=keycloak
+      - POSTGRES_DB=restfulci-pipeline
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
     restart: always
 
-  job-frontend:
-    build:
-      context: .
-      dockerfile: ./Dockerfile
-    ports:
-      - "5111:5000"
+  pipeline-api-cron-server:
+    image: restfulci/pipeline-api-cron-server:8d55b5032a2ab9cfe01bf02bebe0f122b045b0ed
     environment:
-      # This needs to be the API path to be seen from the browser, rather
-      # than the API path seen from the docker container (more specifically,
-      # in docker-compose http://master-api-server:8080/ will not work).
-      # It is because this path is in `_nuxt/app.***.js` executed in inside of
-      # the browser.
-      API_SERVER_URI: http://localhost:8881
-      AUTH_SERVER_URI: http://localhost:8880
-      FRONTEND_URI: http://localhost:5551
+      - SPRING_PROFILES_ACTIVE=docker
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    ports:
+      - "8882:8080"
     depends_on:
+      - pipeline-postgres
       - job-master-api-server
     tty: true
     restart: always

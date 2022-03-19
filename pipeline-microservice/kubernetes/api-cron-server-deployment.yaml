@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
       - name: api-cron-server
-        image: restfulci/pipeline-api-cron-server:60644c34f3c6cb1ffa31b3ff45aeb36138afeb09
+        image: restfulci/pipeline-api-cron-server:8d55b5032a2ab9cfe01bf02bebe0f122b045b0ed
         ports:
         - containerPort: 8080
         env:
