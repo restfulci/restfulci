@@ -17,7 +17,7 @@
   <name>RestfulCI API gateway</name>
 
   <properties>
-    <java.version>1.8</java.version>
+    <java.version>11</java.version>
     <spring-cloud.version>Hoxton.SR9</spring-cloud.version>
   </properties>
 
@@ -44,7 +44,7 @@
     <dependency>
         <groupId>org.projectlombok</groupId>
         <artifactId>lombok</artifactId>
-        <version>1.18.10</version>
+        <version>1.18.22</version>
         <scope>provided</scope>
     </dependency>
 
