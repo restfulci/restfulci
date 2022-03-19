@@ -27,7 +27,7 @@ spec:
           # an image (need a docker hub storage then). It is kind of less
           # important, because we probably need to handle liquibase (as a Kubernetes
           # job) anyway.
-          image: restfulci/job-postgres:8da072f0160c76d9698c4bd7374644022925d8ab
+          image: restfulci/job-postgres:8d55b5032a2ab9cfe01bf02bebe0f122b045b0ed
           imagePullPolicy: "IfNotPresent"
           ports:
           - containerPort: 5432

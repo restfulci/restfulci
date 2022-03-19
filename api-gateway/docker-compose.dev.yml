@@ -2,7 +2,7 @@ version: "3"
 services:
 
   keycloak:
-    image: restfulci/auth-server-docker:8da072f0160c76d9698c4bd7374644022925d8ab
+    image: restfulci/auth-server-docker:8d55b5032a2ab9cfe01bf02bebe0f122b045b0ed
     ports:
       # TODO:
       # Use 8443 instand for SSL.
@@ -27,7 +27,7 @@ services:
     restart: always
 
   job-postgres:
-    image: restfulci/job-postgres:8da072f0160c76d9698c4bd7374644022925d8ab
+    image: restfulci/job-postgres:8d55b5032a2ab9cfe01bf02bebe0f122b045b0ed
     environment:
       - POSTGRES_DB=restfulci-job
       - POSTGRES_USER=postgres
@@ -50,7 +50,7 @@ services:
     command: server /data
 
   job-master-api-server:
-    image: restfulci/job-master-api-server:8da072f0160c76d9698c4bd7374644022925d8ab
+    image: restfulci/job-master-api-server:8d55b5032a2ab9cfe01bf02bebe0f122b045b0ed
     environment:
       - SPRING_PROFILES_ACTIVE=docker
       - AUTH_SERVER_URI=http://localhost:8880
@@ -71,7 +71,7 @@ services:
     restart: always
 
   job-slave-executor:
-    image: restfulci/job-slave-executor:8da072f0160c76d9698c4bd7374644022925d8ab
+    image: restfulci/job-slave-executor:8d55b5032a2ab9cfe01bf02bebe0f122b045b0ed
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - $SSH_AUTH_SOCK:${SSH_AUTH_SOCK}
@@ -92,7 +92,7 @@ services:
     restart: always
 
   pipeline-postgres:
-    image: restfulci/pipeline-postgres:8da072f0160c76d9698c4bd7374644022925d8ab
+    image: restfulci/pipeline-postgres:8d55b5032a2ab9cfe01bf02bebe0f122b045b0ed
     environment:
       - POSTGRES_DB=restfulci-pipeline
       - POSTGRES_USER=postgres
@@ -100,7 +100,7 @@ services:
     restart: always
 
   pipeline-api-cron-server:
-    image: restfulci/pipeline-api-cron-server:8da072f0160c76d9698c4bd7374644022925d8ab
+    image: restfulci/pipeline-api-cron-server:8d55b5032a2ab9cfe01bf02bebe0f122b045b0ed
     environment:
       - SPRING_PROFILES_ACTIVE=docker
       - POSTGRES_USER=postgres
