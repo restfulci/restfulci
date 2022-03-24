@@ -1,0 +1,15 @@
+routes:
+  -
+    uri: /actuator/*
+    upstream:
+      nodes:
+        "job-master-api-server:8080": 1
+        # "localhost:8881": 1
+      type: roundrobin
+  -
+    uri: /anything/*
+    upstream:
+      nodes:
+        "httpbin.org:80": 1
+      type: roundrobin
+#END
