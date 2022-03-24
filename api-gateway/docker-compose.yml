@@ -1,114 +1,54 @@
+# Cloned from https://github.com/apache/apisix-docker/blob/master/example/docker-compose.yml
+
 version: "3"
+
 services:
-
-  keycloak:
-    image: restfulci/auth-server-docker:8d55b5032a2ab9cfe01bf02bebe0f122b045b0ed
-    ports:
-      # TODO:
-      # Use 8443 instand for SSL.
-      - "8880:8080"
-    environment:
-      KEYCLOAK_USER: restfulci
-      KEYCLOAK_PASSWORD: secretpassword
-      DB_VENDOR: POSTGRES
-      DB_ADDR: keycloak-postgres
-      DB_DATABASE: keycloak
-      DB_USER: postgres
-      DB_PASSWORD: postgres
-    depends_on:
-      - keycloak-postgres
-
-  keycloak-postgres:
-    image: postgres:14.2
-    environment:
-      - POSTGRES_DB=keycloak
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
+  apisix-dashboard:
+    image: apache/apisix-dashboard:2.10.1-alpine
     restart: always
-
-  job-postgres:
-    image: restfulci/job-postgres:8d55b5032a2ab9cfe01bf02bebe0f122b045b0ed
-    environment:
-      - POSTGRES_DB=restfulci-job
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
-    restart: always
-
-  job-rabbitmq:
-    image: rabbitmq:3.8.9-management
-    environment:
-      - RABBITMQ_DEFAULT_USER=restfulci
-      - RABBITMQ_DEFAULT_PASS=secretpassword
-    ports:
-      - "15673:15672"
-
-  job-minio:
-    image: minio/minio:RELEASE.2020-12-26T01-35-54Z
-    environment:
-      - MINIO_ACCESS_KEY=restfulci
-      - MINIO_SECRET_KEY=secretpassword
-    command: server /data
-
-  job-master-api-server:
-    image: restfulci/job-master-api-server:8d55b5032a2ab9cfe01bf02bebe0f122b045b0ed
-    environment:
-      - SPRING_PROFILES_ACTIVE=docker
-      - AUTH_SERVER_URI=http://localhost:8880
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
-      - RABBITMQ_DEFAULT_USER=restfulci
-      - RABBITMQ_DEFAULT_PASS=secretpassword
-      - MINIO_ACCESS_KEY=restfulci
-      - MINIO_SECRET_KEY=secretpassword
-    ports:
-      - "8881:8080"
-    depends_on:
-      - job-postgres
-      - job-rabbitmq
-      - job-minio
-      - keycloak
-    tty: true
-    restart: always
-
-  job-slave-executor:
-    image: restfulci/job-slave-executor:8d55b5032a2ab9cfe01bf02bebe0f122b045b0ed
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-      - $SSH_AUTH_SOCK:${SSH_AUTH_SOCK}
-    environment:
-      - SSH_AUTH_SOCK
-      - SPRING_PROFILES_ACTIVE=docker
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
-      - RABBITMQ_DEFAULT_USER=restfulci
-      - RABBITMQ_DEFAULT_PASS=secretpassword
-      - MINIO_ACCESS_KEY=restfulci
-      - MINIO_SECRET_KEY=secretpassword
-    depends_on:
-      - job-postgres
-      - job-rabbitmq
-      - job-minio
-    tty: true
-    restart: always
-
-  pipeline-postgres:
-    image: restfulci/pipeline-postgres:8d55b5032a2ab9cfe01bf02bebe0f122b045b0ed
-    environment:
-      - POSTGRES_DB=restfulci-pipeline
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
-    restart: always
-
-  pipeline-api-cron-server:
-    image: restfulci/pipeline-api-cron-server:8d55b5032a2ab9cfe01bf02bebe0f122b045b0ed
-    environment:
-      - SPRING_PROFILES_ACTIVE=docker
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
+    - ./dashboard_conf/conf.yaml:/usr/local/apisix-dashboard/conf/conf.yaml
     ports:
-      - "8882:8080"
-    depends_on:
-      - pipeline-postgres
-      - job-master-api-server
-    tty: true
+    - "9000:9000"
+    networks:
+      apisix:
+
+  apisix:
+    image: apache/apisix:2.12.1-alpine
     restart: always
+    volumes:
+      - ./apisix_log:/usr/local/apisix/logs
+      - ./apisix_conf/config.yaml:/usr/local/apisix/conf/config.yaml:ro
+    depends_on:
+      - etcd
+    ##network_mode: host
+    ports:
+      - "9080:9080/tcp"
+      - "9091:9091/tcp"
+      - "9443:9443/tcp"
+      - "9092:9092/tcp"
+    networks:
+      apisix:
+
+  etcd:
+    image: bitnami/etcd:3.4.15
+    restart: always
+    volumes:
+      - etcd_data:/bitnami/etcd
+    environment:
+      ETCD_ENABLE_V2: "true"
+      ALLOW_NONE_AUTHENTICATION: "yes"
+      ETCD_ADVERTISE_CLIENT_URLS: "http://0.0.0.0:2379"
+      ETCD_LISTEN_CLIENT_URLS: "http://0.0.0.0:2379"
+    ports:
+      - "2379:2379/tcp"
+    networks:
+      apisix:
+
+networks:
+  apisix:
+    driver: bridge
+
+volumes:
+  etcd_data:
+    driver: local
